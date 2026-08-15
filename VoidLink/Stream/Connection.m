@@ -43,6 +43,7 @@ static int activeVideoFormat;
 static video_stats_t currentVideoStats;
 static video_stats_t lastVideoStats;
 static NSLock* videoStatsLock;
+static uint64_t lastRenderedInterpolatedFrameCount;
 
 static SDL_AudioDeviceID audioDevice;
 static OPUS_MULTISTREAM_CONFIGURATION audioConfig;
@@ -59,6 +60,7 @@ static AVAudioFormat *audioFormat;
 
 static bool muteInBackground;
 static bool fullColorRange;
+static bool request10BitCodec;
 
 static VideoDecoderRenderer* renderer;
 
@@ -66,12 +68,13 @@ static BandwidthTracker *bwTracker;
 
 int DrDecoderSetup(int videoFormat, int width, int height, int redrawRate, void* context, int drFlags)
 {
-    [renderer setupWithVideoFormat:videoFormat width:width height:height frameRate:redrawRate fullRange:fullColorRange];
+    [renderer setupWithVideoFormat:videoFormat width:width height:height frameRate:redrawRate fullRange:fullColorRange request10BitCodec:request10BitCodec];
     lastFrameNumber = 0;
     activeVideoFormat = videoFormat;
     Log(LOG_I, @"Active video format: 0x%x", activeVideoFormat);
     memset(&currentVideoStats, 0, sizeof(currentVideoStats));
     memset(&lastVideoStats, 0, sizeof(lastVideoStats));
+    lastRenderedInterpolatedFrameCount = [renderer renderedInterpolatedFrameCount];
     bwTracker = [[BandwidthTracker alloc] initWithWindowSeconds:10 bucketIntervalMs:250];
     return 0;
 }
@@ -79,6 +82,10 @@ int DrDecoderSetup(int videoFormat, int width, int height, int redrawRate, void*
 void DrCleanup(void)
 {
     [renderer cleanup];
+    // Drop the static reference so the old renderer (and its decoder resources)
+    // doesn't outlive the session; otherwise it stays alive until the next
+    // Connection init overwrites it, which can interleave with a new session.
+    renderer = nil;
 }
 
 -(BandwidthTracker *) getBwTracker
@@ -173,6 +180,9 @@ int DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
         // Flip stats roughly every second
         if (now - currentVideoStats.startTime >= 1.0f) {
             currentVideoStats.endTime = now;
+            uint64_t renderedInterpolatedFrameCount = [renderer renderedInterpolatedFrameCount];
+            currentVideoStats.interpolatedFrames = (int)(renderedInterpolatedFrameCount - lastRenderedInterpolatedFrameCount);
+            lastRenderedInterpolatedFrameCount = renderedInterpolatedFrameCount;
             
             [videoStatsLock lock];
             lastVideoStats = currentVideoStats;
@@ -657,6 +667,8 @@ void ClSetControllerLED(uint16_t controllerNumber, uint8_t r, uint8_t g, uint8_t
     LiInitializeStreamConfiguration(&_streamConfig);
     _streamConfig.colorRange = config.fullColorRange ? 1 : 0;
     fullColorRange = config.fullColorRange;
+    // request10BitCodec = config.enableHdr || config.sdrPerformanceWorkaround;
+    request10BitCodec = config.enableHdr;
     _streamConfig.width = config.width;
     _streamConfig.height = config.height;
     _streamConfig.fps = config.frameRate;

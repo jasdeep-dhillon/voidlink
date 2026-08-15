@@ -151,7 +151,6 @@ import CoreMotion
         self.widgetYawFactor = yawFactor
         self.widgetPitchFactor = pitchFactor
         self.widgetRollFactor = rollFactor
-        print("self.widgetRollFactor \(self.widgetRollFactor)")
         if self.motionStarter == nil {
             self.motionStarter = sender
             if sender.motionControlButtonString != "GYROPAUSE" {self.startMotionUpdate()}
@@ -189,7 +188,7 @@ import CoreMotion
             else {
                 if #available(iOS 14.0, *) {
                     if activeGCController == nil {
-                        if let controllers = ControllerUtil.activeGCControllers as? Set<GCController> {
+                        if let controllers = ControllerUtil.activeStreamingGCControllers as? Set<GCController> {
                             for controller in controllers {
                                 if controller.playerIndex == .index1 {
                                     activeGCController = controller
@@ -405,8 +404,8 @@ import CoreMotion
 }
     
     private func clearGyroInput(interruptNonGyroInput:Bool){
-        // guard let onScreenControls = onScreenControls else { return }
-
+        guard ControllerUtil.gamepadArrivalReported else { return }
+        
         if yawPitchToRightStick{
             onScreenControls?.sendRightStickTouchPadEvent(rightStickPhysicalInputX+rightStickTouchInputX-yawBias, rightStickPhysicalInputY+rightStickTouchInputY-pitchBias)
         }
