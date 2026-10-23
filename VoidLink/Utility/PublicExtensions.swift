@@ -76,6 +76,7 @@ public extension UIFont {
     }
 }
 
+#if !os(tvOS)
 public extension UISlider {
     func step(forward: Bool, visualStepRatio: Float) {
         let range = self.maximumValue - self.minimumValue
@@ -91,6 +92,7 @@ public extension UISlider {
         }
     }
 }
+#endif
 
 private var previousSelectedSegmentIndexKey: UInt8 = 0
 private var lastKnownSelectedSegmentIndexKey: UInt8 = 0
@@ -192,12 +194,26 @@ public extension UISegmentedControl {
     }
 
     private func storePreviousSelectedSegmentIndex(_ value: Int) {
+        guard canStorePreviousSelectedSegmentIndex(value) else {
+            return
+        }
+
         objc_setAssociatedObject(
             self,
             &previousSelectedSegmentIndexKey,
             NSNumber(value: value),
             .OBJC_ASSOCIATION_RETAIN_NONATOMIC
         )
+    }
+
+    private func canStorePreviousSelectedSegmentIndex(_ value: Int) -> Bool {
+        guard value != UISegmentedControl.noSegment else {
+            return true
+        }
+        guard value >= 0 && value < numberOfSegments else {
+            return false
+        }
+        return isEnabledForSegment(at: value)
     }
 
     private func storeLastKnownSelectedSegmentIndex(_ value: Int) {

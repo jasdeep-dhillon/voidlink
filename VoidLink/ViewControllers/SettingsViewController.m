@@ -10,8 +10,11 @@
 //
 
 #import "SettingsViewController.h"
+#import "SceneDelegate.h"
 #import "MainFrameViewController.h"
+#if !TARGET_OS_TV
 #import "CustomEdgeSlideGestureRecognizer.h"
+#endif
 #import "TemporarySettings.h"
 #import "DataManager.h"
 #import "VoidLink-Swift.h"
@@ -22,9 +25,22 @@
 
 #import "LocalizationHelper.h"
 
+#if TARGET_OS_TV
+#endif
+
+
+#if TARGET_OS_TV
+
+@interface SettingsViewController () <UIScrollViewDelegate>
+@property(nonatomic, assign) SettingsMenuMode currentSettingsMenuMode;
+@end
+
+# else
 @interface SettingsViewController () <MenuSectionDelegate, WidgetPickerViewControllerDelegate, UIScrollViewDelegate>
 @property(nonatomic, assign) SettingsMenuMode currentSettingsMenuMode;
 @end
+
+#endif
 
 @implementation SettingsViewController {
     TemporarySettings* tempSettings;
@@ -43,7 +59,11 @@
     bool settingsViewJustExpanded;
     bool settingsViewAlreadyAppeared;
     uint16_t oswLayoutFingers;
+#if !TARGET_OS_TV
     CustomEdgeSlideGestureRecognizer *slideToCloseSettingsViewRecognizer;
+#else
+    bool didConsumeTvOSInitialSettingsSnapshot;
+#endif
     NSMutableDictionary *_settingStackDict;
     NSMutableArray *_favoriteSettingStackIdentifiers;
     bool settingStackWillBeRelocatedToLowestPosition;
@@ -69,10 +89,974 @@
 @dynamic overrideUserInterfaceStyle;
 @synthesize controllerNavigationHighlightOverlayView = _controllerNavigationHighlightOverlayView;
 
+- (void)viewDidLoad {
+    self->dataMan = [[DataManager alloc] init];
+#if TARGET_OS_TV
+    AppDelegate *appDelegate = (AppDelegate *)UIApplication.sharedApplication.delegate;
+    self->tempSettings = [appDelegate peekTvOSInitialSettingsSnapshot];
+#endif
+    if (self->tempSettings == nil) {
+        self->tempSettings = [self->dataMan getSettings];
+    }
+    self.currentSettingsMenuMode = self->tempSettings.settingsMenuMode.intValue;
+
+    if (@available(iOS 14.0, tvOS 14.0, *)) {
+#if !TARGET_OS_TV
+        self->slideToCloseSettingsViewRecognizer = [[CustomEdgeSlideGestureRecognizer alloc] initWithTarget:self action:@selector(edgeSwiped)];
+        self->slideToCloseSettingsViewRecognizer.edges = UIRectEdgeLeft;
+        self->slideToCloseSettingsViewRecognizer.normalizedThresholdDistance = 0.0;
+        self->slideToCloseSettingsViewRecognizer.edgeTolerance = 10;
+        self->slideToCloseSettingsViewRecognizer.immediateTriggering = true;
+        self->slideToCloseSettingsViewRecognizer.delaysTouchesBegan = NO;
+        self->slideToCloseSettingsViewRecognizer.delaysTouchesEnded = NO;
+        [self.view addGestureRecognizer:self->slideToCloseSettingsViewRecognizer];
+#else
+        self.restoresFocusAfterTransition = false;
+#endif
+        [self installSwiftUISettingsIfNeeded];
+        return;
+    }
+    
+#if !TARGET_OS_TV
+    [self restoreCoreDataSettingsForUIKitMenu:tempSettings];
+#endif
+}
+
+#if TARGET_OS_TV
+- (TemporarySettings *)initialSettingsSnapshotForSwiftUI {
+    return self->tempSettings;
+}
+
+- (void)consumeTvOSInitialSettingsSnapshotForMenuPresentation {
+    if (didConsumeTvOSInitialSettingsSnapshot) {
+        return;
+    }
+    didConsumeTvOSInitialSettingsSnapshot = true;
+    AppDelegate *appDelegate = (AppDelegate *)UIApplication.sharedApplication.delegate;
+    [appDelegate consumeTvOSInitialSettingsSnapshot];
+}
+#endif
+
+- (void)viewWillAppear:(BOOL)animated{
+    [super viewWillAppear:NO];
+
+    if (@available(iOS 14.0, *)) {
+        if (self.usesSwiftUISettings) {
+            [[NSNotificationCenter defaultCenter] addObserver:self
+                                                     selector:@selector(updateTheme)
+                                                         name:ThemeManager.ThemeDidChangeNotification
+                                                       object:nil];
+            [[NSNotificationCenter defaultCenter] addObserver:self
+                                                     selector:@selector(reloadSwiftUISettings)
+                                                         name:@"GameProfileSelectorCloseNotification"
+                                                       object:nil];
+            [[NSNotificationCenter defaultCenter] addObserver:self
+                                                     selector:@selector(reloadSwiftUISettings)
+                                                         name:@"GameProfileSelectedNotification"
+                                                       object:nil];
+            [self reloadSwiftUISettings];
+            return;
+        }
+    }
+    
+#if !TARGET_OS_TV
+    [self viewWillAppearUIKit];
+#endif
+}
+
+- (void)viewDidAppear:(BOOL)animated{
+    [super viewDidAppear:NO];
+
+    if (@available(iOS 14.0, *)) {
+        if (self.usesSwiftUISettings) {
+            [self refreshSectionHitTesting];
+            if (@available(iOS 13.0, *)) if(ControllerNavigator.radialMenuView.superview) [ControllerNavigator updateRadialMenu];
+            return;
+        }
+    }
+    
+#if !TARGET_OS_TV
+    [self viewDidAppearUIKit];
+#endif
+}
+
+- (void)viewWillDisappear:(BOOL)animated{
+    [super viewWillDisappear:animated];
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (void)viewDidDisappear:(BOOL)animated{
+    [super viewDidDisappear:NO];
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"SettingsViewClosedNotification" object:self]; // notify other view that settings view just closed
+
+    if (@available(iOS 14.0, *)) if (self.usesSwiftUISettings) {
+        [self applySwiftUIClosingEffects];
+        return;
+    }
+    
+#if !TARGET_OS_TV
+    [self viewDidDisappearUIKit];
+#endif
+}
+
+- (SettingsMenuMode)getSettingsMenuMode{
+    if (@available(iOS 14.0, *)) {
+        if (self.usesSwiftUISettings) {
+            return (SettingsMenuMode)[self swiftUISettingsMenuModeRawValue];
+        }
+    }
+    return self.currentSettingsMenuMode;
+}
+
+- (void)initParentStack{
+    self.scrollView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentAutomatic;
+    self.scrollView.delegate = self;
+    // 可选：确保 scrollView 开启垂直滚动
+    self.scrollView.alwaysBounceVertical = YES;
+    self.scrollView.showsVerticalScrollIndicator = NO;
+
+    _parentStack = [[UIStackView alloc] init];
+    _parentStack.axis = UILayoutConstraintAxisVertical;
+    _parentStack.spacing = 0;
+    _parentStack.translatesAutoresizingMaskIntoConstraints = NO;
+    
+    if(!_parentStack.superview){
+        [self.scrollView addSubview:_parentStack];
+        [NSLayoutConstraint activateConstraints:@[
+            [_parentStack.topAnchor constraintEqualToAnchor:self.scrollView.contentLayoutGuide.topAnchor constant: self.currentSettingsMenuMode == AllSettings ? GenericUtils.settingsMenuNavigationBarHeight : GenericUtils.settingsMenuNavigationBarHeight+10],
+            [_parentStack.bottomAnchor constraintEqualToAnchor:self.scrollView.contentLayoutGuide.bottomAnchor constant:-20],
+        ]];
+    }
+    
+#if !TARGET_OS_TV
+    [self updateParentStackHorizontalConstraints];
+#endif
+}
+
+- (void)switchToFavoriteSettings{
+    if (@available(iOS 14.0, *)) {
+        if (self.usesSwiftUISettings) {
+            self.currentSettingsMenuMode = FavoriteSettings;
+            [self setSwiftUISettingsMenuMode:FavoriteSettings];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (ControllerNavigator.radialMenuView.superview) [ControllerNavigator updateRadialMenu];
+                [GamepadNavigationIllustrationHud updateHudWithForceDisplay:false];
+                if (ControllerUtil.primaryGCController) [ControllerNavigator restoreSettingsModeSwitchHighlight];
+            });
+            return;
+        }
+    }
+    
+#if !TARGET_OS_TV
+    [self switchToFavoriteSettingsUIKit];
+#endif
+}
+
+- (void)switchToAllSettings{
+    if (@available(iOS 14.0, tvOS 14.0, *)) {
+        if (self.usesSwiftUISettings) {
+            self.currentSettingsMenuMode = AllSettings;
+            [self setSwiftUISettingsMenuMode:AllSettings];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (ControllerNavigator.radialMenuView.superview) [ControllerNavigator updateRadialMenu];
+                [GamepadNavigationIllustrationHud updateHudWithForceDisplay:false];
+                if (ControllerUtil.primaryGCController) [ControllerNavigator restoreSettingsModeSwitchHighlight];
+            });
+            return;
+        }
+    }
+    
+#if !TARGET_OS_TV
+    [self switchToAllSettingsUIKit];
+#endif
+}
+
+
+- (void)expandGamepadSection {
+    if(_currentSettingsMenuMode == FavoriteSettings) [self switchToAllSettings];
+    
+    if (@available(iOS 14.0, *)) {
+        if (self.usesSwiftUISettings) {
+            [self expandSectionWithIdentifier:@"SettingsSectionController"];
+        }
+    }
+#if !TARGET_OS_TV
+    [controllerSection setExpanded:true];
+#endif
+}
+
+- (void)enterRemoveSettingItemMode{
+    if (@available(iOS 14.0, *)) {
+        if (self.usesSwiftUISettings) {
+            self.currentSettingsMenuMode = RemoveSettingItem;
+            [self setSwiftUISettingsMenuMode:RemoveSettingItem];
+            return;
+        }
+    }
+    
+#if !TARGET_OS_TV
+    [self enterRemoveSettingItemModeUIKit];
+#endif
+}
+
+- (void)doneRemoveSettingItem{
+    if (@available(iOS 14.0, *)) {
+        if (self.usesSwiftUISettings) {
+            self.currentSettingsMenuMode = FavoriteSettings;
+            [self setSwiftUISettingsMenuMode:FavoriteSettings];
+            return;
+        }
+    }
+    
+#if !TARGET_OS_TV
+    [self doneRemoveSettingItemUIKit];
+#endif
+}
+
+
+- (void)mainFrameGameProfileButtonTapped:(bool)animated{
+    self.definesPresentationContext = NO;
+
+    if (@available(iOS 14.0, *)) {
+        if (self.usesSwiftUISettings) {
+            [self persistSwiftUIGameProfileSettings];
+        }
+#if !TARGET_OS_TV
+        else [self saveGameProfileConfigsUIKit];
+#endif
+    }
+#if !TARGET_OS_TV
+    else [self saveGameProfileConfigsUIKit];
+
+    self.layoutOnScreenControlsVC = [self instantiateOscLayoutViewController];
+    if (self.layoutOnScreenControlsVC == nil) {
+        return;
+    }
+
+    // self.layoutOnScreenControlsVC.view.backgroundColor = [UIColor colorWithWhite:0.55 alpha:1.0];
+    
+    self.layoutOnScreenControlsVC.view.backgroundColor = UIColor.clearColor;
+    self.layoutOnScreenControlsVC.modalPresentationStyle = UIModalPresentationOverCurrentContext;
+    self.layoutOnScreenControlsVC.profileSelectorLoadingMode = ProfileSelectorLoadingModeSelectProfileFromMainFrame;
+    [self presentViewController:self.layoutOnScreenControlsVC animated:NO completion:^{
+        [self->_layoutOnScreenControlsVC presentProfileSelectorWith:ProfileSelectorLoadingModeSelectProfileFromMainFrame animated:animated];
+    }];
+    self->_layoutOnScreenControlsVC.toolbarStackView.hidden = true;
+    self->_layoutOnScreenControlsVC.toolbarRootView.hidden = true;
+#else
+    ProfileSelectorViewController *profileSelectorVC = [[ProfileSelectorViewController alloc] init];
+    profileSelectorVC.loadingMode = ProfileSelectorLoadingModeSelectProfileFromMainFrame;
+    profileSelectorVC.modalPresentationStyle = UIModalPresentationOverCurrentContext;
+    [self presentViewController:profileSelectorVC animated:animated completion:nil];
+#endif
+}
+
+#if !TARGET_OS_TV
+
+- (void)edgeSwiped {
+    [self.mainFrameViewController closeSettingViewAnimated:YES];
+}
+
+
+-(void)deviceOrientationDidChange:(NSNotification *)notification {
+    if (@available(iOS 14.0, *)) {
+        if (self.usesSwiftUISettings) {
+            // [self refreshSwiftUISettingsGeometry];
+            return;
+        }
+    }
+    
+    [self updateParentStackHorizontalConstraints];
+}
+
+- (LayoutOnScreenControlsViewController *)instantiateOscLayoutViewController {
+    BOOL isIPhone = ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPhone);
+    NSString *storyboardName = isIPhone ? @"iPhone" : @"iPad";
+    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:storyboardName bundle:nil];
+    UIViewController *viewController = [storyboard instantiateViewControllerWithIdentifier:@"LayoutOnScreenControlsViewController"];
+
+    NSLog(@"[OSC] storyboard=%@ instantiated class=%@", storyboardName, NSStringFromClass([viewController class]));
+    
+    if (![viewController isKindOfClass:[LayoutOnScreenControlsViewController class]]) {
+        NSAssert(NO, @"Expected LayoutOnScreenControlsViewController, got %@", NSStringFromClass([viewController class]));
+        return nil;
+    }
+
+    LayoutOnScreenControlsViewController *layoutViewController = (LayoutOnScreenControlsViewController *)viewController;
+    if (!isIPhone) {
+        // layoutViewController.modalPresentationStyle = UIModalPresentationFullScreen;
+    }
+    
+    layoutViewController.toolbarStackView.hidden = false;
+    layoutViewController.toolbarRootView.hidden = false;
+
+    return layoutViewController;
+}
+
+- (void)updateParentStackHorizontalConstraints{
+    if(!PublicUtils.isIPhone){
+        if(parentStackCenterXConstraint && parentStackWidthConstraint) [NSLayoutConstraint deactivateConstraints:@[parentStackCenterXConstraint, parentStackWidthConstraint]];
+        parentStackCenterXConstraint = [_parentStack.centerXAnchor constraintEqualToAnchor:self.view.centerXAnchor constant: 0]; //mark: settingMenuLayout
+        parentStackWidthConstraint = [_parentStack.widthAnchor constraintEqualToAnchor:self.view.widthAnchor constant:-20]; // section width adjusted here
+        [NSLayoutConstraint activateConstraints:@[parentStackCenterXConstraint, parentStackWidthConstraint]];
+        return;
+    }
+    
+    UIWindow *keyWindow = [UIApplication sharedApplication].windows.firstObject;
+    
+    if (@available(iOS 13.0, *)) {
+        if(parentStackWidthConstraint && parentStackLeadingConstraint) [NSLayoutConstraint deactivateConstraints:@[parentStackLeadingConstraint, parentStackWidthConstraint]];
+        
+        UIWindowScene *activeScene = (UIWindowScene *)[UIApplication sharedApplication].connectedScenes.allObjects.firstObject;
+        UIInterfaceOrientation currentOrientation;
+        if (activeScene.activationState == UISceneActivationStateForegroundActive) {
+            currentOrientation = activeScene.interfaceOrientation;
+        }
+        else currentOrientation = keyWindow.windowScene.interfaceOrientation;
+        
+        if(parentStackLeadingConstraint && parentStackWidthConstraint) [NSLayoutConstraint deactivateConstraints:@[parentStackLeadingConstraint, parentStackWidthConstraint]];
+        switch (currentOrientation) {
+            case UIInterfaceOrientationLandscapeRight:
+                parentStackLeadingConstraint = [_parentStack.leadingAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.leadingAnchor constant:0];
+                parentStackWidthConstraint = [_parentStack.widthAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.widthAnchor constant:-10];
+                break;
+            default:
+                parentStackLeadingConstraint = [_parentStack.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor constant:10];
+                parentStackWidthConstraint = [_parentStack.widthAnchor constraintEqualToAnchor:self.view.widthAnchor constant:-20];
+                break;
+        }
+        [NSLayoutConstraint activateConstraints:@[parentStackLeadingConstraint, parentStackWidthConstraint]];
+    } else {
+        // Fallback on earlier versions
+    }
+        
+    double delayInSeconds = 0.05;
+    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
+    dispatch_after(popTime, dispatch_get_main_queue(), ^{
+        [self hideOverlappedDynamicLabels];
+    });
+}
+
+// This view is rooted at a ScrollView. To make it scrollable,
+// we'll update content size here.
+
+-(void)viewDidLayoutSubviews {
+    if (@available(iOS 14.0, *)) {
+        if (self.usesSwiftUISettings) {
+            [self refreshSwiftUISettings];
+            return;
+        }
+    }
+    
+    CGFloat highestViewY = 0;
+    
+    // Enumerate the scroll view's subviews looking for the
+    // highest view Y value to set our scroll view's content
+    // size.
+    
+    for (UIView* view in self.scrollView.subviews) {
+        // UIScrollViews have 2 default child views
+        // which represent the horizontal and vertical scrolling
+        // indicators. Ignore any views we don't recognize.
+        if (![view isKindOfClass:[UILabel class]] &&
+            ![view isKindOfClass:[UISegmentedControl class]] &&
+            ![view isKindOfClass:[UISlider class]]) {
+            continue;
+        }
+        
+        CGFloat currentViewY = view.frame.origin.y + view.frame.size.height;
+        if (currentViewY > highestViewY) {
+            highestViewY = currentViewY;
+        }
+    }
+    
+    // Add a bit of padding so the view doesn't end right at the button of the display
+    self.scrollView.contentSize = CGSizeMake(self.scrollView.contentSize.width, _parentStack.frame.size.height + GenericUtils.settingsMenuNavigationBarHeight + 20);
+    double delayInSeconds = 3;
+    // Convert the delay into a dispatch_time_t value
+    dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
+    // Perform some task after the delay
+    dispatch_after(delayTime, dispatch_get_main_queue(), ^{// Code to execute after the delay
+        // [self updateResolutionAccordingly];
+    });
+}
+
+// Adjust the subviews for the safe area on the iPhone X.
+- (void)viewSafeAreaInsetsDidChange {
+    [super viewSafeAreaInsetsDidChange];
+}
+
+// this will also be called back when device orientation changes
+- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
+    [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
+    if (@available(iOS 14.0, *)) {
+        if (self.usesSwiftUISettings) {
+            [self stopSwiftUISettingsScrollViewImmediately];
+            [coordinator animateAlongsideTransition:nil completion:^(__unused id<UIViewControllerTransitionCoordinatorContext> context) {
+                [self refreshSwiftUISettingsGeometry];
+            }];
+            return;
+        }
+    }
+    
+    double delayInSeconds = 0.7;
+    // Convert the delay into a dispatch_time_t value
+    dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
+    // Perform some task after the delay
+    dispatch_after(delayTime, dispatch_get_main_queue(), ^{// Code to execute after the delay
+        [self updateResolutionTable];
+    });
+}
+
+- (void)invokeOscLayout{
+    // init CustomOSC stuff
+    /* sets a reference to the correct 'LayoutOnScreenControlsViewController' depending on whether the user is on an iPhone or iPad */
+    // self.layoutOnScreenControlsVC = [[LayoutOnScreenControlsViewController alloc] init];
+    self.layoutOnScreenControlsVC = [self instantiateOscLayoutViewController];
+    if (self.layoutOnScreenControlsVC == nil) {
+        return;
+    }
+
+    self.layoutOnScreenControlsVC.view.backgroundColor = [UIColor colorWithWhite:0.55 alpha:1.0];
+    self.layoutOnScreenControlsVC.modalPresentationStyle = UIModalPresentationFullScreen;
+    [self presentViewController:self.layoutOnScreenControlsVC animated:YES completion:nil];
+}
+
+#else
+
+- (BOOL)canBecomeFocused {
+    return NO;
+}
+
+- (BOOL)shouldUpdateFocusInContext:(UIFocusUpdateContext *)context {
+    return VoidLinkTvOSShouldUpdateFocus(context, self.view.window);
+}
+
+#endif
+
+- (void)layoutSettingsView{
+    if (@available(iOS 14.0, *)) {
+        if (self.usesSwiftUISettings) {
+            [self.view setNeedsLayout];
+            [self.view layoutIfNeeded];
+            [self refreshSectionHitTesting];
+            return;
+        }
+    }
+    
+#if !TARGET_OS_TV
+    [self.scrollView layoutSubviews];
+    
+    //switchToAll/Favorite 调用此方法时，这些hiddenStack已身处新的superView中， 可以正常执行hidden = YES
+    for(UIStackView* stack in hiddenStacks) stack.hidden = YES;
+
+    if(self.currentSettingsMenuMode == AllSettings){
+        for(MenuSectionView* section in _parentStack.arrangedSubviews) [section updateViewForFoldState];
+    }
+    [self hideDynamicLabelsWhenOverlapped:self.parentStack];
+#endif
+}
+
+// UITextFieldDelegate
+- (BOOL)textFieldShouldBeginEditing:(UITextField *)textField {
+    if (GenericUtils.autoPopSoftKeyboard) {
+        return YES;
+    } else {
+        GenericUtils.autoPopSoftKeyboard = YES;
+        return NO;
+    }
+}
+
+- (void)updateTheme{
+    if (@available(iOS 14.0, *)) {
+        if (self.usesSwiftUISettings) {
+            self.view.backgroundColor = ThemeManager.menuBackgroundColor;
+            [self refreshSwiftUISettingsTheme];
+            return;
+        }
+    }
+    
+#if !TARGET_OS_TV
+    [self updateUIKitMenuTheme];
+#endif
+}
+
+- (void) saveSettings {
+    if (@available(iOS 14.0, *)) {
+        if (self.usesSwiftUISettings) {
+            [self persistSwiftUISettings];
+            return;
+        }
+    }
+    
+#if !TARGET_OS_TV
+    [self saveUIKitMenuSettings];
+#endif
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+
+
+
+#pragma mark UIKit-only codes
+
+#if !TARGET_OS_TV
+
+- (void)viewWillAppearUIKit {
+    settingsViewJustExpanded = true;
+
+    // Ensure codec-dependent switches are in correct state when view appears
+    // [self updateCodecDependentSwitches];
+
+    /*
+    [self checkAndRequestMicPermission];
+    self.micHandler = [MicHandler new];
+    [self.micHandler startTapping];
+    */
+
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(deviceOrientationDidChange:) // handle orientation change since i made portrait mode available
+                                                 name:UIDeviceOrientationDidChangeNotification
+                                               object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(updateTheme)
+                                                 name:ThemeManager.ThemeDidChangeNotification
+                                               object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(reloadGameProfileConfigsUIKit)
+                                                 name:@"GameProfileSelectorCloseNotification"
+                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(reloadGameProfileConfigsUIKit)
+                                                 name:@"GameProfileSelectedNotification"
+                                               object:nil];
+        
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(pencilProPurchaseAborted:)
+                                                 name:@"PencilProPurchaseAbortedNotification"
+                                               object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(pencilProPurchaseSucceeded:)
+                                                 name:@"PencilProPurchaseSucceededNotification"
+                                               object:nil];
+
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        if(self.mainFrameViewController.settingsExpandedInStreamView){
+            NSInteger responseCode = [self.mainFrameViewController requestForBitrate:self->_bitrate];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self widget:self.bitrateSlider setEnabled:responseCode == 200];
+            });
+        }
+        else dispatch_async(dispatch_get_main_queue(), ^{[self widget:self.bitrateSlider setEnabled:true];});
+    });
+    
+    if(self.currentSettingsMenuMode == AllSettings && MenuSectionView.overridePersistedFoldState){
+        for(UIView *subview in _parentStack.arrangedSubviews){
+            if([subview isKindOfClass:[MenuSectionView class]]){
+                MenuSectionView* section = (MenuSectionView* )subview;
+                [section setExpanded:YES];
+            }
+        }
+    }
+    
+    if(![self manuallyChangedFPS]) [self framerateChanged];
+    
+    /*
+    // self->motionControlSection.expandable = [self isCustomOswEnabled];
+    self->motionControlSection.expandable = true;
+    // [self->motionControlSection setExpanded:self->motionControlSection.expandable];
+    __weak typeof(self) weakSelf = self;
+    self->motionControlSection.lockedSectionHandler = ^{
+        [AlertControllerUtil showAlertIn:weakSelf
+                                        title:[LocalizationHelper localizedStringForKey:@"Tips"]
+                                      message:[LocalizationHelper localizedStringForKey:@"Tap 'OK' to set on-screen widget to 'Custom' and enable motion control."]
+                                   withCancel:YES
+                                  buttonTitle:[LocalizationHelper localizedStringForKey:@"OK"]
+                                    countdown:0
+                                       action:^{}
+                                   completion:^{
+            if(!AlertControllerUtil.actionCancelled){
+                weakSelf.onScreenWidgetSelector.selectedSegmentIndex = OnScreenControlsLevelCustom;
+                if(weakSelf.touchModeSelector1.selectedSegmentIndex == NativeTouch){
+                    [weakSelf.enableOswForNativeTouchSwitch setOn:true];
+                    [weakSelf enableOswForNativeTouchSwitchFlipped:weakSelf.enableOswForNativeTouchSwitch];
+                }
+                __strong typeof(weakSelf) strongSelf = weakSelf;
+                if (!strongSelf) return;
+                strongSelf->motionControlSection.expandable = true;
+                [strongSelf->motionControlSection setExpanded:YES];
+            }
+        }];
+    };
+    */
+    
+    [self reloadGameProfileConfigsUIKit];
+    
+    self->tempSettings = [self->dataMan getSettings];
+    
+    if(!settingsViewAlreadyAppeared){
+        _scrollView.contentOffset = CGPointMake(_scrollView.contentOffset.x, tempSettings.settingsMenuOffset.floatValue);
+        _scrollView.hidden = true;
+    }
+}
+
+- (void)viewDidAppearUIKit {
+    [self updateParentStackHorizontalConstraints];
+    
+    [self updateResolutionTable];
+    
+    [self.customResolutionSwitch addTarget:self action:@selector(customResolutionSwitched:) forControlEvents:UIControlEventValueChanged];
+    [self.customResolutionSwitch setOn: isCustomResolution(self->tempSettings.resolutionSelected.intValue)];
+    [self.resolutionSelector setEnabled:!self.customResolutionSwitch.isOn];
+    
+    [self touchModeChanged:self.touchModeSelector1]; // a special fix for iOS 14 to set hidden for the "enableOswStack"
+    
+    if(!settingsViewAlreadyAppeared) {
+        if(![self contentOffsetRestored]) _scrollView.contentOffset = CGPointMake(_scrollView.contentOffset.x, tempSettings.settingsMenuOffset.floatValue);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.view layoutIfNeeded];
+            [self updateResolutionTable];
+            [self updateInterpolationLevelSliderWithMaximumDimension:self->tempSettings.interpolationMaximumDimension.integerValue];
+            [self.streamDimensionScaleSlider sendActionsForControlEvents:UIControlEventValueChanged];
+        });
+    }
+    if(@available(iOS 13.0, *)) if(ControllerUtil.primaryGCController) [self restoreControllerNavigationHighlight];
+    
+    _scrollView.hidden = false;
+    
+    settingsViewJustExpanded = false;
+    settingsViewAlreadyAppeared = true;
+    
+    if (@available(iOS 13.0, *)) if(ControllerNavigator.radialMenuView.superview) [ControllerNavigator updateRadialMenu];
+
+}
+
+- (void)viewDidDisappearUIKit{
+    bool unlockDisplayOrientationFlipped = tempSettings.unlockDisplayOrientation != (_unlockDisplayOrientationSelector.selectedSegmentIndex == 1);
+    if(unlockDisplayOrientationFlipped) [_mainFrameViewController setNeedsUpdateAllowedOrientation]; // handle allow portratit on & off
+    if (@available(iOS 13.0, *)) if(ControllerNavigator.radialMenuView.superview) [ControllerNavigator updateRadialMenu];
+    
+    if(self.framePacingModeSelector.selectedSegmentIndex == FramePacingModeInterpolation) {
+        [VideoDecoderRenderer startOrRestartFrameInterpolation];
+    }
+    else {
+        [VideoDecoderRenderer stopFrameInterpolation];
+    }
+}
+
+- (void)switchToFavoriteSettingsUIKit {
+    [self forceRestoreHeightTemporarilyForSettingStackParentView];
+    [_parentStack removeFromSuperview];
+    self.currentSettingsMenuMode = FavoriteSettings;
+    [self initParentStack];
+    [self updateTheme];
+    Settings *currentSettings = [dataMan retrieveSettings];
+    currentSettings.settingsMenuMode = [NSNumber numberWithInteger:self.currentSettingsMenuMode];
+    [dataMan saveData];
+    
+    _parentStack.spacing = PublicUtils.isIPhone ? 10 : 12;
+    
+    [self loadFavoriteSettingStackIdentifiers];
+    for(NSString* settingIdentifier in _favoriteSettingStackIdentifiers){
+        [_parentStack addArrangedSubview:_settingStackDict[settingIdentifier]];
+    }
+    // hidden Stacks that does not belong to favorite stacks shall also be added secretely to avoid stack restoring bug
+    for(UIStackView* stack in hiddenStacks){
+        if(![_favoriteSettingStackIdentifiers containsObject:stack.accessibilityIdentifier]){
+            [_parentStack addArrangedSubview:stack];
+            stack.hidden = YES;
+        }
+    }
+
+    [self hideDynamicLabelsWhenOverlapped:self.parentStack];
+    [self layoutSettingsView];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (@available(iOS 13.0, *)) {
+            if(ControllerNavigator.radialMenuView.superview) [ControllerNavigator updateRadialMenu];
+            [GamepadNavigationIllustrationHud updateHudWithForceDisplay:false];
+            if(ControllerUtil.primaryGCController){
+                [ControllerNavigator restoreSettingsModeSwitchHighlight];
+            };
+        }
+    });
+}
+
+- (void)switchToAllSettingsUIKit {
+    [self forceRestoreHeightTemporarilyForSettingStackParentView];
+    self.currentSettingsMenuMode = AllSettings;
+    [_parentStack removeFromSuperview];
+    [self initParentStack];
+    [self layoutSections];
+    // [self updateCodecDependentSwitches]; // Ensure switches are in correct state after layout
+    [self updateTheme];
+        //[self doneRemoveSettingItem];
+    Settings *currentSettings = [dataMan retrieveSettings];
+    currentSettings.settingsMenuMode = [NSNumber numberWithInteger:self.currentSettingsMenuMode];
+    [dataMan saveData];
+    [self layoutSettingsView];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (@available(iOS 13.0, *)){
+            if(ControllerNavigator.radialMenuView.superview) [ControllerNavigator updateRadialMenu];
+            [GamepadNavigationIllustrationHud updateHudWithForceDisplay:false];
+            if(ControllerUtil.primaryGCController){
+                [ControllerNavigator restoreSettingsModeSwitchHighlight];
+            };
+        }
+    });
+}
+
+- (void)enterRemoveSettingItemModeUIKit {
+    self.currentSettingsMenuMode = RemoveSettingItem;
+    for(UIStackView* stack in _parentStack.arrangedSubviews){
+        for(UIView* view in stack.subviews){
+            if([view.accessibilityIdentifier isEqualToString:@"infoButton"]) view.hidden = YES;
+            // view.userInteractionEnabled = false;
+        }
+        [self attachRemoveButtonForStack:stack];
+        // stack.userInteractionEnabled = false;
+    }
+}
+
+- (void)doneRemoveSettingItemUIKit{
+    self.currentSettingsMenuMode = FavoriteSettings;
+    for(UIStackView* stack in _parentStack.arrangedSubviews){
+        //stack.userInteractionEnabled = true;
+        for(UIView* view in stack.subviews){
+            //view.
+            if([view.accessibilityIdentifier isEqualToString:@"infoButton"]) view.hidden = NO;
+            if([view.accessibilityIdentifier isEqualToString:@"removeButton"]) [view removeFromSuperview];
+        }
+    }
+}
+
+- (void)saveUIKitMenuSettings {
+    [self preSavingActions];
+
+    Settings* currentSettings = [dataMan retrieveSettings];
+    
+    [self populatePencilSettings:currentSettings];
+    
+    CGFloat settingsMenuOffset = _rememberFoldStateSwitch.isOn ? _scrollView.contentOffset.y : 0;
+    
+    CMVideoDimensions dimensions;
+    if (self.mainFrameViewController.isStreaming) {
+        dimensions.width = (int32_t)currentSettings.width.intValue;
+        dimensions.height = (int32_t)currentSettings.height.intValue;
+    } else {
+        dimensions = [self getChosenStreamDimensions];
+    }
+    NSInteger height = dimensions.height;
+    NSInteger width = dimensions.width;
+    
+    NSLog(@"saveSettings %d, %ld, %ld",self.mainFrameViewController.isStreaming, width, height);
+    
+    NSInteger framerate = [self getChosenFrameRate];
+
+    NSInteger audioConfig = [@[@2, @3, @6, @8][self.audioConfigSelector.selectedSegmentIndex] integerValue];
+    // 2 - stereo (system)
+    // 3 - stereo (SDL)
+    // 6 - 5.1 (SDL)
+    // 8 - 7.1 (SDL)
+
+    NSInteger renderingBackend = self.renderingBackendSelector.selectedSegmentIndex;
+    NSInteger framePacingMode = self.framePacingModeSelector.selectedSegmentIndex;
+    InterpolationResolutionConfiguration *interpolationConfiguration =
+        [self getCurrentInterpolationResolutionConfiguration];
+    NSInteger interpolationMaximumDimension = interpolationConfiguration.maximumDimension;
+    NSInteger interpolationMaximumPixelCount = interpolationConfiguration.maximumPixelCount;
+    CGFloat streamDimensionScale = self.streamDimensionScaleSlider.value;
+    NSInteger onscreenControls = self.onScreenWidgetSelector.selectedSegmentIndex;
+    NSInteger keyboardToggleFingers = self.softKeyboardGestureSelector.selectedSegmentIndex == 3 ? 20 : self.softKeyboardGestureSelector.selectedSegmentIndex+3;
+    NSInteger oscLayoutToolFingers = (uint16_t)self->oswLayoutFingers;
+
+    CGFloat slideToSettingsDistance = self.slideToMenuDistanceSlider.value;
+    uint32_t slideToSettingsScreenEdge = [self getScreenEdgeFromSelector];
+    CGFloat pointerVelocityModeDivider = (CGFloat)(uint8_t)self.pointerVelocityModeDividerSlider.value/100;
+    CGFloat touchPointerVelocityFactor = (CGFloat)(uint16_t)[self map_velocFactorDisplay_fromSliderValue:self.touchPointerVelocityFactorSlider.value]/100;
+    CGFloat mousePointerVelocityFactor = (CGFloat)(uint16_t)[self map_velocFactorDisplay_fromSliderValue:self.mousePointerVelocityFactorSlider.value]/100;
+    CGFloat gyroSensitivity = (CGFloat)(uint16_t)self.gyroSensitivitySlider.value/100;
+    
+    CGFloat localVolume = self.localVolumeSlider.value/100;
+    CGFloat micVolume = self.micVolumeSlider.value/100;
+
+    uint16_t touchMoveEventInterval = 0;
+
+    BOOL reverseMouseWheelDirection = self.reverseMouseWheelDirectionSelector.selectedSegmentIndex == 1;
+    NSInteger asyncNativeTouchPriority = 1;
+    //BOOL liftStreamViewForKeyboard = self.liftStreamViewForKeyboardSelector.selectedSegmentIndex == 1;
+    BOOL liftStreamViewForKeyboard = YES; // enable and hide this option
+    BOOL showKeyboardToolbar = self.softKeyboardToolbarSwitch.isOn;
+    BOOL optimizeGames = self.optimizeGamesSwitch.isOn;
+    BOOL multiController = self.multiControllerSwitch.isOn;
+    BOOL swapABXYButtons = self.swapAbxySwitch.isOn;
+    BOOL buttonVisualFeedback = self.buttonVisualFeedbackSwitch.isOn;
+    BOOL touchPointTracking = self.trackTouchPointSwitch.isOn;
+    NSInteger gyroMode = self.gyroModeSelector.selectedSegmentIndex;
+    NSInteger emulatedControllerType = [self segmentIndexToControllerType:self.emulatedControllerTypeSelector.selectedSegmentIndex]; //self.emulatedControllerTypeSelector.selectedSegmentIndex;
+    BOOL audioOnPC = self.audioOnPcSwitch.isOn;
+    BOOL redirectMic = self.redirectMicSwitch.isOn;
+    BOOL useBuiltinMic = self.useBuiltinMicSwitch.isOn;
+    uint32_t preferredCodec = [self getChosenCodecPreference];
+    BOOL enableYUV444 = self.yuv444Switch.isOn;
+    BOOL sdrPerformanceWorkaround = self.sdrPerformanceWorkaroundSwitch.isOn;
+    BOOL enablePIP = self.pipSwitch.isOn;
+    BOOL fullColorRange = self.fullColorRangeSwitch.isOn;
+    BOOL btMouseSupport = self.citrixX1MouseSwitch.isOn;
+    NSInteger touchMode = self.touchModeSelector1.selectedSegmentIndex;
+    NSInteger statsOverlayLevel = self.statsOverlaySelector.selectedSegmentIndex;
+    BOOL statsOverlayEnabled = statsOverlayLevel != 0;
+    BOOL enableHdr = self.hdrSwitch.isOn;
+    BOOL unlockDisplayOrientation = self.unlockDisplayOrientationSelector.selectedSegmentIndex == 1;
+    BOOL enableGraphs = self.enableGraphsSwitch.isOn;
+    int graphOpacity = (int)self.graphOpacityStepper.value;
+    int frameQueueSize = (int)self.frameQueueSizeSlider.value;
+    NSInteger resolutionSelected = self.resolutionSelector.selectedSegmentIndex;
+    if (self.customResolutionSwitch.isOn) {
+        resolutionSelected = RESOLUTION_TABLE_CUSTOM_INDEX;
+    }
+    NSInteger externalDisplayMode = self.externalDisplayModeSelector.selectedSegmentIndex;
+    NSInteger localMousePointerMode = self.localMousePointerModeSelector.selectedSegmentIndex;
+    BOOL sendDummyEvent = self.sendDummyEventSwitch.isOn;
+    BOOL rememberFoldState = self.rememberFoldStateSwitch.isOn;
+    CGFloat singleTapSensitivity = self.singleTapSensitivitySlider.value;
+    NSInteger hapticEngine = self.hapticEngineSelector.selectedSegmentIndex;
+    CGFloat edgeSlidingSensitivity = self.edgeSlidingSensitivitySlider.value;
+    NSInteger audioEngine = self.audioEngineSelector.selectedSegmentIndex;
+    BOOL delayLeftClick = self.delayLeftClickSwitch.isOn;
+    // BOOL delayLeftClick = true;
+    BOOL duckOtherApps = self.duckOtherAppSwitch.isOn;
+    BOOL muteInBackground = self.muteInBackgroundSwitch.isOn;
+    CGFloat relativeTouchSlideThreshold = self.relativeTouchSlideThresholdSlider.value;
+    BOOL enablePinch = self.pinchGestureSwitch.isOn;
+    CGFloat scrollSensitivity = self.scrollSensitivitySlider.value;
+    CGFloat pinchSensitivity = self.pinchSensitivitySlider.value;
+    BOOL ctrlDownForPinch = self.ctrlDownForPinchSwitch.isOn;
+    CGFloat leftClickDelayMs = self.leftClickDelaySlider.value;
+    BOOL passthroughGestures = self.passthroughGesturesSwitch.isOn;
+    BOOL enableControllerNavigation = self.controllerNavigationSwitch.isOn;
+    CGFloat controllerMousePointerVelocity = self.controllerMouseVelocitySlider.value;
+    CGFloat controllerMouseExpo = self.controllerMouseExpoSlider.value;
+    NSInteger controllerGyroSwitchMode = self.controllerGyroSwitchButtonSetter.selectedSegmentIndex;
+    BOOL enableFrameTimebase = false;
+    BOOL asyncFrameDequeue = self.asyncFrameDequeueSwitch.isOn;
+    CGFloat softKeyboardHeight = self.softKeyboardHeightSwitch.isOn ? self->softKeyboardHeight : 0;
+    BOOL globeAsEscape = self.globeAsEscapeSwitch.isOn;
+    CGFloat streamingRadialMenuDelay = self.streamingRadialMenuDelaySlider.value;
+    NSInteger backgroundSessionTimer = self.backgroundSessionTimerSlider.value == self.backgroundSessionTimerSlider.maximumValue ? (uint32_t) INT16_MAX : (uint32_t)self.backgroundSessionTimerSlider.value;
+
+    [dataMan saveSettings:currentSettings
+                         withBitrate:_bitrate
+                           framerate:framerate
+                              height:height
+                               width:width
+                         audioConfig:audioConfig
+                    onscreenControls:onscreenControls
+                            gyroMode:gyroMode
+              emulatedControllerType:emulatedControllerType
+               keyboardToggleFingers:keyboardToggleFingers
+                oscLayoutToolFingers:oscLayoutToolFingers
+           slideToSettingsScreenEdge:slideToSettingsScreenEdge
+             slideToSettingsDistance:slideToSettingsDistance
+          pointerVelocityModeDivider:pointerVelocityModeDivider
+          touchPointerVelocityFactor:touchPointerVelocityFactor
+          mousePointerVelocityFactor:mousePointerVelocityFactor
+                     gyroSensitivity:gyroSensitivity
+                         localVolume:localVolume
+                           micVolume:micVolume
+              touchMoveEventInterval:touchMoveEventInterval
+          reverseMouseWheelDirection:reverseMouseWheelDirection
+            asyncNativeTouchPriority:asyncNativeTouchPriority
+           liftStreamViewForKeyboard:liftStreamViewForKeyboard
+                 showKeyboardToolbar:showKeyboardToolbar
+                       optimizeGames:optimizeGames
+                     multiController:multiController
+                buttonVisualFeedback:buttonVisualFeedback
+                  touchPointTracking:touchPointTracking
+                     swapABXYButtons:swapABXYButtons
+                           audioOnPC:audioOnPC
+                         redirectMic:redirectMic
+                       useBuiltinMic:useBuiltinMic
+                      preferredCodec:preferredCodec
+                        enableYUV444:enableYUV444
+                           enablePIP:enablePIP
+                      fullColorRange:fullColorRange
+                           enableHdr:enableHdr
+                      btMouseSupport:btMouseSupport
+                           touchMode:touchMode
+                   statsOverlayLevel:statsOverlayLevel
+                 statsOverlayEnabled:statsOverlayEnabled
+            unlockDisplayOrientation:unlockDisplayOrientation
+                  resolutionSelected:resolutionSelected
+                 externalDisplayMode:externalDisplayMode
+               localMousePointerMode:localMousePointerMode
+                      frameQueueSize:frameQueueSize
+                        enableGraphs:enableGraphs
+                        graphOpacity:graphOpacity
+                    renderingBackend:renderingBackend
+                     framePacingMode:framePacingMode
+       interpolationMaximumDimension:interpolationMaximumDimension
+      interpolationMaximumPixelCount:interpolationMaximumPixelCount
+                streamDimensionScale:streamDimensionScale
+                      sendDummyEvent:sendDummyEvent
+                   rememberFoldState:rememberFoldState
+                  singleTapSensitivy:singleTapSensitivity
+                        hapticEngine:hapticEngine
+              edgeSlidingSensitivity:edgeSlidingSensitivity
+                         audioEngine:audioEngine
+                     delayLeftClick:delayLeftClick
+                       duckOtherApps:duckOtherApps
+                    muteInBackground:muteInBackground
+         relativeTouchSlideThreshold:relativeTouchSlideThreshold
+                         enablePinch:enablePinch
+                   scrollSensitivity:scrollSensitivity
+                    pinchSensitivity:pinchSensitivity
+                    ctrlDownForPinch:ctrlDownForPinch
+                    leftClickDelayMs:leftClickDelayMs
+                  settingsMenuOffset:settingsMenuOffset
+                 passthroughGestures:passthroughGestures
+          enableControllerNavigation:enableControllerNavigation
+      controllerMousePointerVelocity:controllerMousePointerVelocity
+                 controllerMouseExpo:controllerMouseExpo
+            controllerGyroSwitchMode:controllerGyroSwitchMode
+                 enableFrameTimebase:enableFrameTimebase
+                   asyncFrameDequeue:asyncFrameDequeue
+            sdrPerformanceWorkaround:sdrPerformanceWorkaround
+                  softKeyboardHeight:softKeyboardHeight
+                      globeAsEscape:globeAsEscape
+           streamingRadialMenuDelay:streamingRadialMenuDelay
+              backgroundSessionTimer:backgroundSessionTimer];
+    
+    if(_bitrate >= 50000) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [GenericUtils handleFirstSettingHighBitrateIn:self handler:^{
+                if(AlertControllerUtil.actionCancelled){
+                    [PublicUtils openUrl:[LocalizationHelper localizedStringForKey:@"awdlTipLink"]];
+                }
+            }];
+        });
+    }
+
+}
+
+- (void)updateUIKitMenuTheme {
+    self.view.backgroundColor = [UIColor clearColor];
+    self.view.backgroundColor = ThemeManager.menuBackgroundColor;
+    [self updateThemeForMenuSections:self.view];
+    [self updateThemeForLabels:self.view];
+    [self updateThemeForSelectors:self.view];
+    [self updateThemeForSliders:self.view];
+    if(PublicUtils.liquidGlassEnabled) [self updateThemeForSwitches:self.view];
+}
+
 - (MenuSectionView *)touchControlSection {
     return touchControlSection;
 }
-
 
 //static NSString* bitrateFormat;
 static const int bitrateTable[] = {
@@ -211,14 +1195,20 @@ CMVideoDimensions resolutionTable[RESOLUTION_TABLE_SIZE];
 -(uint16_t)controllerTypeToSegmentIndex:(uint16_t)type{
     uint16_t index;
     switch (type) {
-        case LI_CTYPE_XBOX:
+        case ControllerEmulationXbox:
             index = 0;
             break;
-        case LI_CTYPE_PS:
+        case ControllerEmulationPs:
             index = 1;
             break;
-        default:
+        case ControllerEmulationPsEnhancedHaptic:
             index = 2;
+            break;
+        case ControllerEmulationXboxAndPs:
+            index = 3;
+            break;
+        default:
+            index = 3;
             break;
     }
     return index;
@@ -228,10 +1218,16 @@ CMVideoDimensions resolutionTable[RESOLUTION_TABLE_SIZE];
     uint16_t type;
     switch (index) {
         case 0:
-            type = LI_CTYPE_XBOX;
+            type = ControllerEmulationXbox;
             break;
         case 1:
-            type = LI_CTYPE_PS;
+            type = ControllerEmulationPs;
+            break;
+        case 2:
+            type = ControllerEmulationPsEnhancedHaptic;
+            break;
+        case 3:
+            type = ControllerEmulationXboxAndPs;
             break;
         default:
             type = LI_CTYPE_UNKNOWN;
@@ -251,47 +1247,6 @@ CMVideoDimensions resolutionTable[RESOLUTION_TABLE_SIZE];
     
     // Return the last entry in the table
     return i - 1;
-}
-
-// This view is rooted at a ScrollView. To make it scrollable,
-// we'll update content size here.
--(void)viewDidLayoutSubviews {
-    CGFloat highestViewY = 0;
-    
-    // Enumerate the scroll view's subviews looking for the
-    // highest view Y value to set our scroll view's content
-    // size.
-    
-    for (UIView* view in self.scrollView.subviews) {
-        // UIScrollViews have 2 default child views
-        // which represent the horizontal and vertical scrolling
-        // indicators. Ignore any views we don't recognize.
-        if (![view isKindOfClass:[UILabel class]] &&
-            ![view isKindOfClass:[UISegmentedControl class]] &&
-            ![view isKindOfClass:[UISlider class]]) {
-            continue;
-        }
-        
-        CGFloat currentViewY = view.frame.origin.y + view.frame.size.height;
-        if (currentViewY > highestViewY) {
-            highestViewY = currentViewY;
-        }
-    }
-    
-    // Add a bit of padding so the view doesn't end right at the button of the display
-    self.scrollView.contentSize = CGSizeMake(self.scrollView.contentSize.width, _parentStack.frame.size.height + GenericUtils.settingsMenuNavigationBarHeight + 20);
-    double delayInSeconds = 3;
-    // Convert the delay into a dispatch_time_t value
-    dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
-    // Perform some task after the delay
-    dispatch_after(delayTime, dispatch_get_main_queue(), ^{// Code to execute after the delay
-        // [self updateResolutionAccordingly];
-    });
-}
-
-// Adjust the subviews for the safe area on the iPhone X.
-- (void)viewSafeAreaInsetsDidChange {
-    [super viewSafeAreaInsetsDidChange];
 }
 
 BOOL isCustomResolution(int resolutionSelected) {
@@ -314,7 +1269,7 @@ BOOL isCustomResolution(int resolutionSelected) {
 }
 
 - (bool)isAirPlayEnabled{
-    return self.externalDisplayModeSelector.selectedSegmentIndex == 1;
+    return self.externalDisplayModeSelector.selectedSegmentIndex == ExternalDisplayModeExtended;
 }
 
 - (void)updateResolutionTable{
@@ -341,19 +1296,6 @@ BOOL isCustomResolution(int resolutionSelected) {
             NSLog(@"AVAudioSessionRecordPermissionDenied");
     }*/
 }
- 
-// this will also be called back when device orientation changes
-- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
-    [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
-    double delayInSeconds = 0.7;
-    // Convert the delay into a dispatch_time_t value
-    dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
-    // Perform some task after the delay
-    dispatch_after(delayTime, dispatch_get_main_queue(), ^{// Code to execute after the delay
-        [self updateResolutionTable];
-    });
-}
-
 
 - (void)micHandlerDidFinishPlayback:(MicHandler *)handler {
     NSLog(@"Playback finished");
@@ -363,7 +1305,7 @@ BOOL isCustomResolution(int resolutionSelected) {
     NSLog(@"Mic error: %@", error);
 }
 
-- (void)reloadGameProfileConfigs{
+- (void)reloadGameProfileConfigsUIKit{
     oscProfile = [oscProfileMan getSelectedProfile];
     
     // this part will enable/disable oscSelector & the asyncNativeTouchPriority selector
@@ -374,8 +1316,8 @@ BOOL isCustomResolution(int resolutionSelected) {
     [self.touchModeSelector2 addTarget:self action:@selector(touchMode2Changed:) forControlEvents:UIControlEventValueChanged];
     self.touchModeSelector2.selectedSegmentIndex = self.touchModeSelector1.selectedSegmentIndex;
     
-    [self.enableOswForNativeTouchSwitch setOn:oscProfile.touchMode != NativeTouchOnly];
-    [self.enableOswForNativeTouchSwitch sendActionsForControlEvents:UIControlEventValueChanged];
+    // [self.enableOswForNativeTouchSwitch setOn:oscProfile.touchMode != NativeTouchOnly];
+    // [self.enableOswForNativeTouchSwitch sendActionsForControlEvents:UIControlEventValueChanged];
 
     [self.pointerVelocityModeDividerSlider setValue: (uint8_t)(oscProfile.pointerVelocityModeDivider * 100) animated:NO]; // Load old setting.
     [self.pointerVelocityModeDividerSlider sendActionsForControlEvents:UIControlEventValueChanged]; // Load old setting.
@@ -428,6 +1370,9 @@ BOOL isCustomResolution(int resolutionSelected) {
 
     [self.synthPhysicalInputSwitch setOn:oscProfile.synthesizePhysicalStick];
     
+    [self.dualSenseTransientSlider setValue:oscProfile.dualSenseTransient];
+    [self.dualSenseTransientSlider sendActionsForControlEvents:UIControlEventValueChanged];
+    
     [self.pressureCurveSwitch setOn:oscProfile.pressureCurveEnabled];
     [self.doubleTapShortcutSwitch setOn:oscProfile.doubleTapShorcutEnabled];
     [self.squeezeShortcutSwitch setOn:oscProfile.squeezeShorcutEnabled];
@@ -436,13 +1381,13 @@ BOOL isCustomResolution(int resolutionSelected) {
     self.pencilModeSelector.selectedSegmentIndex = oscProfile.pencilAndHoverMode;
 }
 
-- (void)saveGameProfileConfigs{
+- (void)saveGameProfileConfigsUIKit{
     
     CGFloat touchPointerVelocityFactorPercent = [self map_velocFactorDisplay_fromSliderValue:self.touchPointerVelocityFactorSlider.value];
     CGFloat yawSensitivityPercent = [self map_velocFactorDisplay_fromSliderValue:self.yawSensitivitySlider.value];
     CGFloat pitchSensitivityPercent = [self map_velocFactorDisplay_fromSliderValue:self.pitchSensitivitySlider.value];
     CGFloat rollSensitivityPercent = [self map_velocFactorDisplay_fromSliderValue:self.rollSensitivitySlider.value];
-    TouchMode touchMode = [self isNotNativeTouchOnly] ? self.touchModeSelector1.selectedSegmentIndex : NativeTouchOnly;
+    TouchMode touchMode = self.touchModeSelector1.selectedSegmentIndex;
     bool leftStickMinOffsetSliderNotMoved = (int16_t)(oscProfile.physicalLeftStickMinOffset) == (int16_t)self.leftStickMinOffsetSlider.value;
     bool rightStickMinOffsetSliderNotMoved = (int16_t)(oscProfile.physicalRightStickMinOffset) == (int16_t)self.rightStickMinOffsetSlider.value;
 
@@ -461,6 +1406,7 @@ BOOL isCustomResolution(int resolutionSelected) {
                              && (int16_t)(oscProfile.gyroSensitivityPitch*100) == (int16_t)pitchSensitivityPercent
                              && (int16_t)(oscProfile.gyroSensitivityRoll*100) == (int16_t)rollSensitivityPercent
                              && (int16_t)(oscProfile.gyroToStickMinOffset) == (int16_t)self.gyroToStickMinOffsetSlider.value
+                             && (int16_t)(oscProfile.dualSenseTransient*100) == (int16_t)(self.dualSenseTransientSlider.value*100)
                              && oscProfile.synthesizePhysicalStick == self.synthPhysicalInputSwitch.isOn
                              && oscProfile.controllerGyroSwitchMode == self.controllerGyroSwitchButtonSetter.selectedSegmentIndex
                              && oscProfile.reverseGyroHoldButton == self.reverseHoldButtonSwitch.isOn
@@ -488,6 +1434,7 @@ BOOL isCustomResolution(int resolutionSelected) {
         oscProfile.gyroSensitivityPitch = pitchSensitivityPercent/100;
         oscProfile.gyroSensitivityRoll = rollSensitivityPercent/100;
         oscProfile.gyroToStickMinOffset = (int16_t)self.gyroToStickMinOffsetSlider.value;
+        oscProfile.dualSenseTransient = self.dualSenseTransientSlider.value;
         oscProfile.synthesizePhysicalStick = self.synthPhysicalInputSwitch.isOn;
         oscProfile.controllerGyroSwitchMode = (int)self.controllerGyroSwitchButtonSetter.selectedSegmentIndex;
         oscProfile.reverseGyroHoldButton = self.reverseHoldButtonSwitch.isOn;
@@ -515,246 +1462,6 @@ BOOL isCustomResolution(int resolutionSelected) {
 - (bool)contentOffsetRestored{
     return fabs(_scrollView.contentOffset.y - tempSettings.settingsMenuOffset.floatValue)<2;
 }
-
-- (void)viewWillAppear:(BOOL)animated{
-    [super viewWillAppear:NO];
-
-    settingsViewJustExpanded = true;
-
-    // Ensure codec-dependent switches are in correct state when view appears
-    // [self updateCodecDependentSwitches];
-
-    /*
-    [self checkAndRequestMicPermission];
-    self.micHandler = [MicHandler new];
-    [self.micHandler startTapping];
-    */
-
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(deviceOrientationDidChange:) // handle orientation change since i made portrait mode available
-                                                 name:UIDeviceOrientationDidChangeNotification
-                                               object:nil];
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(updateTheme)
-                                                 name:ThemeManager.ThemeDidChangeNotification
-                                               object:nil];
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(reloadGameProfileConfigs)
-                                                 name:@"GameProfileSelectorCloseNotification"
-                                               object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(reloadGameProfileConfigs)
-                                                 name:@"GameProfileSelectedNotification"
-                                               object:nil];
-        
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(pencilProPurchaseAborted:)
-                                                 name:@"PencilProPurchaseAbortedNotification"
-                                               object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(pencilProPurchaseSucceeded:)
-                                                 name:@"PencilProPurchaseSucceededNotification"
-                                               object:nil];
-
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-        if(self.mainFrameViewController.settingsExpandedInStreamView){
-            NSInteger responseCode = [self.mainFrameViewController requestForBitrate:self->_bitrate];
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [self widget:self.bitrateSlider setEnabled:responseCode == 200];
-            });
-        }
-        else dispatch_async(dispatch_get_main_queue(), ^{[self widget:self.bitrateSlider setEnabled:true];});
-    });
-    
-    if(self.currentSettingsMenuMode == AllSettings && MenuSectionView.overridePersistedFoldState){
-        for(UIView *subview in _parentStack.arrangedSubviews){
-            if([subview isKindOfClass:[MenuSectionView class]]){
-                MenuSectionView* section = (MenuSectionView* )subview;
-                [section setExpanded:YES];
-            }
-        }
-    }
-    
-    if(![self manuallyChangedFPS]) [self framerateChanged];
-    
-    /*
-    // self->motionControlSection.expandable = [self isCustomOswEnabled];
-    self->motionControlSection.expandable = true;
-    // [self->motionControlSection setExpanded:self->motionControlSection.expandable];
-    __weak typeof(self) weakSelf = self;
-    self->motionControlSection.lockedSectionHandler = ^{
-        [AlertControllerUtil showAlertIn:weakSelf
-                                        title:[LocalizationHelper localizedStringForKey:@"Tips"]
-                                      message:[LocalizationHelper localizedStringForKey:@"Tap 'OK' to set on-screen widget to 'Custom' and enable motion control."]
-                                   withCancel:YES
-                                  buttonTitle:[LocalizationHelper localizedStringForKey:@"OK"]
-                                    countdown:0
-                                       action:^{}
-                                   completion:^{
-            if(!AlertControllerUtil.actionCancelled){
-                weakSelf.onScreenWidgetSelector.selectedSegmentIndex = OnScreenControlsLevelCustom;
-                if(weakSelf.touchModeSelector1.selectedSegmentIndex == NativeTouch){
-                    [weakSelf.enableOswForNativeTouchSwitch setOn:true];
-                    [weakSelf enableOswForNativeTouchSwitchFlipped:weakSelf.enableOswForNativeTouchSwitch];
-                }
-                __strong typeof(weakSelf) strongSelf = weakSelf;
-                if (!strongSelf) return;
-                strongSelf->motionControlSection.expandable = true;
-                [strongSelf->motionControlSection setExpanded:YES];
-            }
-        }];
-    };
-    */
-    
-    [self reloadGameProfileConfigs];
-    
-    self->tempSettings = [self->dataMan getSettings];
-    
-    if(!settingsViewAlreadyAppeared){
-        _scrollView.contentOffset = CGPointMake(_scrollView.contentOffset.x, tempSettings.settingsMenuOffset.floatValue);
-        _scrollView.hidden = true;
-    }
-}
-
-- (void)viewDidAppear:(BOOL)animated{
-    [super viewDidAppear:NO];
-    
-    [self updateParentStackHorizontalConstraints];
-    
-    [self updateResolutionTable];
-    
-    [self.customResolutionSwitch addTarget:self action:@selector(customResolutionSwitched:) forControlEvents:UIControlEventValueChanged];
-    [self.customResolutionSwitch setOn: isCustomResolution(self->tempSettings.resolutionSelected.intValue)];
-    [self.resolutionSelector setEnabled:!self.customResolutionSwitch.isOn];
-    
-    [self touchModeChanged:self.touchModeSelector1]; // a special fix for iOS 14 to set hidden for the "enableOswStack"
-    
-    if(!settingsViewAlreadyAppeared) {
-        if(![self contentOffsetRestored]) _scrollView.contentOffset = CGPointMake(_scrollView.contentOffset.x, tempSettings.settingsMenuOffset.floatValue);
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self.view layoutIfNeeded];
-            [self updateResolutionTable];
-            [self updateInterpolationLevelSliderWithMaximumDimension:self->tempSettings.interpolationMaximumDimension.integerValue];
-            [self.streamDimensionScaleSlider sendActionsForControlEvents:UIControlEventValueChanged];
-        });
-    }
-    if(@available(iOS 13.0, *)) if(ControllerUtil.primaryGCController) [self restoreControllerNavigationHighlight];
-    
-    _scrollView.hidden = false;
-    
-    settingsViewJustExpanded = false;
-    settingsViewAlreadyAppeared = true;
-    
-    if (@available(iOS 13.0, *)) if(ControllerNavigator.radialMenuView.superview) [ControllerNavigator updateRadialMenu];
-}
-
-- (void)viewWillDisappear:(BOOL)animated{
-    [super viewWillDisappear:animated];
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
-}
-
-- (void)viewDidDisappear:(BOOL)animated{
-    [super viewDidDisappear:NO];
-    [[NSNotificationCenter defaultCenter] postNotificationName:@"SettingsViewClosedNotification" object:self]; // notify other view that settings view just closed
-    
-    bool unlockDisplayOrientationFlipped = tempSettings.unlockDisplayOrientation != (_unlockDisplayOrientationSelector.selectedSegmentIndex == 1);
-    if(unlockDisplayOrientationFlipped) [_mainFrameViewController setNeedsUpdateAllowedOrientation]; // handle allow portratit on & off
-    if (@available(iOS 13.0, *)) if(ControllerNavigator.radialMenuView.superview) [ControllerNavigator updateRadialMenu];
-    
-    if(self.framePacingModeSelector.selectedSegmentIndex == FramePacingModeInterpolation) {
-        [VideoDecoderRenderer startOrRestartFrameInterpolation];
-    }
-    else {
-        [VideoDecoderRenderer stopFrameInterpolation];
-    }
-}
-
-
-- (SettingsMenuMode)getSettingsMenuMode{
-    return self.currentSettingsMenuMode;
-}
-
-- (void)edgeSwiped {
-    [self.mainFrameViewController closeSettingViewAnimated:YES];
-}
-
-- (BOOL)isIPhone {
-    return [UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPhone;
-}
-
-- (void)initParentStack{
-    self.scrollView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentAutomatic;
-    self.scrollView.delegate = self;
-    // 可选：确保 scrollView 开启垂直滚动
-    self.scrollView.alwaysBounceVertical = YES;
-    self.scrollView.showsVerticalScrollIndicator = NO;
-
-    _parentStack = [[UIStackView alloc] init];
-    _parentStack.axis = UILayoutConstraintAxisVertical;
-    _parentStack.spacing = 0;
-    _parentStack.translatesAutoresizingMaskIntoConstraints = NO;
-    
-    if(!_parentStack.superview){
-        [self.scrollView addSubview:_parentStack];
-        [NSLayoutConstraint activateConstraints:@[
-            [_parentStack.topAnchor constraintEqualToAnchor:self.scrollView.contentLayoutGuide.topAnchor constant: self.currentSettingsMenuMode == AllSettings ? GenericUtils.settingsMenuNavigationBarHeight : GenericUtils.settingsMenuNavigationBarHeight+10],
-            [_parentStack.bottomAnchor constraintEqualToAnchor:self.scrollView.contentLayoutGuide.bottomAnchor constant:-20],
-        ]];
-    }
-    
-    [self updateParentStackHorizontalConstraints];
-}
-
--(void)deviceOrientationDidChange:(NSNotification *)notification {
-    [self updateParentStackHorizontalConstraints];
-}
-
-- (void)updateParentStackHorizontalConstraints{
-    if(![self isIPhone]){
-        if(parentStackCenterXConstraint && parentStackWidthConstraint) [NSLayoutConstraint deactivateConstraints:@[parentStackCenterXConstraint, parentStackWidthConstraint]];
-        parentStackCenterXConstraint = [_parentStack.centerXAnchor constraintEqualToAnchor:self.view.centerXAnchor constant: 0]; //mark: settingMenuLayout
-        parentStackWidthConstraint = [_parentStack.widthAnchor constraintEqualToAnchor:self.view.widthAnchor constant:-20]; // section width adjusted here
-        [NSLayoutConstraint activateConstraints:@[parentStackCenterXConstraint, parentStackWidthConstraint]];
-        return;
-    }
-    
-    UIWindow *keyWindow = [UIApplication sharedApplication].windows.firstObject;
-    
-    if (@available(iOS 13.0, *)) {
-        if(parentStackWidthConstraint && parentStackLeadingConstraint) [NSLayoutConstraint deactivateConstraints:@[parentStackLeadingConstraint, parentStackWidthConstraint]];
-        
-        UIWindowScene *activeScene = (UIWindowScene *)[UIApplication sharedApplication].connectedScenes.allObjects.firstObject;
-        UIInterfaceOrientation currentOrientation;
-        if (activeScene.activationState == UISceneActivationStateForegroundActive) {
-            currentOrientation = activeScene.interfaceOrientation;
-        }
-        else currentOrientation = keyWindow.windowScene.interfaceOrientation;
-        
-        if(parentStackLeadingConstraint && parentStackWidthConstraint) [NSLayoutConstraint deactivateConstraints:@[parentStackLeadingConstraint, parentStackWidthConstraint]];
-        switch (currentOrientation) {
-            case UIInterfaceOrientationLandscapeRight:
-                parentStackLeadingConstraint = [_parentStack.leadingAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.leadingAnchor constant:0];
-                parentStackWidthConstraint = [_parentStack.widthAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.widthAnchor constant:-10];
-                break;
-            default:
-                parentStackLeadingConstraint = [_parentStack.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor constant:10];
-                parentStackWidthConstraint = [_parentStack.widthAnchor constraintEqualToAnchor:self.view.widthAnchor constant:-20];
-                break;
-        }
-        [NSLayoutConstraint activateConstraints:@[parentStackLeadingConstraint, parentStackWidthConstraint]];
-    } else {
-        // Fallback on earlier versions
-    }
-        
-    double delayInSeconds = 0.05;
-    dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
-    dispatch_after(popTime, dispatch_get_main_queue(), ^{
-        [self hideOverlappedDynamicLabels];
-    });
-}
-
 
 - (UIButton* )findInfoButtonFromStack:(UIStackView* )stack{
     UIButton* button;
@@ -996,6 +1703,11 @@ BOOL isCustomResolution(int resolutionSelected) {
     self.emulatedControllerTypeStack.hasInfoTag = YES;
     // self.emulatedControllerTypeStack.isGameProfileSetting = YES;
     [self addSetting:self.emulatedControllerTypeStack ofId:@"emulatedControllerTypeStack" to:controllerSection];
+    
+    self.dualSenseTransientStack.hasInfoTag = YES;
+    self.dualSenseTransientStack.isGameProfileSetting = YES;
+    self.dualSenseTransientStack.hasDynamicLabel = YES;
+    [self addSetting:self.dualSenseTransientStack ofId:@"dualSenseTransientStack" to:controllerSection];
 
     self.gyroModeStack.hasInfoTag = YES;
     // self.gyroModeStack.isGameProfileSetting = YES;
@@ -1274,11 +1986,6 @@ BOOL isCustomResolution(int resolutionSelected) {
     [experimentalSection addToParentStack:_parentStack];
 }
 
-- (void)expandGamepadSection {
-    if(_currentSettingsMenuMode == FavoriteSettings) [self switchToAllSettings];
-    [controllerSection setExpanded:true];
-}
-
 - (void)handleAutoScroll:(CGPoint)location{
     bool scrollDown = location.y > self.view.bounds.size.height - 100;
     bool scrollUp = location.y < 150;
@@ -1481,7 +2188,7 @@ BOOL isCustomResolution(int resolutionSelected) {
         [self addSettingToFavorite:self->capturedStack];
         self->capturedStack.backgroundColor = [UIColor clearColor];
     }];
-    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:[self isIPhone] ? [LocalizationHelper localizedStringForKey:@"Cancel"] : @""
+    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:PublicUtils.isIPhone ? [LocalizationHelper localizedStringForKey:@"Cancel"] : @""
                                                             style:UIAlertActionStyleCancel
                                                           handler:^(UIAlertAction * _Nonnull action) {
         self->capturedStack.backgroundColor = [UIColor clearColor];
@@ -1914,17 +2621,6 @@ BOOL isCustomResolution(int resolutionSelected) {
     [self saveFavoriteSettingStackIdentifiers];
 }
 
-- (void)layoutSettingsView{
-    [self.scrollView layoutSubviews];
-    
-    //switchToAll/Favorite 调用此方法时，这些hiddenStack已身处新的superView中， 可以正常执行hidden = YES
-    for(UIStackView* stack in hiddenStacks) stack.hidden = YES;
-
-    if(self.currentSettingsMenuMode == AllSettings){
-        for(MenuSectionView* section in _parentStack.arrangedSubviews) [section updateViewForFoldState];
-    }
-    [self hideDynamicLabelsWhenOverlapped:self.parentStack];
-}
 
 // 旧版本iOS兼容必要
 - (void)forceRestoreHeightTemporarilyForSettingStackParentView{
@@ -1947,90 +2643,7 @@ BOOL isCustomResolution(int resolutionSelected) {
     }
 }
 
-- (void)switchToFavoriteSettings{
-    [self forceRestoreHeightTemporarilyForSettingStackParentView];
-    [_parentStack removeFromSuperview];
-    self.currentSettingsMenuMode = FavoriteSettings;
-    [self initParentStack];
-    [self updateTheme];
-    Settings *currentSettings = [dataMan retrieveSettings];
-    currentSettings.settingsMenuMode = [NSNumber numberWithInteger:self.currentSettingsMenuMode];
-    [dataMan saveData];
-    
-    _parentStack.spacing = [self isIPhone] ? 10 : 12;
-    
-    [self loadFavoriteSettingStackIdentifiers];
-    for(NSString* settingIdentifier in _favoriteSettingStackIdentifiers){
-        [_parentStack addArrangedSubview:_settingStackDict[settingIdentifier]];
-    }
-    // hidden Stacks that does not belong to favorite stacks shall also be added secretely to avoid stack restoring bug
-    for(UIStackView* stack in hiddenStacks){
-        if(![_favoriteSettingStackIdentifiers containsObject:stack.accessibilityIdentifier]){
-            [_parentStack addArrangedSubview:stack];
-            stack.hidden = YES;
-        }
-    }
 
-    [self hideDynamicLabelsWhenOverlapped:self.parentStack];
-    [self layoutSettingsView];
-    dispatch_async(dispatch_get_main_queue(), ^{
-        if (@available(iOS 13.0, *)) {
-            if(ControllerNavigator.radialMenuView.superview) [ControllerNavigator updateRadialMenu];
-            [GamepadNavigationIllustrationHud updateHudWithForceDisplay:false];
-            if(ControllerUtil.primaryGCController){
-                [ControllerNavigator restoreSettingsModeSwitchHighlight];
-            };
-        }
-    });
-}
-
-- (void)switchToAllSettings{
-    [self forceRestoreHeightTemporarilyForSettingStackParentView];
-    self.currentSettingsMenuMode = AllSettings;
-    [_parentStack removeFromSuperview];
-    [self initParentStack];
-    [self layoutSections];
-    // [self updateCodecDependentSwitches]; // Ensure switches are in correct state after layout
-    [self updateTheme];
-        //[self doneRemoveSettingItem];
-    Settings *currentSettings = [dataMan retrieveSettings];
-    currentSettings.settingsMenuMode = [NSNumber numberWithInteger:self.currentSettingsMenuMode];
-    [dataMan saveData];
-    [self layoutSettingsView];
-    dispatch_async(dispatch_get_main_queue(), ^{
-        if (@available(iOS 13.0, *)){
-            if(ControllerNavigator.radialMenuView.superview) [ControllerNavigator updateRadialMenu];
-            [GamepadNavigationIllustrationHud updateHudWithForceDisplay:false];
-            if(ControllerUtil.primaryGCController){
-                [ControllerNavigator restoreSettingsModeSwitchHighlight];
-            };
-        }
-    });
-}
-
-- (void)enterRemoveSettingItemMode{
-    self.currentSettingsMenuMode = RemoveSettingItem;
-    for(UIStackView* stack in _parentStack.arrangedSubviews){
-        for(UIView* view in stack.subviews){
-            if([view.accessibilityIdentifier isEqualToString:@"infoButton"]) view.hidden = YES;
-            // view.userInteractionEnabled = false;
-        }
-        [self attachRemoveButtonForStack:stack];
-        // stack.userInteractionEnabled = false;
-    }
-}
-
-- (void)doneRemoveSettingItem{
-    self.currentSettingsMenuMode = FavoriteSettings;
-    for(UIStackView* stack in _parentStack.arrangedSubviews){
-        //stack.userInteractionEnabled = true;
-        for(UIView* view in stack.subviews){
-            //view.
-            if([view.accessibilityIdentifier isEqualToString:@"infoButton"]) view.hidden = NO;
-            if([view.accessibilityIdentifier isEqualToString:@"removeButton"]) [view removeFromSuperview];
-        }
-    }
-}
 
 /*
 - (BOOL)isFirstLaunch {
@@ -2095,8 +2708,7 @@ BOOL isCustomResolution(int resolutionSelected) {
      */
 }
 
-- (void)viewDidLoad {
-    
+- (void)restoreCoreDataSettingsForUIKitMenu:(TemporarySettings* )tempSettings {
     [UIView animateWithDuration:0 animations:^{
     
         self->oscProfileMan = [OSCProfilesManager sharedManager:CGRectZero];
@@ -2119,17 +2731,15 @@ BOOL isCustomResolution(int resolutionSelected) {
         [self initParentStack];
         
         // load rememberFoldState before section layout
-        self->dataMan = [[DataManager alloc] init];
-        self->tempSettings = [self->dataMan getSettings];
         [self.rememberFoldStateSwitch setOn:self->tempSettings.rememberFoldState];// Load old setting
         MenuSectionView.overridePersistedFoldState = !self->tempSettings.rememberFoldState;
         [self.rememberFoldStateSwitch addTarget:self action:@selector(rememberFoldStateSwitchFlipped:) forControlEvents:UIControlEventValueChanged];
 
         [self layoutSections];
 
-
         // [self swi];
 
+#if !TARGET_OS_TV
         self->slideToCloseSettingsViewRecognizer = [[CustomEdgeSlideGestureRecognizer alloc] initWithTarget:self action:@selector(edgeSwiped)];
         self->slideToCloseSettingsViewRecognizer.edges = UIRectEdgeLeft;
         self->slideToCloseSettingsViewRecognizer.normalizedThresholdDistance = 0.0;
@@ -2138,6 +2748,7 @@ BOOL isCustomResolution(int resolutionSelected) {
         self->slideToCloseSettingsViewRecognizer.delaysTouchesBegan = NO;
         self->slideToCloseSettingsViewRecognizer.delaysTouchesEnded = NO;
         [self.view addGestureRecognizer:self->slideToCloseSettingsViewRecognizer];
+#endif
 
         self->settingsViewJustLoaded = true;
         self->settingsViewJustExpanded = true;
@@ -2148,8 +2759,6 @@ BOOL isCustomResolution(int resolutionSelected) {
             self.overrideUserInterfaceStyle = UIUserInterfaceStyleDark;
         }
 
-
-        self.currentSettingsMenuMode = self->tempSettings.settingsMenuMode.intValue;
         [self loadFavoriteSettingStackIdentifiers];
         if(self->tempSettings.settingsMenuMode.intValue == FavoriteSettings) [self switchToFavoriteSettings];
 
@@ -2320,9 +2929,13 @@ BOOL isCustomResolution(int resolutionSelected) {
         else disableControllerRumble = true;
         [self.hapticEngineSelector setEnabled:!disableControllerRumble forSegmentAtIndex:LeftRightSwapped];
         [self.hapticEngineSelector setEnabled:!disableControllerRumble forSegmentAtIndex:HapticEngineAuto];
-        [self.hapticEngineSelector setEnabled:[self isIPhone] forSegmentAtIndex:RumbleDevice];
+        [self.hapticEngineSelector setEnabled:PublicUtils.isIPhone forSegmentAtIndex:RumbleDevice];
+        
+        [self.dualSenseTransientSlider addTarget:self action:@selector(dualSenseTransientSliderMoved:) forControlEvents:UIControlEventValueChanged];
 
         self.gyroModeSelector.selectedSegmentIndex = self->tempSettings.gyroMode.intValue;
+        [self.gyroModeSelector addTarget:self action:@selector(emulatedGyroModeChanged:) forControlEvents:(UIControlEventValueChanged)]; // Update label display when slider is being moved.
+        
         [self.gyroSensitivitySlider setValue: (uint16_t)(self->tempSettings.gyroSensitivity.floatValue * 100) animated:NO]; // Load old setting.
         [self.gyroSensitivitySlider addTarget:self action:@selector(gyroSensitivitySliderMoved:) forControlEvents:(UIControlEventValueChanged)]; // Update label display when slider is being moved.
         [self.gyroSensitivitySlider sendActionsForControlEvents:UIControlEventValueChanged]; // Load old setting.
@@ -2426,7 +3039,7 @@ BOOL isCustomResolution(int resolutionSelected) {
         // 8 - 7.1 (SDL)
 
         // Unlock Display Orientation setting
-        bool unlockDisplayOrientationSelectorEnabled = [self isFullScreenRequired] || [self isIPhone];//need "requires fullscreen" enabled in the app bunddle to make runtime orientation limitation working
+        bool unlockDisplayOrientationSelectorEnabled = [self isFullScreenRequired] || PublicUtils.isIPhone;//need "requires fullscreen" enabled in the app bunddle to make runtime orientation limitation working
         if(unlockDisplayOrientationSelectorEnabled) self.unlockDisplayOrientationSelector.selectedSegmentIndex = self->tempSettings.unlockDisplayOrientation ? 1 : 0;
         else self.unlockDisplayOrientationSelector.selectedSegmentIndex = 1; // can't lock screen orientation in this mode = Display Orientation always unlocked
         [self.unlockDisplayOrientationSelector setEnabled:unlockDisplayOrientationSelectorEnabled];
@@ -2549,7 +3162,7 @@ BOOL isCustomResolution(int resolutionSelected) {
         
         // touchMode refactored to game profile system
         [self.touchModeSelector1 addTarget:self action:@selector(touchMode1Changed:) forControlEvents:UIControlEventValueChanged];
-        [self.enableOswForNativeTouchSwitch addTarget:self action:@selector(enableOswForNativeTouchSwitchFlipped:) forControlEvents:UIControlEventValueChanged];
+        // [self.enableOswForNativeTouchSwitch addTarget:self action:@selector(enableOswForNativeTouchSwitchFlipped:) forControlEvents:UIControlEventValueChanged];
 
         self.externalDisplayModeSelector.selectedSegmentIndex = self->tempSettings.externalDisplayMode.integerValue;
         self.localMousePointerModeSelector.selectedSegmentIndex = self->tempSettings.localMousePointerMode.integerValue;
@@ -2655,12 +3268,12 @@ BOOL isCustomResolution(int resolutionSelected) {
     /*
     if(!sender.isOn
        && [Utils hdrSupported]
-       && ![self isIPhone]) [self.sdrPerformanceWorkaroundSwitch setOn:true];
+       && !PublicUtils.isIPhone) [self.sdrPerformanceWorkaroundSwitch setOn:true];
      */
 }
 
 - (bool)isOswEnabled{
-    return [self isNotNativeTouchOnly] && self.onScreenWidgetSelector.selectedSegmentIndex != OnScreenControlsLevelOff;
+    return self.onScreenWidgetSelector.selectedSegmentIndex != OnScreenControlsLevelOff;
 }
 
 - (bool)isCustomOswEnabled{
@@ -2669,11 +3282,12 @@ BOOL isCustomResolution(int resolutionSelected) {
     // if(!(settingsViewJustExpanded || settingsViewJustLoaded)) [motionControlSection setExpanded:customOswEnabled];
     return customOswEnabled;
 }
-
+/*
 - (bool)isNotNativeTouchOnly{
     // return (self.enableOswForNativeTouchSwitch.isOn && self.touchModeSelector1.selectedSegmentIndex == NativeTouch) || self.touchModeSelector1.selectedSegmentIndex != NativeTouch;
     return true;
 }
+ */
 
 - (void)handleOswGestureChange{
     if(settingsViewJustLoaded) return;
@@ -3346,67 +3960,6 @@ BOOL isCustomResolution(int resolutionSelected) {
     ControllerUtil.gamepadArrivalReported = true;
 }
 
-- (void)invokeOscLayout{
-    // init CustomOSC stuff
-    /* sets a reference to the correct 'LayoutOnScreenControlsViewController' depending on whether the user is on an iPhone or iPad */
-    // self.layoutOnScreenControlsVC = [[LayoutOnScreenControlsViewController alloc] init];
-    self.layoutOnScreenControlsVC = [self instantiateOscLayoutViewController];
-    if (self.layoutOnScreenControlsVC == nil) {
-        return;
-    }
-
-    self.layoutOnScreenControlsVC.view.backgroundColor = [UIColor colorWithWhite:0.55 alpha:1.0];
-    self.layoutOnScreenControlsVC.modalPresentationStyle = UIModalPresentationFullScreen;
-    [self presentViewController:self.layoutOnScreenControlsVC animated:YES completion:nil];
-}
-
-- (void)mainFrameGameProfileButtonTapped:(bool)animated{
-    self.definesPresentationContext = NO;
-    
-    [self saveGameProfileConfigs];
-    
-    self.layoutOnScreenControlsVC = [self instantiateOscLayoutViewController];
-    if (self.layoutOnScreenControlsVC == nil) {
-        return;
-    }
-
-
-    // self.layoutOnScreenControlsVC.view.backgroundColor = [UIColor colorWithWhite:0.55 alpha:1.0];
-    
-    self.layoutOnScreenControlsVC.view.backgroundColor = UIColor.clearColor;
-    self.layoutOnScreenControlsVC.modalPresentationStyle = UIModalPresentationOverCurrentContext;
-    self.layoutOnScreenControlsVC.profileSelectorLoadingMode = ProfileSelectorLoadingModeSelectProfileFromMainFrame;
-    [self presentViewController:self.layoutOnScreenControlsVC animated:NO completion:^{
-        [self->_layoutOnScreenControlsVC presentProfileSelectorWith:ProfileSelectorLoadingModeSelectProfileFromMainFrame animated:animated];
-    }];
-    self->_layoutOnScreenControlsVC.toolbarStackView.hidden = true;
-    self->_layoutOnScreenControlsVC.toolbarRootView.hidden = true;
-}
-
-- (LayoutOnScreenControlsViewController *)instantiateOscLayoutViewController {
-    BOOL isIPhone = ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPhone);
-    NSString *storyboardName = isIPhone ? @"iPhone" : @"iPad";
-    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:storyboardName bundle:nil];
-    UIViewController *viewController = [storyboard instantiateViewControllerWithIdentifier:@"LayoutOnScreenControlsViewController"];
-
-    NSLog(@"[OSC] storyboard=%@ instantiated class=%@", storyboardName, NSStringFromClass([viewController class]));
-    
-    if (![viewController isKindOfClass:[LayoutOnScreenControlsViewController class]]) {
-        NSAssert(NO, @"Expected LayoutOnScreenControlsViewController, got %@", NSStringFromClass([viewController class]));
-        return nil;
-    }
-
-    LayoutOnScreenControlsViewController *layoutViewController = (LayoutOnScreenControlsViewController *)viewController;
-    if (!isIPhone) {
-        // layoutViewController.modalPresentationStyle = UIModalPresentationFullScreen;
-    }
-    
-    layoutViewController.toolbarStackView.hidden = false;
-    layoutViewController.toolbarRootView.hidden = false;
-
-    return layoutViewController;
-}
-
 - (void) pointerVelocityModeDividerSliderMoved:(UISlider* )sender {
     [self findDynamicLabelFromStack:(UIStackView*)sender.superview].text = [NSString stringWithFormat:@"  | %d%% | %d%% |  ", (uint8_t)sender.value, 100-(uint8_t)sender.value];
     bool hasNoPresentedVC = self.presentedViewController == nil && self.view.window != nil;
@@ -3425,8 +3978,18 @@ BOOL isCustomResolution(int resolutionSelected) {
     }
 }
 
+- (void)dualSenseTransientSliderMoved:(UISlider* )sender {
+    [self findDynamicLabelFromStack:(UIStackView*)sender.superview].text = [NSString stringWithFormat:@"  %.2f  ", sender.value]; // Update label display
+    ControllerUtil.dualSenseHapticTransient = sender.value;
+}
+
 - (void) gyroSensitivitySliderMoved:(UISlider* )sender {
     [self findDynamicLabelFromStack:(UIStackView*)sender.superview].text = [NSString stringWithFormat:@"  %d%%  ", (uint16_t)sender.value]; // Update label display
+}
+
+- (void)emulatedGyroModeChanged:(UISegmentedControl* )sender {
+    if(sender.selectedSegmentIndex == GyroModeOff) return;
+    [GenericUtils handleEmulatedGyroModeTipIn:self];
 }
 
 - (void) localVolumeSliderMoved:(UISlider* )sender {
@@ -3574,14 +4137,13 @@ BOOL isCustomResolution(int resolutionSelected) {
     // bool isEgmerging = self.enableOswSwitchStack.hidden != !isNativeTouch && isNativeTouch;
     bool isEgmerging = false;
     // self.enableOswSwitchStack.hidden = !isNativeTouch;
-    self.enableOswSwitchStack.hidden = true;
-    if(isEgmerging) [self highlightEmergingStack:self.enableOswSwitchStack];
+    // self.enableOswSwitchStack.hidden = true;
+    // if(isEgmerging) [self highlightEmergingStack:self.enableOswSwitchStack];
 
     
     [self setHidden:!isNativeTouch forStack:self.pointerVelocityDividerStack];
 
     // [self touchMoveEventIntervalSliderMoved:self.touchMoveEventIntervalSlider];
-    [self setHidden:!isNativeTouch forStack:self.pointerVelocityDividerStack];
     [self setHidden:!isNativeTouch forStack:self.pointerVelocityFactorStack];
     // [self setHidden:!isNativeTouch forStack:self.touchMoveEventIntervalStack];
 
@@ -3610,15 +4172,37 @@ BOOL isCustomResolution(int resolutionSelected) {
     [self setHidden:sender.selectedSegmentIndex!=RelativeTouch forStack:self.mousePointerVelocityStack];
     [self setHidden:sender.selectedSegmentIndex!=RelativeTouch forStack:self.singleTapSensitivityStack];
     [self setHidden:sender.selectedSegmentIndex!=RelativeTouch forStack:self.relativeTouchSlideThresholdStack];
-    [self setHidden:![self isNotNativeTouchOnly] forStack:self.onScreenWidgetStack];
-    [self setHidden:![self isNotNativeTouchOnly] forStack:self.buttonVisualFeedbackStack];
+    [self setHidden:false forStack:self.onScreenWidgetStack];
+    [self setHidden:false forStack:self.buttonVisualFeedbackStack];
     [self setHidden:sender.selectedSegmentIndex!=AbsoluteTouch forStack:self.delayLeftClickStack];
+    
+    
+    bool gesturePassthroughUnavailable = sender.selectedSegmentIndex==NativeTouch
+    || sender.selectedSegmentIndex==TouchDisabled
+    || (sender.selectedSegmentIndex==AbsoluteTouch && !_passthroughGesturesSwitch.isOn);
+    
+    [self setHidden:gesturePassthroughUnavailable forStack:self.pinchGestureStack];
+    [self setHidden:gesturePassthroughUnavailable forStack:self.scrollSensitivityStack];
+
+    [self setHidden:gesturePassthroughUnavailable
+     || !_pinchGestureSwitch.isOn
+    forStack:self.ctrlDownForPinchStack];
+    [self setHidden:gesturePassthroughUnavailable
+     || !_pinchGestureSwitch.isOn
+    forStack:self.pinchSensitivityStack];
+
     [self handleOswGestureChange];
 }
 
 - (void)emulatedControllerTypeChanged:(UISegmentedControl* )sender{
     [self setHidden:sender.selectedSegmentIndex == 0 forStack:_gyroModeStack];
     [self setHidden:sender.selectedSegmentIndex == 0 forStack:_gyroSensitivityStack];
+    [self setHidden:sender.selectedSegmentIndex != 2 forStack:_dualSenseTransientStack];
+
+    if(settingsViewJustExpanded) return;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [GenericUtils handleControllerEmulationTipIn:self];
+    });
 }
 
 
@@ -3702,15 +4286,6 @@ BOOL isCustomResolution(int resolutionSelected) {
     }
 }
 
-// UITextFieldDelegate
-- (BOOL)textFieldShouldBeginEditing:(UITextField *)textField {
-    if (GenericUtils.autoPopSoftKeyboard) {
-        return YES;
-    } else {
-        GenericUtils.autoPopSoftKeyboard = YES;
-        return NO;
-    }
-}
 
 - (void)pinchGestureSwitchFlipped:(UISwitch* )sender{
     [self setHidden:!sender.isOn forStack:_pinchSensitivityStack];
@@ -3729,7 +4304,14 @@ BOOL isCustomResolution(int resolutionSelected) {
 }
 
 - (void)redirectMicSwitchFlipped:(UISwitch* )sender{
-    if(sender.isOn) [self checkAndRequestMicPermission];
+    if(sender.isOn) {
+#if TARGET_OS_TV
+        [self checkAndRequestMicPermission];
+#else
+        if (settingsViewJustLoaded) [self checkAndRequestMicPermission];
+        else [GenericUtils handleRedirectMicEnabledTipIn:self];
+#endif
+    }
     [self setHidden:!sender.isOn forStack:_useBuiltinMicStack];
     [self setHidden:!sender.isOn forStack:_micVolumeStack];
 }
@@ -3989,6 +4571,7 @@ BOOL isCustomResolution(int resolutionSelected) {
     [GenericUtils handleFrameInterpolationResolutionTipIn:self];
 }
 
+
 - (InterpolationResolutionConfiguration *)getCurrentInterpolationResolutionConfiguration {
     return [FrameInterpolator
         resolutionConfigurationForDimensions:[self getChosenPresetStreamDimensions]
@@ -4013,7 +4596,7 @@ BOOL isCustomResolution(int resolutionSelected) {
 - (void) slideToMenuDistanceSliderMoved:(UISlider* )sender{
     UILabel* displayLabel = [self findDynamicLabelFromStack:(UIStackView*)sender.superview];
     // displayLabel.font = [UIFont systemFontOfSize:12 weight:UIFontWeightMedium];
-    NSString* labelText = [LocalizationHelper localizedStringForKey:@"%d%% screen width", (uint8_t)(sender.value * 100)];
+    NSString* labelText = [LocalizationHelper localizedStringForKey:@"    %d%% screen width", (uint8_t)(sender.value * 100)];
     displayLabel.text = [NSString stringWithFormat:@"  %@  ", labelText];
 }
 
@@ -4215,15 +4798,6 @@ BOOL isCustomResolution(int resolutionSelected) {
     }
 }
 
-- (void)updateTheme{
-    self.view.backgroundColor = [UIColor clearColor];
-    self.view.backgroundColor = ThemeManager.menuBackgroundColor;
-    [self updateThemeForMenuSections:self.view];
-    [self updateThemeForLabels:self.view];
-    [self updateThemeForSelectors:self.view];
-    [self updateThemeForSliders:self.view];
-    if(PublicUtils.liquidGlassEnabled) [self updateThemeForSwitches:self.view];
-}
 
 - (void) frameQueueSizeSliderMoved:(UISlider* )sender {
     assert(self.frameQueueSizeSlider.value >= 0 && self.frameQueueSizeSlider.value <= 5);
@@ -4256,7 +4830,7 @@ BOOL isCustomResolution(int resolutionSelected) {
     
     if(![MicHandler permissionGranted]) [self.redirectMicSwitch setOn:false];
     
-    [self saveGameProfileConfigs];
+    [self saveGameProfileConfigsUIKit];
     
     if (@available(iOS 13.0, *)) if(!self.controllerNavigationSwitch.isOn) ControllerNavigator.enabled = false;
 }
@@ -4450,222 +5024,6 @@ BOOL isCustomResolution(int resolutionSelected) {
     }
 }
 
-- (void) saveSettings {
-    [self preSavingActions];
-
-    Settings* currentSettings = [dataMan retrieveSettings];
-    
-    [self populatePencilSettings:currentSettings];
-    
-    CGFloat settingsMenuOffset = _rememberFoldStateSwitch.isOn ? _scrollView.contentOffset.y : 0;
-    
-    CMVideoDimensions dimensions;
-    if (self.mainFrameViewController.isStreaming) {
-        dimensions.width = (int32_t)currentSettings.width.intValue;
-        dimensions.height = (int32_t)currentSettings.height.intValue;
-    } else {
-        dimensions = [self getChosenStreamDimensions];
-    }
-    NSInteger height = dimensions.height;
-    NSInteger width = dimensions.width;
-    
-    NSLog(@"saveSettings %d, %ld, %ld",self.mainFrameViewController.isStreaming, width, height);
-    
-    NSInteger framerate = [self getChosenFrameRate];
-
-    NSInteger audioConfig = [@[@2, @3, @6, @8][self.audioConfigSelector.selectedSegmentIndex] integerValue];
-    // 2 - stereo (system)
-    // 3 - stereo (SDL)
-    // 6 - 5.1 (SDL)
-    // 8 - 7.1 (SDL)
-
-    NSInteger renderingBackend = self.renderingBackendSelector.selectedSegmentIndex;
-    NSInteger framePacingMode = self.framePacingModeSelector.selectedSegmentIndex;
-    InterpolationResolutionConfiguration *interpolationConfiguration =
-        [self getCurrentInterpolationResolutionConfiguration];
-    NSInteger interpolationMaximumDimension = interpolationConfiguration.maximumDimension;
-    NSInteger interpolationMaximumPixelCount = interpolationConfiguration.maximumPixelCount;
-    CGFloat streamDimensionScale = self.streamDimensionScaleSlider.value;
-    NSInteger onscreenControls = self.onScreenWidgetSelector.selectedSegmentIndex;
-    NSInteger keyboardToggleFingers = self.softKeyboardGestureSelector.selectedSegmentIndex == 3 ? 20 : self.softKeyboardGestureSelector.selectedSegmentIndex+3;
-    NSInteger oscLayoutToolFingers = (uint16_t)self->oswLayoutFingers;
-
-    CGFloat slideToSettingsDistance = self.slideToMenuDistanceSlider.value;
-    uint32_t slideToSettingsScreenEdge = [self getScreenEdgeFromSelector];
-    CGFloat pointerVelocityModeDivider = (CGFloat)(uint8_t)self.pointerVelocityModeDividerSlider.value/100;
-    CGFloat touchPointerVelocityFactor = (CGFloat)(uint16_t)[self map_velocFactorDisplay_fromSliderValue:self.touchPointerVelocityFactorSlider.value]/100;
-    CGFloat mousePointerVelocityFactor = (CGFloat)(uint16_t)[self map_velocFactorDisplay_fromSliderValue:self.mousePointerVelocityFactorSlider.value]/100;
-    CGFloat gyroSensitivity = (CGFloat)(uint16_t)self.gyroSensitivitySlider.value/100;
-    
-    CGFloat localVolume = self.localVolumeSlider.value/100;
-    CGFloat micVolume = self.micVolumeSlider.value/100;
-
-    uint16_t touchMoveEventInterval = 0;
-
-    BOOL reverseMouseWheelDirection = self.reverseMouseWheelDirectionSelector.selectedSegmentIndex == 1;
-    NSInteger asyncNativeTouchPriority = 1;
-    //BOOL liftStreamViewForKeyboard = self.liftStreamViewForKeyboardSelector.selectedSegmentIndex == 1;
-    BOOL liftStreamViewForKeyboard = YES; // enable and hide this option
-    BOOL showKeyboardToolbar = self.softKeyboardToolbarSwitch.isOn;
-    BOOL optimizeGames = self.optimizeGamesSwitch.isOn;
-    BOOL multiController = self.multiControllerSwitch.isOn;
-    BOOL swapABXYButtons = self.swapAbxySwitch.isOn;
-    BOOL buttonVisualFeedback = self.buttonVisualFeedbackSwitch.isOn;
-    BOOL touchPointTracking = self.trackTouchPointSwitch.isOn;
-    NSInteger gyroMode = self.gyroModeSelector.selectedSegmentIndex;
-    NSInteger emulatedControllerType = [self segmentIndexToControllerType:self.emulatedControllerTypeSelector.selectedSegmentIndex]; //self.emulatedControllerTypeSelector.selectedSegmentIndex;
-    BOOL audioOnPC = self.audioOnPcSwitch.isOn;
-    BOOL redirectMic = self.redirectMicSwitch.isOn;
-    BOOL useBuiltinMic = self.useBuiltinMicSwitch.isOn;
-    uint32_t preferredCodec = [self getChosenCodecPreference];
-    BOOL enableYUV444 = self.yuv444Switch.isOn;
-    BOOL sdrPerformanceWorkaround = self.sdrPerformanceWorkaroundSwitch.isOn;
-    BOOL enablePIP = self.pipSwitch.isOn;
-    BOOL fullColorRange = self.fullColorRangeSwitch.isOn;
-    BOOL btMouseSupport = self.citrixX1MouseSwitch.isOn;
-    NSInteger touchMode = [self isNotNativeTouchOnly] ? self.touchModeSelector1.selectedSegmentIndex : NativeTouchOnly;
-    NSInteger statsOverlayLevel = self.statsOverlaySelector.selectedSegmentIndex;
-    BOOL statsOverlayEnabled = statsOverlayLevel != 0;
-    BOOL enableHdr = self.hdrSwitch.isOn;
-    BOOL unlockDisplayOrientation = self.unlockDisplayOrientationSelector.selectedSegmentIndex == 1;
-    BOOL enableGraphs = self.enableGraphsSwitch.isOn;
-    int graphOpacity = (int)self.graphOpacityStepper.value;
-    int frameQueueSize = (int)self.frameQueueSizeSlider.value;
-    NSInteger resolutionSelected = self.resolutionSelector.selectedSegmentIndex;
-    if (self.customResolutionSwitch.isOn) {
-        resolutionSelected = RESOLUTION_TABLE_CUSTOM_INDEX;
-    }
-    NSInteger externalDisplayMode = self.externalDisplayModeSelector.selectedSegmentIndex;
-    NSInteger localMousePointerMode = self.localMousePointerModeSelector.selectedSegmentIndex;
-    BOOL sendDummyEvent = self.sendDummyEventSwitch.isOn;
-    BOOL rememberFoldState = self.rememberFoldStateSwitch.isOn;
-    CGFloat singleTapSensitivity = self.singleTapSensitivitySlider.value;
-    NSInteger hapticEngine = self.hapticEngineSelector.selectedSegmentIndex;
-    CGFloat edgeSlidingSensitivity = self.edgeSlidingSensitivitySlider.value;
-    NSInteger audioEngine = self.audioEngineSelector.selectedSegmentIndex;
-    BOOL delayLeftClick = self.delayLeftClickSwitch.isOn;
-    // BOOL delayLeftClick = true;
-    BOOL duckOtherApps = self.duckOtherAppSwitch.isOn;
-    BOOL muteInBackground = self.muteInBackgroundSwitch.isOn;
-    CGFloat relativeTouchSlideThreshold = self.relativeTouchSlideThresholdSlider.value;
-    BOOL enablePinch = self.pinchGestureSwitch.isOn;
-    CGFloat scrollSensitivity = self.scrollSensitivitySlider.value;
-    CGFloat pinchSensitivity = self.pinchSensitivitySlider.value;
-    BOOL ctrlDownForPinch = self.ctrlDownForPinchSwitch.isOn;
-    CGFloat leftClickDelayMs = self.leftClickDelaySlider.value;
-    BOOL passthroughGestures = self.passthroughGesturesSwitch.isOn;
-    BOOL enableControllerNavigation = self.controllerNavigationSwitch.isOn;
-    CGFloat controllerMousePointerVelocity = self.controllerMouseVelocitySlider.value;
-    CGFloat controllerMouseExpo = self.controllerMouseExpoSlider.value;
-    NSInteger controllerGyroSwitchMode = self.controllerGyroSwitchButtonSetter.selectedSegmentIndex;
-    BOOL enableFrameTimebase = false;
-    BOOL asyncFrameDequeue = self.asyncFrameDequeueSwitch.isOn;
-    CGFloat softKeyboardHeight = self.softKeyboardHeightSwitch.isOn ? self->softKeyboardHeight : 0;
-    BOOL globeAsEscape = self.globeAsEscapeSwitch.isOn;
-    CGFloat streamingRadialMenuDelay = self.streamingRadialMenuDelaySlider.value;
-    NSInteger backgroundSessionTimer = self.backgroundSessionTimerSlider.value == self.backgroundSessionTimerSlider.maximumValue ? (uint32_t) INT16_MAX : (uint32_t)self.backgroundSessionTimerSlider.value;
-
-    [dataMan saveSettings:currentSettings
-                         withBitrate:_bitrate
-                           framerate:framerate
-                              height:height
-                               width:width
-                         audioConfig:audioConfig
-                    onscreenControls:onscreenControls
-                            gyroMode:gyroMode
-              emulatedControllerType:emulatedControllerType
-               keyboardToggleFingers:keyboardToggleFingers
-                oscLayoutToolFingers:oscLayoutToolFingers
-           slideToSettingsScreenEdge:slideToSettingsScreenEdge
-             slideToSettingsDistance:slideToSettingsDistance
-          pointerVelocityModeDivider:pointerVelocityModeDivider
-          touchPointerVelocityFactor:touchPointerVelocityFactor
-          mousePointerVelocityFactor:mousePointerVelocityFactor
-                     gyroSensitivity:gyroSensitivity
-                         localVolume:localVolume
-                           micVolume:micVolume
-              touchMoveEventInterval:touchMoveEventInterval
-          reverseMouseWheelDirection:reverseMouseWheelDirection
-            asyncNativeTouchPriority:asyncNativeTouchPriority
-           liftStreamViewForKeyboard:liftStreamViewForKeyboard
-                 showKeyboardToolbar:showKeyboardToolbar
-                       optimizeGames:optimizeGames
-                     multiController:multiController
-                buttonVisualFeedback:buttonVisualFeedback
-                  touchPointTracking:touchPointTracking
-                     swapABXYButtons:swapABXYButtons
-                           audioOnPC:audioOnPC
-                         redirectMic:redirectMic
-                       useBuiltinMic:useBuiltinMic
-                      preferredCodec:preferredCodec
-                        enableYUV444:enableYUV444
-                           enablePIP:enablePIP
-                      fullColorRange:fullColorRange
-                           enableHdr:enableHdr
-                      btMouseSupport:btMouseSupport
-                           touchMode:touchMode
-                   statsOverlayLevel:statsOverlayLevel
-                 statsOverlayEnabled:statsOverlayEnabled
-            unlockDisplayOrientation:unlockDisplayOrientation
-                  resolutionSelected:resolutionSelected
-                 externalDisplayMode:externalDisplayMode
-               localMousePointerMode:localMousePointerMode
-                      frameQueueSize:frameQueueSize
-                        enableGraphs:enableGraphs
-                        graphOpacity:graphOpacity
-                    renderingBackend:renderingBackend
-                     framePacingMode:framePacingMode
-       interpolationMaximumDimension:interpolationMaximumDimension
-      interpolationMaximumPixelCount:interpolationMaximumPixelCount
-                streamDimensionScale:streamDimensionScale
-                      sendDummyEvent:sendDummyEvent
-                   rememberFoldState:rememberFoldState
-                  singleTapSensitivy:singleTapSensitivity
-                        hapticEngine:hapticEngine
-              edgeSlidingSensitivity:edgeSlidingSensitivity
-                         audioEngine:audioEngine
-                     delayLeftClick:delayLeftClick
-                       duckOtherApps:duckOtherApps
-                    muteInBackground:muteInBackground
-         relativeTouchSlideThreshold:relativeTouchSlideThreshold
-                         enablePinch:enablePinch
-                   scrollSensitivity:scrollSensitivity
-                    pinchSensitivity:pinchSensitivity
-                    ctrlDownForPinch:ctrlDownForPinch
-                    leftClickDelayMs:leftClickDelayMs
-                  settingsMenuOffset:settingsMenuOffset
-                 passthroughGestures:passthroughGestures
-          enableControllerNavigation:enableControllerNavigation
-      controllerMousePointerVelocity:controllerMousePointerVelocity
-                 controllerMouseExpo:controllerMouseExpo
-            controllerGyroSwitchMode:controllerGyroSwitchMode
-                 enableFrameTimebase:enableFrameTimebase
-                   asyncFrameDequeue:asyncFrameDequeue
-            sdrPerformanceWorkaround:sdrPerformanceWorkaround
-                  softKeyboardHeight:softKeyboardHeight
-                      globeAsEscape:globeAsEscape
-           streamingRadialMenuDelay:streamingRadialMenuDelay
-              backgroundSessionTimer:backgroundSessionTimer];
-    
-    if(_bitrate >= 50000) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [GenericUtils handleFirstSettingHighBitrateIn:self handler:^{
-                if(AlertControllerUtil.actionCancelled){
-                    [PublicUtils openUrl:[LocalizationHelper localizedStringForKey:@"awdlTipLink"]];
-                }
-            }];
-        });
-    }
-}
-
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
-}
-
-
-#pragma mark - Navigation
-
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
 }
 
@@ -4708,5 +5066,6 @@ BOOL isCustomResolution(int resolutionSelected) {
     
     if(![Utils hdrSupported]) [self.hdrSwitch setOn:NO animated:NO];
 }
+#endif
 
 @end

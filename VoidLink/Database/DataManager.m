@@ -187,7 +187,7 @@
         settingsToSave.resolutionSelected = [NSNumber numberWithInteger:resolutionSelected];
         settingsToSave.externalDisplayMode = [NSNumber numberWithInteger:externalDisplayMode];
         settingsToSave.localMousePointerMode = [NSNumber numberWithInteger:localMousePointerMode];
-        settingsToSave.backroundSessionTimer = [NSNumber numberWithInteger:backgroundSessionTimer];
+        settingsToSave.backgroundSessionTimer = [NSNumber numberWithInteger:backgroundSessionTimer];
 
         settingsToSave.frameQueueSize = [NSNumber numberWithInteger:frameQueueSize];
         settingsToSave.enableFrameTimebase = enableFrameTimebase;
@@ -320,6 +320,13 @@
     if ([_managedObjectContext hasChanges] && ![_managedObjectContext save:&error]) {
         Log(LOG_E, @"Unable to save hosts to database: %@", error);
     }
+
+#if TARGET_OS_TV
+    // Keep the one-shot startup snapshot current until Settings consumes it.
+    // After consumption AppDelegate intentionally ignores these refreshes.
+    TemporarySettings *settingsSnapshot = [[TemporarySettings alloc] initFromSettings:[self retrieveSettings]];
+    [_appDelegate refreshTvOSInitialSettingsSnapshot:settingsSnapshot];
+#endif
 
     [_appDelegate saveContext];
 }

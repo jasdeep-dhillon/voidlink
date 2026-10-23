@@ -24,6 +24,29 @@
         }
       }
     },
+    "    %d%% screen width" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d%%屏幕宽度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d%%螢幕寬度"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%d%%螢幕寬度"
+          }
+        }
+      }
+    },
     "  %d%% opacity  " : {
       "extractionState" : "manual",
       "localizations" : {
@@ -634,25 +657,25 @@
         }
       }
     },
-    "%d%% screen width" : {
+    "×2 Interpolation" : {
       "extractionState" : "manual",
       "localizations" : {
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%d%%屏幕宽度"
+            "value" : "×2 插帧"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%d%%螢幕寬度"
+            "value" : "x2 影格插補"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%d%%螢幕寬度"
+            "value" : "x2 影格插補"
           }
         }
       }
@@ -3267,6 +3290,35 @@
         }
       }
     },
+    "=pushToTalk" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🎙️ Talk"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "🎙️ 对讲机"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "🎙️ 對講機"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "🎙️ 對講機"
+          }
+        }
+      }
+    },
     "=quitApp" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4641,6 +4693,165 @@
         }
       }
     },
+    "3 Finger Tap" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "三指轻点"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "三指輕點"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "三指輕點"
+          }
+        }
+      }
+    },
+    "4 Finger Tap" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "四指轻点"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "四指輕點"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "四指輕點"
+          }
+        }
+      }
+    },
+    "4K" : {
+      "extractionState" : "manual"
+    },
+    "5 Finger Tap" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "五指轻点"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "五指輕點"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "五指輕點"
+          }
+        }
+      }
+    },
+    "5.1-channel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5.1 声道"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5.1 聲道"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "5.1 聲道"
+          }
+        }
+      }
+    },
+    "7.1-channel" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "7.1 声道"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "7.1 聲道"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "7.1 聲道"
+          }
+        }
+      }
+    },
+    "30 FPS" : {
+      "extractionState" : "manual"
+    },
+    "60 FPS" : {
+      "extractionState" : "manual"
+    },
+    "90° Display Rotation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "90°转屏"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "90°旋轉"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "90°旋轉"
+          }
+        }
+      }
+    },
+    "120 FPS" : {
+      "extractionState" : "manual"
+    },
+    "360p" : {
+      "extractionState" : "manual"
+    },
+    "720p" : {
+      "extractionState" : "manual"
+    },
+    "1080p" : {
+      "extractionState" : "manual"
+    },
     "A button with touchpad functionality will be created" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4969,6 +5180,29 @@
         }
       }
     },
+    "Align with System" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "与系统一致"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "與系統一致"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "與系統一致"
+          }
+        }
+      }
+    },
     "All Profiles" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5011,6 +5245,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "所有設定"
+          }
+        }
+      }
+    },
+    "Allowed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允许"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允許"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "允許"
           }
         }
       }
@@ -5136,6 +5393,29 @@
         }
       }
     },
+    "Async Frame Dequeue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "异步帧出队"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "非同步取幀"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "非同步取幀"
+          }
+        }
+      }
+    },
     "asyncFrameDequeueStackTip" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5188,6 +5468,29 @@
         }
       }
     },
+    "Audio Configuration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音频配置"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音訊設定"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音訊設定"
+          }
+        }
+      }
+    },
     "audioConfigStackTip" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5213,6 +5516,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "- 雙聲道：由系統音訊引擎驅動的雙聲道模式。音質較佳，且在熄屏後仍可維持播放。\n\n- 雙聲道（SDL）：由 SDL 引擎驅動的雙聲道模式。此模式基本等同於 Moonlight-iOS 的音訊。熄屏後無法維持播放。\n\n5.1／7.1 聲道：皆由 SDL 引擎驅動。熄屏後無法維持播放，需 iOS 18 以上支援。"
+          }
+        }
+      }
+    },
+    "Auto" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自动"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自動"
           }
         }
       }
@@ -5361,6 +5687,9 @@
         }
       }
     },
+    "AV1" : {
+      "extractionState" : "manual"
+    },
     "awdlTipLink" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5413,6 +5742,29 @@
         }
       }
     },
+    "Background Session" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "后台会话"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "背景執行"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "背景執行"
+          }
+        }
+      }
+    },
     "Balanced" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5458,6 +5810,12 @@
           }
         }
       }
+    },
+    "barrelRollReminderTip" : {
+      "extractionState" : "manual"
+    },
+    "barrelRollReminderTipValidIAP" : {
+      "extractionState" : "manual"
     },
     "Batch edit" : {
       "extractionState" : "manual",
@@ -5534,6 +5892,29 @@
         }
       }
     },
+    "Bitrate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "串流码率"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "串流位元速率"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "串流位元速率"
+          }
+        }
+      }
+    },
     "Bitrate: %.1f Mbps" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5605,6 +5986,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "僅在您的網路有能力時才增加位元率，尤其是在超過 50 Mbps 時要特別小心。"
+          }
+        }
+      }
+    },
+    "Blend Physical Stick Input" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "合成实体摇杆输入"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "合成實體搖桿輸入"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "合成實體搖桿輸入"
           }
         }
       }
@@ -5799,6 +6203,29 @@
         }
       }
     },
+    "Built-in" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "内置"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "內建"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "內建"
+          }
+        }
+      }
+    },
     "bulkEditTip" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5870,6 +6297,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "按鍵模式"
+          }
+        }
+      }
+    },
+    "Button Visual Feedback" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按键视觉反馈"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按鍵視覺回饋"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按鍵視覺回饋"
           }
         }
       }
@@ -6001,6 +6451,29 @@
         }
       }
     },
+    "Captured" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "被窗口捕获"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "被視窗捕獲"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "被視窗捕獲"
+          }
+        }
+      }
+    },
     "Centered (PlayStation)" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6089,6 +6562,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "圓形"
+          }
+        }
+      }
+    },
+    "Citrix X1 Mouse" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Citrix X1 鼠标"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Citrix X1 滑鼠"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Citrix X1 滑鼠"
           }
         }
       }
@@ -6611,6 +7107,29 @@
         }
       }
     },
+    "Controller Mouse Velocity" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手柄鼠标速度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手把滑鼠速度"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手把滑鼠速度"
+          }
+        }
+      }
+    },
     "Controller Navigation" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6630,6 +7149,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "手把導覽"
+          }
+        }
+      }
+    },
+    "Controller Stick" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手柄摇杆"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手把搖桿"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手把搖桿"
           }
         }
       }
@@ -6842,6 +7384,29 @@
         }
       }
     },
+    "Ctrl Down for Pinch" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "捏合时按下Ctrl"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "捏合時按下Ctrl"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "捏合時按下Ctrl"
+          }
+        }
+      }
+    },
     "ctrlDownForPinchStackTip" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6917,6 +7482,98 @@
         }
       }
     },
+    "Curve Exponent" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "非线性因子"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "非線性因子"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "非線性因子"
+          }
+        }
+      }
+    },
+    "Custom" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自定义"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自訂"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自訂"
+          }
+        }
+      }
+    },
+    "Custom Double Tap Keyboard Shortcut" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "轻点两下快捷键"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "輕點兩下快速鍵"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "輕點兩下快速鍵"
+          }
+        }
+      }
+    },
+    "Custom Resolution" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自定义分辨率"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自訂解析度"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "自訂解析度"
+          }
+        }
+      }
+    },
     "Custom Resolution Selected" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6963,6 +7620,29 @@
         }
       }
     },
+    "Custom Squeeze Keyboard Shortcut" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "捏合快捷键"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "捏合快速鍵"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "捏合快速鍵"
+          }
+        }
+      }
+    },
     "customOscTip" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6988,6 +7668,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "\n1. 從螢幕 %@ 邊緣向內滑動 %@ 螢幕寬度，開啟工具欄選單.\n\n2. 選擇「編輯螢幕控制項佈局」。"
+          }
+        }
+      }
+    },
+    "Dark" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "深色"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "深色"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "深色"
           }
         }
       }
@@ -7080,6 +7783,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "刪除"
+          }
+        }
+      }
+    },
+    "Delay Left Click" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "延迟鼠标左单击"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "延遲滑鼠左單擊"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "延遲滑鼠左單擊"
           }
         }
       }
@@ -7184,6 +7910,52 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "衍生版"
+          }
+        }
+      }
+    },
+    "Designate Soft Keyboard Height" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "指定软键盘高度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "指定軟鍵盤高度"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "指定軟鍵盤高度"
+          }
+        }
+      }
+    },
+    "Detailed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "详细"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完整"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "完整"
           }
         }
       }
@@ -7372,6 +8144,29 @@
         }
       }
     },
+    "Disable Slide Gesture for Pencil" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭手写笔滑动手势"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "關閉手寫筆滑動手勢"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "關閉手寫筆滑動手勢"
+          }
+        }
+      }
+    },
     "Disable tilt for apple pencil" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7414,6 +8209,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "停用觸控"
+          }
+        }
+      }
+    },
+    "Disabled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "關閉"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "關閉"
           }
         }
       }
@@ -7529,6 +8347,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "位移型右搖桿觸控板"
+          }
+        }
+      }
+    },
+    "Divider Position" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "灵敏度分割位置"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "靈敏度分割位置"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "靈敏度分割位置"
           }
         }
       }
@@ -7862,6 +8703,29 @@
         }
       }
     },
+    "Drawing Pauses Native Touch" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "绘画时暂停多点触控"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "繪畫時暫停多點觸控"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "繪畫時暫停多點觸控"
+          }
+        }
+      }
+    },
     "Drawing Toolkit" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7977,6 +8841,56 @@
         }
       }
     },
+    "DualSense Haptic EQ" : {
+      "comment" : "The title of the view that allows users to adjust the haptic feedback intensity of their DualSense controllers.",
+      "isCommentAutoGenerated" : true
+    },
+    "DualSense Haptic Intensity" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DualSense振动强度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DualSense振動強度"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DualSense振動強度"
+          }
+        }
+      }
+    },
+    "Duck Other Apps" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "降低其他 App 音量"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "降低其他 App 音量"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "降低其他 App 音量"
+          }
+        }
+      }
+    },
     "dummyPadTip" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8048,6 +8962,52 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "如ctrl, lswheel, wasdpad..."
+          }
+        }
+      }
+    },
+    "EarPhone" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "耳机"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "耳機"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "耳機"
+          }
+        }
+      }
+    },
+    "Edge Trigger Sensitivity" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "边缘触发灵敏度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "邊緣觸發靈敏度"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "邊緣觸發靈敏度"
           }
         }
       }
@@ -8173,6 +9133,29 @@
         }
       }
     },
+    "Emulated Controller Type" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手柄映射类型"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手把映射類型"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手把映射類型"
+          }
+        }
+      }
+    },
     "emulatedControllerTypeStackDoc" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8208,25 +9191,54 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sunshine emulates game controller via VigemBus, which support DS4 & Xbox360. \n\n- Xbox360 does not support gyro.\n\n- When “both” is selected, the app will map built-in gyro as player0 & external game controller as player1"
+            "value" : "Sunshine emulates game controller via VigemBus, which support DS4 & Xbox360. \n- Xbox360 does not support gyro.\n- When “both” is selected, the app will map built-in gyro as player0 & external game controller as player1\n\nWhen DualSense sidecar is running on Sunshine-Foundation, VigemBus will be taken over, left DualSense to be the emulated Controller on your host. In this case:\n- The option “PS (Enhanced Haptic)” provides better haptic feedback for a real DualSense controller.\n- The option “PS” provides DualSense haptic feedback translation to traditional rumbling for all controllers.\n- Enhanced haptics are also available with iPhone motor by setting “Haptic Engine” to “Device”.\n"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sunshine 通过 VigemBus 模拟游戏手柄，支持 DS4 和 Xbox 360。\n\n- Xbox 360 不支持陀螺仪。\n\n- 当选择“同时映射”时，app会将内置陀螺仪映射为玩家0，外接手柄映射为玩家1。"
+            "value" : "Sunshine 通过 VigemBus 模拟游戏手柄，支持 DS4 和 Xbox 360。\n- Xbox 360 不支持陀螺仪。\n- 当选择“同时映射”时，app会将内置陀螺仪映射为玩家0，外接手柄映射为玩家1。\n\n当 DualSense 组件在【Sunshine 基地版】上运行时，它会接管 ViGEmBus，并使 DualSense 成为主机端的模拟手柄。在这种情况下：\n- 选择“PS（触觉增强）”将为真实的DualSense 手柄提供更好的触觉反馈。\n- 选择“PS”：将 DualSense 触觉反馈转换为传统震动，适用于所有手柄。\n- 将 “振动引擎” 设置为 “内置”，也可以通过 iPhone 马达获得增强触觉反馈。\n\nDualSense的自适应板机、触觉反馈仅与Sunshine基地版配合使用时有效。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sunshine 透過 VigemBus 模擬遊戲控制器，支援 DS4 和 Xbox 360。\n\n- Xbox 360 不支援陀螺儀。\n\n- 當選擇「同時映射」時，app 會將內建陀螺儀對應為玩家0，外接控制器對應為玩家1。"
+            "value" : "Sunshine 透過 VigemBus 模擬遊戲控制器，支援 DS4 和 Xbox 360。\n- Xbox 360 不支援陀螺儀。\n- 當選擇「同時映射」時，app 會將內建陀螺儀對應為玩家0，外接控制器對應為玩家1。\n\n當 DualSense 元件在 「Sunshine 基地版」上執行時，它會接管 ViGEmBus，並使 DualSense 成為主機端的模擬手把。在這種情況下：\n- 選擇「PS（觸覺增強）」將為真實的 DualSense 手把提供更好的觸覺回饋。\n- 選擇「PS」：將 DualSense 觸覺回饋轉換為傳統震動，適用於所有手把。\n- 將「振動引擎」設定為「內建」，也可以透過 iPhone 馬達獲得增強觸覺回饋。\n\nDualSense 的自適應扳機、觸覺回饋僅在與 Sunshine 基地版配合使用時有效。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sunshine 透過 VigemBus 模擬遊戲控制器，支援 DS4 和 Xbox 360。\n\n- Xbox 360 不支援陀螺儀。\n\n- 當選擇「同時映射」時，app 會將內建陀螺儀對應為玩家0，外接控制器對應為玩家1。"
+            "value" : "Sunshine 透過 VigemBus 模擬遊戲控制器，支援 DS4 和 Xbox 360。\n- Xbox 360 不支援陀螺儀。\n- 當選擇「同時映射」時，app 會將內建陀螺儀對應為玩家0，外接控制器對應為玩家1。\n\n當 DualSense 元件在 「Sunshine 基地版」上執行時，它會接管 ViGEmBus，並使 DualSense 成為主機端的模擬手把。在這種情況下：\n- 選擇「PS（觸覺增強）」將為真實的 DualSense 手把提供更好的觸覺回饋。\n- 選擇「PS」：將 DualSense 觸覺回饋轉換為傳統震動，適用於所有手把。\n- 將「振動引擎」設定為「內建」，也可以透過 iPhone 馬達獲得增強觸覺回饋。\n\nDualSense 的自適應扳機、觸覺回饋僅在與 Sunshine 基地版配合使用時有效。"
+          }
+        }
+      }
+    },
+    "emulatedGyroModeDisablesBuiltinMotionControlTip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turning this option on will disable VoidLink's built-in motion control. If you need the app to convert gyroscope input directly into mouse or controller-stick signals, remember to turn this option off."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开该选项，将导致 VoidLink 内置的体感控制功能失效。如果您需要在 App 内部直接将陀螺仪转换为鼠标或手柄摇杆信号，请记得关闭该选项。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開啟該選項，將導致 VoidLink 內建的體感控制功能失效。如果您需要在 App 內部直接將陀螺儀轉換為滑鼠或手把搖桿訊號，請記得關閉該選項。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開啟該選項，將導致 VoidLink 內置的體感控制功能失效。如果您需要在 App 內部直接將陀螺儀轉換為滑鼠或手掣搖桿訊號，請記得關閉該選項。"
           }
         }
       }
@@ -8250,6 +9262,30 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "啟用 Metal 渲染？"
+          }
+        }
+      },
+      "shouldTranslate" : false
+    },
+    "Enable PiP" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "画中画"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "啟用子母畫面"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "啟用子母畫面"
           }
         }
       }
@@ -8400,6 +9436,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "輸入橡皮擦快速鍵:"
+          }
+        }
+      }
+    },
+    "Enter host IP for VoidLink TV from iPhone/iPad" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter host IP for VoidLink TV from iPhone/iPad"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通过 iPhone/iPad 为 VoidLink TV 输入主机 IP 地址"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "透過 iPhone/iPad 為 VoidLink TV 輸入主機 IP 位址"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "透過 iPhone/iPad 為 VoidLink TV 輸入主機 IP 位址"
           }
         }
       }
@@ -8796,6 +9861,35 @@
         }
       }
     },
+    "Exit Directly" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Exit Directly"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "直接退出"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "直接退出"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "直接退出"
+          }
+        }
+      }
+    },
     "Expands setting menu during streaming" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -8861,6 +9955,104 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "匯出"
+          }
+        }
+      }
+    },
+    "External Audio Output" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外置音频输出"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外置音訊輸出"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外置音訊輸出"
+          }
+        }
+      }
+    },
+    "External Display Mode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外接显示模式"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外接螢幕模式"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外接螢幕模式"
+          }
+        }
+      }
+    },
+    "External Display Only" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "仅外屏"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "僅外螢幕"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "僅外螢幕"
+          }
+        }
+      }
+    },
+    "externalAudioSelectionTip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Is audio playing through a speaker or earphones? Speaker enables voice processing to reduce echo. EarPhone disables voice processing to preserve playback quality."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "当前声音通过扬声器还是耳机播放？选择扬声器将启用语音处理以减少回声；选择耳机将关闭语音处理以保留播放音质。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目前聲音透過揚聲器還是耳機播放？選擇揚聲器將啟用語音處理以減少回音；選擇耳機將關閉語音處理以保留播放音質。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "目前聲音透過揚聲器還是耳機播放？選擇揚聲器將啟用語音處理以減少回音；選擇耳機將關閉語音處理以保留播放音質。"
           }
         }
       }
@@ -9142,6 +10334,35 @@
         }
       }
     },
+    "firstTappingPushToTalkTip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The system saves separate volume levels for voice capture and normal audio modes. You may need to manually adjust the volume in each mode to balance their perceived loudness."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "语音采集与正常音频两种模式的音量由系统分开保存，您可能需要手动调整两种模式下的听感音量平衡"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "語音擷取與一般音訊兩種模式的音量由系統分別儲存，您可能需要手動調整兩種模式下的聽感音量平衡"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "語音擷取與一般音訊兩種模式的音量由系統分別儲存，您可能需要手動調整兩種模式下的聽感音量平衡"
+          }
+        }
+      }
+    },
     "Floating keyboard not supported" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9350,6 +10571,52 @@
         }
       }
     },
+    "Frame Pacing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "帧步调"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "影格步調"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "影格步調"
+          }
+        }
+      }
+    },
+    "Frame Rate" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "串流帧率"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "串流幀率"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "串流幀率"
+          }
+        }
+      }
+    },
     "frameInterpolationResolutionTip" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9477,6 +10744,75 @@
         }
       }
     },
+    "Full Color Range" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "全色彩范围"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "全色彩範圍"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "全色彩範圍"
+          }
+        }
+      }
+    },
+    "Full-Screen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全屏"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全螢幕"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全螢幕"
+          }
+        }
+      }
+    },
+    "FullScr/Window" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全屏/窗口"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全螢幕/視窗"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "全螢幕/視窗"
+          }
+        }
+      }
+    },
     "Functional Widgets" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9546,6 +10882,64 @@
         }
       }
     },
+    "G8+ MFi Regression" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "G8+ MFi Regression"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "G8+ MFi 功能回撤"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "G8+ MFi 功能回撤"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "G8+ MFi 功能回撤"
+          }
+        }
+      }
+    },
+    "G8PlusMFiRegressionTip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dear G8+ MFi controller user, due to Apple App Review requirements, VoidLink updates have had to remove the MFi-protocol vibration feature for this controller. We sincerely apologize. As a temporary workaround, you may install the TestFlight version where this functionality remains unaffected. Whether this feature can be restored in a future version depends on VoidLink obtaining MFi authorization from the controller manufacturer."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "尊敬的 G8+ MFi 手柄用户，应 Apple app 审核要求，VoidLink版本更新不得不移除此手柄的 MFi 协议振动功能。 开发者对此深表歉意！您可以安装功能不受影响的TestFlight版本，作为临时解决方案。后续版本是否恢复该功能，取决于 VoidLink 能否获得手柄厂商的 MFi 许可。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "尊敬的 G8+ MFi 手把使用者，因應 Apple app 審核要求，VoidLink 版本更新不得不移除此手把的 MFi 協議震動功能。開發者對此深表歉意！您可以安裝功能不受影響的 TestFlight 版本，作為臨時解決方案。後續版本是否恢復此功能，取決於 VoidLink 能否取得手把廠商的 MFi 授權。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "尊敬的 G8+ MFi 手把使用者，因應 Apple app 審核要求，VoidLink 版本更新不得不移除此手把的 MFi 協議震動功能。開發者對此深表歉意！您可以安裝功能不受影響的 TestFlight 版本，作為臨時解決方案。後續版本是否恢復此功能，取決於 VoidLink 能否取得手把廠商的 MFi 授權。"
+          }
+        }
+      }
+    },
     "Game Profile" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9588,6 +10982,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "遊戲配置"
+          }
+        }
+      }
+    },
+    "gameControllerRequiredTip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Please connect a game controller to use this app. If you have not paired a controller yet, quit the app to complete pairing."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请连接游戏手柄以使用此 app。如果您尚未配对游戏手柄，可以先退出此 app 以完成配对。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請連接遊戲控制器以使用此 app。如果您尚未配對遊戲控制器，可以先退出此 app 以完成配對。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請連接遊戲控制器以使用此 app。如果您尚未配對遊戲控制器，可以先退出此 app 以完成配對。"
           }
         }
       }
@@ -9886,25 +11309,25 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This setting is saved in [Game Profile]. To open game profile selector:\n- Tap the gamepad icon on navigation bar\n- While streaming, swipe inward from the %@ edge of the screen by %@ of screen width, open [Switch Game Profile] in the toolbox menu"
+            "value" : "This setting is saved in [Game Profile]. To open game profile selector:\n- Tap the gamepad icon on navigation bar\n- While streaming, swipe inward from the %@ edge of the screen by %@ of screen width, open [Switch Game Profile] in the toolbox menu\n- Also available by controller radial menu -> [more options]"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "该设置保存在 [游戏配置] 中. 游戏配置切换入口:\n- 点击导航栏的手柄图标\n- 串流时，由屏幕 %@ 边缘向内滑动 %@ 屏宽，在工具箱菜单中打开 [切换游戏配置]"
+            "state" : "needs_review",
+            "value" : "该设置保存在 [游戏配置] 中. 游戏配置切换入口:\n- 点击导航栏的手柄图标\n- 串流时，由屏幕 %@ 边缘向内滑动 %@ 屏宽，在工具箱菜单中打开 [切换游戏配置]\n- 手柄用户请在环形菜单 -> [更多] 中打开"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "此設定保存在［遊戲配置］中。遊戲配置切換入口：\n- 點擊導覽列的手把圖示\n- 串流時，由螢幕 %@ 邊緣向內滑動 %@ 螢幕寬度，在工具箱選單中開啟［切換遊戲配置］"
+            "state" : "needs_review",
+            "value" : "此設定保存在［遊戲配置］中。遊戲配置切換入口：\n- 點擊導覽列的手把圖示\n- 串流時，由螢幕 %@ 邊緣向內滑動 %@ 螢幕寬度，在工具箱選單中開啟［切換遊戲配置］\n- 手把使用者請在環形選單 -> [更多] 中開啟"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
-            "state" : "translated",
-            "value" : "此設定保存在［遊戲配置］中。遊戲配置切換入口：\n- 點擊導覽列的手把圖示\n- 串流時，由螢幕 %@ 邊緣向內滑動 %@ 螢幕寬度，在工具箱選單中開啟［切換遊戲配置］"
+            "state" : "needs_review",
+            "value" : "此設定保存在［遊戲配置］中。遊戲配置切換入口：\n- 點擊導覽列的手把圖示\n- 串流時，由螢幕 %@ 邊緣向內滑動 %@ 螢幕寬度，在工具箱選單中開啟［切換遊戲配置］\n- 手把使用者請在環形選單 -> [更多] 中開啟"
           }
         }
       }
@@ -9938,6 +11361,29 @@
         }
       }
     },
+    "Gesture Sliding Distance" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手势滑动距离"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手勢滑動距離"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手勢滑動距離"
+          }
+        }
+      }
+    },
     "Gestures" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9957,6 +11403,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "手勢"
+          }
+        }
+      }
+    },
+    "Globe Key as Escape" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "地球键用作ESC"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "地球鍵用作ESC"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "地球鍵用作ESC"
           }
         }
       }
@@ -9986,6 +11455,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "如果外接鍵盤自帶 Esc 鍵，可以關閉此選項。"
+          }
+        }
+      }
+    },
+    "Go for TestFlight" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go for TestFlight"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前往 TestFlight"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前往 TestFlight"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前往 TestFlight"
           }
         }
       }
@@ -10128,6 +11626,29 @@
         }
       }
     },
+    "Gyro Mode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "陀螺仪"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "陀螺儀"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "陀螺儀"
+          }
+        }
+      }
+    },
     "Gyro off while activated" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10170,6 +11691,52 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "啟用時開啟陀螺儀"
+          }
+        }
+      }
+    },
+    "Gyro Sensitivity" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "陀螺仪灵敏度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "陀螺儀靈敏度"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "陀螺儀靈敏度"
+          }
+        }
+      }
+    },
+    "Gyro Source" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "陀螺仪输入来源"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "陀螺儀輸入來源"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "陀螺儀輸入來源"
           }
         }
       }
@@ -10255,6 +11822,78 @@
         }
       }
     },
+    "H.264" : {
+      "extractionState" : "manual"
+    },
+    "Haptic Engine" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "振动引擎"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "振動引擎"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "振動引擎"
+          }
+        }
+      }
+    },
+    "HD" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HD"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HD"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HD"
+          }
+        }
+      }
+    },
+    "HDR" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HDR"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HDR"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "HDR"
+          }
+        }
+      }
+    },
     "hdrStackTip" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10326,6 +11965,32 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "高度: %.2f "
+          }
+        }
+      }
+    },
+    "HEVC" : {
+      "extractionState" : "manual"
+    },
+    "Hidden" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隐藏(绝对坐标)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隱藏(絕對座標)"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "隱藏(絕對座標)"
           }
         }
       }
@@ -10503,6 +12168,29 @@
         }
       }
     },
+    "Hold down" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按住保持"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按住保持"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按住保持"
+          }
+        }
+      }
+    },
     "Hold until release" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -10522,6 +12210,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "按壓直至鬆開"
+          }
+        }
+      }
+    },
+    "holdToNavSection" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold for Section Navigation"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按住导航分区"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按住導航分區"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按住導航分區"
           }
         }
       }
@@ -10649,6 +12366,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "主機"
+          }
+        }
+      }
+    },
+    "Hovering Disabled" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭悬停"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "關閉懸停"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "關閉懸停"
           }
         }
       }
@@ -11160,6 +12900,29 @@
         }
       }
     },
+    "L/R Swapped" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左右交换"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左右交換"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左右交換"
+          }
+        }
+      }
+    },
     "Label alpha" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11598,6 +13361,52 @@
         }
       }
     },
+    "Left Click Delay" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左单击延迟"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左單擊延遲"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左單擊延遲"
+          }
+        }
+      }
+    },
+    "Left Stick Minimum Offset" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左摇杆最小偏移"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左搖桿最小偏移"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "左搖桿最小偏移"
+          }
+        }
+      }
+    },
     "Left stick pad" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11696,6 +13505,29 @@
         }
       }
     },
+    "Legacy" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "传统模式"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "傳統模式"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "傳統模式"
+          }
+        }
+      }
+    },
     "legacyFramePacingTip" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11721,6 +13553,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "傳統影格步調、無影格步調模式可能導致串流效能下降，或頻繁發生畫面抖動與卡頓，且不支援熄屏保持及無子母畫面的背景串流。\n\n點選【確定】以繼續。\n點選【取消】返回佇列緩衝模式。"
+          }
+        }
+      }
+    },
+    "Light" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "浅色"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "淺色"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "淺色"
           }
         }
       }
@@ -11800,6 +13655,52 @@
         }
       }
     },
+    "Local Mouse Cursor" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本地鼠标指针"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本地滑鼠指標"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本地滑鼠指標"
+          }
+        }
+      }
+    },
+    "Local Volume" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本地音量"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本機音量"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "本機音量"
+          }
+        }
+      }
+    },
     "localMousePointerModeStackDoc" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11854,6 +13755,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "- 被視窗捕獲：滑鼠游標被限制在應用程式視窗內。\n\n- 隱藏：不顯示本機滑鼠游標。\n\n- 可見：顯示 iOS 本機滑鼠游標，減少延遲感。\n\n​​請勿使用「隱藏/可見」模式操作任何需用滑鼠控制視角的遊戲。​​"
+          }
+        }
+      }
+    },
+    "Long press [%@] to activate controller menu" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Long press [%@] to activate controller menu"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "长按 [%@] 激活手柄菜单"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "長按 [%@] 啟用控制器選單"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "長按 [%@] 啟用控制器選單"
           }
         }
       }
@@ -12227,6 +14157,29 @@
         }
       }
     },
+    "Map Gyro to" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "陀螺仪映射为"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "陀螺儀映射為"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "陀螺儀映射為"
+          }
+        }
+      }
+    },
     "mapGyroToStackTip" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -12285,6 +14238,29 @@
         }
       }
     },
+    "Metal (Experimental)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metal (实验性)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metal (實驗性)"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Metal (實驗性)"
+          }
+        }
+      }
+    },
     "metalRenderTip" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -12310,6 +14286,29 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "\n等等！\n\n- VoidLink 標準算繪模式的效能相當出色，不僅與自身的 Metal 算繪器處於同等水準，更大幅超越一些以 vibe coding 打造的所謂 Metal 算繪器。\n\n- Metal 渲染需要消耗更多 GPU 資源與電量，在部分裝置上可能反而會導致效能下降。\n\n- Metal HDR 算繪需要開發者自行編寫著色器。無論開發者如何宣稱，任何 Metal 算繪器都無法還原 VoidLink 標準算繪器經過裝置校準的 HDR 準確性。\n\n- Metal 渲染模式下不支援画中画。\n\n点选「套用」表示我已了解并同意上述说明。"
+          }
+        }
+      }
+    },
+    "Mic Volume" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "麦克风音量"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "麥克風音量"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "麥克風音量"
           }
         }
       }
@@ -12385,6 +14384,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "中鍵"
+          }
+        }
+      }
+    },
+    "Minimum Offset (Gyro→Stick)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最小偏移量(陀螺仪→摇杆)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最小偏移量(陀螺儀→搖桿)"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最小偏移量(陀螺儀→搖桿)"
           }
         }
       }
@@ -12533,6 +14555,52 @@
         }
       }
     },
+    "Mouse" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "鼠标"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滑鼠"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滑鼠"
+          }
+        }
+      }
+    },
+    "Mouse Pointer Velocity" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "鼠标指针灵敏度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滑鼠靈敏度"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滑鼠靈敏度"
+          }
+        }
+      }
+    },
     "Mouse Pointer Velocity: %d%%" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -12677,6 +14745,52 @@
         }
       }
     },
+    "Multi-Controller Mode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "多手柄模式"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "多手把模式"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "多手把模式"
+          }
+        }
+      }
+    },
+    "Mute in Background" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "后台静音"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "背景靜音"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "背景靜音"
+          }
+        }
+      }
+    },
     "name" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -12696,6 +14810,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "名稱"
+          }
+        }
+      }
+    },
+    "Native Touch" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "多点触控"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "多點觸控"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "多點觸控"
           }
         }
       }
@@ -12954,35 +15091,6 @@
         }
       }
     },
-    "No purchase found" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Purchase [%@] for:\n-  Pro-level pencil pressure curve tool.\n- Improved stroke transmission & responsiveness,  and user-defined keyboard/mouse shortcut for double tap & squeeze, in the remote drawing workflow.\n- Exclusive drawing-related on-screen buttons.\n- And more …\nNote: basic pencil function remains available without purchasing this add-on component."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "基础Pencil功能之上，购买 [%@] 可解锁：\n- 专业级笔压曲线工具。\n- 远程绘画笔迹传输优化、笔触响应性能优化。\n- 支持用户自定义的双击及捏合键盘/鼠标快捷键。\n- 专属绘图相关的屏显按钮。\n..."
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在基礎Pencil功能之上，購買 [%@] 可解鎖：\n- 專業級筆壓曲線工具。\n- 最佳化遠端繪畫的筆跡傳輸與筆觸響應效能。\n- 並支援使用者自訂的雙擊及捏合鍵盤/滑鼠快捷鍵。\n- 專屬繪圖相關的螢幕顯示按鈕。\n..."
-          }
-        },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "在基礎Pencil功能之上，購買 [%@] 可解鎖：\n- 專業級筆壓曲線工具。\n- 最佳化遠端繪畫的筆跡傳輸與筆觸響應效能。\n- 並支援使用者自訂的雙擊及捏合鍵盤/滑鼠快捷鍵。\n- 專屬繪圖相關的螢幕顯示按鈕。\n..."
-          }
-        }
-      }
-    },
     "No video received from host." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -13071,6 +15179,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "沒有足夠空間插入觸發間隔格"
+          }
+        }
+      }
+    },
+    "Not interested" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暂不感兴趣"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暫不感興趣"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "暫不感興趣"
           }
         }
       }
@@ -13209,6 +15340,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "NVIDIA GameStream 服務終止"
+          }
+        }
+      }
+    },
+    "Off" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "關閉"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "關閉"
           }
         }
       }
@@ -13353,6 +15507,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "螢幕控制器與控制項"
+          }
+        }
+      }
+    },
+    "On-Screen Widgets" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "屏显控件"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "螢幕控制項"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "螢幕控制項"
           }
         }
       }
@@ -13582,6 +15759,52 @@
         }
       }
     },
+    "Open Settings in Streaming" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "串流时打开设置"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "串流時開啟設定"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "串流時開啟設定"
+          }
+        }
+      }
+    },
+    "Open Toolbox in Streaming" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "串流时打开工具箱"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "串流時開啟工具箱"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "串流時開啟工具箱"
+          }
+        }
+      }
+    },
     "Opens pencil pressure curve tool" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -13601,6 +15824,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "開啟 Pencil 壓感曲線工具"
+          }
+        }
+      }
+    },
+    "Optimize Game Settings" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "优化游戏设置"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最佳化遊戲設定"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "最佳化遊戲設定"
           }
         }
       }
@@ -13899,6 +16145,29 @@
         }
       }
     },
+    "Passthrough Gestures" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "透传手势"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "透傳手勢"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "透傳手勢"
+          }
+        }
+      }
+    },
     "Pen Pressure Curve" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -13964,6 +16233,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pencil 懸浮"
+          }
+        }
+      }
+    },
+    "Pencil Mode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pencil模式(非内购功能)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pencil模式(非內購功能）"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pencil模式(非內購功能）"
           }
         }
       }
@@ -14108,7 +16400,33 @@
       }
     },
     "PencilProPackDescription" : {
-      "extractionState" : "manual"
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Purchase [%@] for:\n-  Pro-level pencil pressure curve tool.\n- Improved stroke transmission & responsiveness,  and user-defined keyboard/mouse shortcut for double tap & squeeze, in the remote drawing workflow.\n- Exclusive drawing-related on-screen buttons.\n- And more …\nNote: basic pencil function remains available without purchasing this add-on component."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "基础Pencil功能之上，购买 [%@] 可解锁：\n- 专业级笔压曲线工具。\n- 远程绘画笔迹传输优化、笔触响应性能优化。\n- 支持用户自定义的双击及捏合键盘/鼠标快捷键。\n- 专属绘图相关的屏显按钮。\n..."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在基礎Pencil功能之上，購買 [%@] 可解鎖：\n- 專業級筆壓曲線工具。\n- 最佳化遠端繪畫的筆跡傳輸與筆觸響應效能。\n- 並支援使用者自訂的雙擊及捏合鍵盤/滑鼠快捷鍵。\n- 專屬繪圖相關的螢幕顯示按鈕。\n..."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在基礎Pencil功能之上，購買 [%@] 可解鎖：\n- 專業級筆壓曲線工具。\n- 最佳化遠端繪畫的筆跡傳輸與筆觸響應效能。\n- 並支援使用者自訂的雙擊及捏合鍵盤/滑鼠快捷鍵。\n- 專屬繪圖相關的螢幕顯示按鈕。\n..."
+          }
+        }
+      }
     },
     "PencilProPackLowOSVersionTip" : {
       "extractionState" : "manual",
@@ -14220,6 +16538,29 @@
         }
       }
     },
+    "Performance Graph  " : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "性能图表"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "效能圖表"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "效能圖表"
+          }
+        }
+      }
+    },
     "Performance Graphs - Opacity: %ld%%" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14295,6 +16636,29 @@
         }
       }
     },
+    "Physical Mouse Wheel Scroll" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "物理鼠标滚轮方向"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "實體滑鼠滾輪方向"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "實體滑鼠滾輪方向"
+          }
+        }
+      }
+    },
     "physicaStickMinOffsetTip" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14366,6 +16730,52 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "選取版面"
+          }
+        }
+      }
+    },
+    "Pinch Gesture" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缩放手势"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "縮放手勢"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "縮放手勢"
+          }
+        }
+      }
+    },
+    "Pinch Sensitivity" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "缩放灵敏度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "縮放靈敏度"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "縮放靈敏度"
           }
         }
       }
@@ -14480,6 +16890,29 @@
         }
       }
     },
+    "Pitch Sensitivity" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "俯仰灵敏度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "俯仰靈敏度"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "俯仰靈敏度"
+          }
+        }
+      }
+    },
     "Place the device flat on a surface and keep it still, then tap ‘Start’." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14499,6 +16932,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "將裝置靜置於平面上，然後點「開始」。"
+          }
+        }
+      }
+    },
+    "Play Audio on PC" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 PC 上播放音频"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 PC 上播放音訊"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "在 PC 上播放音訊"
           }
         }
       }
@@ -14711,6 +17167,110 @@
         }
       }
     },
+    "Prefer iPhone/iPad Mic" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "优先使用 iPhone/iPad 麦克风"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "優先使用 iPhone/iPad 麥克風"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "優先使用 iPhone/iPad 麥克風"
+          }
+        }
+      }
+    },
+    "Preferred Codec" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "视频编解码"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "視訊編解碼"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "視訊編解碼"
+          }
+        }
+      }
+    },
+    "Press  🖥️  to quit app" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Press  🖥️  to quit app"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按  🖥️  退出 app"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按  🖥️  退出 app"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按  🖥️  退出 app"
+          }
+        }
+      }
+    },
+    "Press ‹ to quit app" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Press ‹ to quit app"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按 ‹ 退出 app"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按 ‹ 退出 app"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按 ‹ 退出 app"
+          }
+        }
+      }
+    },
     "Press a button for keeping gyro active by holding down.\nYou can have 2 buttons for both press-toggle & hold-down switch." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14849,6 +17409,29 @@
         }
       }
     },
+    "Press-toggle" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按下切换"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按下切換"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按下切換"
+          }
+        }
+      }
+    },
     "Pressed for %dms" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14891,6 +17474,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "壓感曲線"
+          }
+        }
+      }
+    },
+    "Pressure Curve" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "压力曲线"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壓力曲線"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "壓力曲線"
           }
         }
       }
@@ -15212,6 +17818,32 @@
         }
       }
     },
+    "PS" : {
+      "extractionState" : "manual"
+    },
+    "PS (Enhanced Haptics)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PS (触觉增强)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PS（觸覺增強）"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PS（觸覺增強）"
+          }
+        }
+      }
+    },
     "Purchase Now" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15231,6 +17863,87 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "即刻購買"
+          }
+        }
+      }
+    },
+    "pushToTalkExternalAudioTip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Push to Talk cannot be activated directly while external earphones are connected. Please disconnect first, then enable “Redirect Mic” in Settings → Audio."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外接耳机时无法直接激活对讲机，请先断开连接，在 设置菜单 → 音频分区 中打开“重定向麦克风”。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外接耳機時無法直接啟用對講機，請先中斷連線，在 設定選單 → 音訊區 中開啟「重新導向麥克風」。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外接耳機時無法直接啟用對講機，請先中斷連線，在 設定選單 → 音訊區 中開啟「重新導向麥克風」。"
+          }
+        }
+      }
+    },
+    "pushToTalkTip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold to send mic audio; release to stop. With “redirect mic” off, speaker playback retains high quality while not talking."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "按住发送麦克风声音，松开停止。关闭麦克风重定向时，外放可在未对讲时保持高音质。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "按住傳送麥克風聲音，放開停止。關閉麥克風重新導向時，揚聲器可在未對講時保持高音質。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "按住傳送麥克風聲音，放開停止。關閉麥克風重新導向時，揚聲器可在未對講時保持高音質。"
+          }
+        }
+      }
+    },
+    "Queue Buffering" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "队列缓冲"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "佇列緩衝"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "佇列緩衝"
           }
         }
       }
@@ -15581,6 +18294,58 @@
         }
       }
     },
+    "Redirect Mic" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重定向麦克风"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新導向麥克風"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "重新導向麥克風"
+          }
+        }
+      }
+    },
+    "redirectMicPushToTalkTip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When using the speaker, turn this option off and use the “Push to Talk” button directly to preserve high audio quality when you are not talking."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "外放模式下，关闭该选项并直接使用“对讲机”按键，可保持非语音状态下的高音质。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "揚聲器模式下，關閉此選項並直接使用「對講機」按鍵，可保持非語音狀態下的高音質。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "揚聲器模式下，關閉此選項並直接使用「對講機」按鍵，可保持非語音狀態下的高音質。"
+          }
+        }
+      }
+    },
     "redirectMicStackTip" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15611,7 +18376,27 @@
       }
     },
     "Regular" : {
-      "extractionState" : "manual"
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "常规"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "常規"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "常規"
+          }
+        }
+      }
     },
     "relativeTouchSlideThresholdStackLink" : {
       "extractionState" : "manual",
@@ -15638,6 +18423,29 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "https://voidlink.yuque.com/org-wiki-voidlink-znirha/fa3tgr/fqd6l1kgt482on8a"
+          }
+        }
+      }
+    },
+    "Remember Menu Fold/Expand" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "记住菜单折叠状态"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "記住選單摺疊狀態"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "記住選單摺疊狀態"
           }
         }
       }
@@ -15707,6 +18515,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "移除項目"
+          }
+        }
+      }
+    },
+    "Rendering Mode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "渲染模式"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "渲染模式"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "渲染模式"
           }
         }
       }
@@ -15809,6 +18640,10 @@
         }
       }
     },
+    "Reset EQ" : {
+      "comment" : "A button label that resets the haptic feedback equalizer to its default settings.",
+      "isCommentAutoGenerated" : true
+    },
     "Reset the pen pressure curve by starting from the pen pressure test?" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15828,6 +18663,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "是否從筆壓範圍測試開始重置筆壓曲線？"
+          }
+        }
+      }
+    },
+    "Resolution" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "串流分辨率"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "串流解析度"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "串流解析度"
           }
         }
       }
@@ -15970,6 +18828,52 @@
         }
       }
     },
+    "Reverse Hold Button" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "反转保持按键"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "反轉保持按鍵"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "反轉保持按鍵"
+          }
+        }
+      }
+    },
+    "Reversed" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "反转"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "反轉"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "反轉"
+          }
+        }
+      }
+    },
     "reverseHoldButtonStackTip" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -16091,6 +18995,29 @@
         }
       }
     },
+    "Right Stick Minimum Offset" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "右摇杆最小偏移"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "右搖桿最小偏移"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "右搖桿最小偏移"
+          }
+        }
+      }
+    },
     "Right stick wheel" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -16166,6 +19093,29 @@
         }
       }
     },
+    "Roll → Left Stick" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滚转→左摇杆"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滾轉→左搖桿"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滾轉→左搖桿"
+          }
+        }
+      }
+    },
     "Roll factor: %.2f" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -16185,6 +19135,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "滾轉係數: %.2f"
+          }
+        }
+      }
+    },
+    "Roll Sensitivity" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滚转灵敏度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滾轉靈敏度"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滾轉靈敏度"
           }
         }
       }
@@ -16379,6 +19352,29 @@
         }
       }
     },
+    "Safe Area" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安全区域"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安全區域"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安全區域"
+          }
+        }
+      }
+    },
     "Save" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -16398,6 +19394,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "儲存"
+          }
+        }
+      }
+    },
+    "Save Changes" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save Changes"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "保存修改"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "儲存修改"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "儲存修改"
+          }
+        }
+      }
+    },
+    "Save changes before closing?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Save changes before closing?"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关闭前是否保存修改？"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "關閉前是否儲存修改？"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "關閉前是否儲存修改？"
           }
         }
       }
@@ -16473,6 +19527,29 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "提示：手動鎖定螢幕方向以避免顯示異常"
+          }
+        }
+      }
+    },
+    "Scroll Sensitivity" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滚动灵敏度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滾動靈敏度"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滾動靈敏度"
           }
         }
       }
@@ -16788,6 +19865,29 @@
         }
       }
     },
+    "Send Dummy Event" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "发送假事件"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "發送假事件"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "發送假事件"
+          }
+        }
+      }
+    },
     "sendDummyEventStackTip" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -16984,6 +20084,35 @@
         }
       }
     },
+    "Setting already in favorites" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This setting is already in Favorites"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收藏夹已存在该设置"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收藏夾已存在此設定"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "收藏夾已存在此設定"
+          }
+        }
+      }
+    },
     "Settings" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -17151,6 +20280,29 @@
         }
       }
     },
+    "Simplified" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "简单"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "精簡"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "精簡"
+          }
+        }
+      }
+    },
     "simplifiedOsdText" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -17205,6 +20357,52 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "FPS: %6.2f+%.2f    掉幀: %4.1f%%    位元速率: %5.1f Mbps   延遲: %@"
+          }
+        }
+      }
+    },
+    "Single Point" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "单点鼠标"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "單點滑鼠"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "單點滑鼠"
+          }
+        }
+      }
+    },
+    "Single Tap Sensitivity" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "单击灵敏度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "單擊靈敏度"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "單擊靈敏度"
           }
         }
       }
@@ -17297,6 +20495,75 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "串流中選單的滑動距離：%.2f * 螢幕寬度"
+          }
+        }
+      }
+    },
+    "Slide Distance Threshold" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滑动距离阈值"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滑動距離閾值"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滑動距離閾值"
+          }
+        }
+      }
+    },
+    "Slide From Left Edge" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从左边缘滑动"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從左側邊緣滑動"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從左側邊緣滑動"
+          }
+        }
+      }
+    },
+    "Slide From Right Edge" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从右边缘滑动"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從右側邊緣滑動"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從右側邊緣滑動"
           }
         }
       }
@@ -17417,13 +20684,13 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "軟鍵盤工具欄"
+            "value" : "軟鍵盤工具列"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "軟鍵盤工具欄"
+            "value" : "軟鍵盤工具列"
           }
         }
       }
@@ -17534,6 +20801,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "透過系統自動取得的軟鍵盤高度可能不可靠（尤其是第三方輸入法），可能導致串流畫面無法正確抬升，指定軟鍵盤高度可解決此問題。"
+          }
+        }
+      }
+    },
+    "Speaker" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "扬声器"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "揚聲器"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "揚聲器"
           }
         }
       }
@@ -17717,6 +21007,29 @@
         }
       }
     },
+    "Standard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "标准"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "標準"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "標準"
+          }
+        }
+      }
+    },
     "standardRenderTip" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -17769,6 +21082,52 @@
         }
       }
     },
+    "Statistics Overlay" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "性能数据叠加"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "效能資料圖層"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "效能資料圖層"
+          }
+        }
+      }
+    },
+    "Stereo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "立体声"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "立體聲"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "立體聲"
+          }
+        }
+      }
+    },
     "Stereo (surround sound available for iOS18+)" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -17788,6 +21147,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "立體聲 (iOS18+ 提供環繞音效)"
+          }
+        }
+      }
+    },
+    "Stereo(SDL)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "立体声(SDL)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "立體聲(SDL)"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "立體聲(SDL)"
           }
         }
       }
@@ -17902,6 +21284,29 @@
         }
       }
     },
+    "Streaming Radial Menu Delay" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "串流手柄菜单延迟"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "串流手把選單延遲"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "串流手把選單延遲"
+          }
+        }
+      }
+    },
     "streamingRadialMenuButtonTip" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -18000,6 +21405,52 @@
         }
       }
     },
+    "Stroke Type" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "笔迹类型"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "筆跡類型"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "筆跡類型"
+          }
+        }
+      }
+    },
+    "Stylus" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手写笔"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手寫筆"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手寫筆"
+          }
+        }
+      }
+    },
     "Successfully sent wake-up request. It may take a few moments for the PC to wake. If it never wakes up, ensure it's properly configured for Wake-on-LAN." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -18052,6 +21503,52 @@
         }
       }
     },
+    "Swap A/B X/Y Buttons" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "交换A/B键、X/Y键"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "交換A/B鍵、X/Y鍵"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "交換A/B鍵、X/Y鍵"
+          }
+        }
+      }
+    },
+    "Swap Yaw & Roll" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "偏航/横滚互换"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "偏航/橫滾互換"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "偏航/橫滾互換"
+          }
+        }
+      }
+    },
     "swapYawAndRollStackTip" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -18081,6 +21578,29 @@
         }
       }
     },
+    "Switch Gyro by Controller" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手柄开关陀螺仪"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手把開關陀螺儀"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手把開關陀螺儀"
+          }
+        }
+      }
+    },
     "Switch on/off a floating gamepad overlay with live input feedback" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -18100,6 +21620,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "開關一個帶有即時輸入回饋的虛擬手把覆蓋層"
+          }
+        }
+      }
+    },
+    "System" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跟随系统"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跟隨系統"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "跟隨系統"
           }
         }
       }
@@ -18357,6 +21900,35 @@
         }
       }
     },
+    "Text Input" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text Input"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文本输入"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文字輸入"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "文字輸入"
+          }
+        }
+      }
+    },
     "The connection was terminated, Error code: %@" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -18392,13 +21964,13 @@
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "主题"
+            "value" : "主題"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "主题"
+            "value" : "主題"
           }
         }
       }
@@ -18564,6 +22136,29 @@
         }
       }
     },
+    "Tick Interval" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "笔画间隔"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "筆畫間隔"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "筆畫間隔"
+          }
+        }
+      }
+    },
     "Timed release" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -18639,6 +22234,29 @@
         }
       }
     },
+    "Toggle Local Soft Keyboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切换本地软键盘"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切換本機軟鍵盤"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "切換本機軟鍵盤"
+          }
+        }
+      }
+    },
     "Toolbox" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -18662,6 +22280,29 @@
         }
       }
     },
+    "Touch" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "触控"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "觸控"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "觸控"
+          }
+        }
+      }
+    },
     "Touch Control" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -18681,6 +22322,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "触控"
+          }
+        }
+      }
+    },
+    "Touch Mode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "触控模式"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "觸控模式"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "觸控模式"
           }
         }
       }
@@ -18773,6 +22437,52 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "觸控模式 - 具備螢幕控制器與滑鼠支援"
+          }
+        }
+      }
+    },
+    "Touch Point Tracking" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "触点跟踪"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "觸點追蹤"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "觸點追蹤"
+          }
+        }
+      }
+    },
+    "Touch Pointer Velocity" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "触点灵敏度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "觸點靈敏度"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "觸點靈敏度"
           }
         }
       }
@@ -18871,6 +22581,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "- 觸控板：與 Windows 筆記型電腦風格觸控板，快速雙擊並滑動即可拖曳，雙指快速輕按觸發滑鼠右鍵，雙指滑動可捲動滑鼠滾輪。\n不建議用於 3D 遊戲，遊戲時請使用 MousePad 螢幕控制項。\n\n- 多點觸控：以 Windows 平板的方式操作 PC 主機。不支援 macOS 主機。\n\n\n- 單點滑鼠：可為 macOS 提供類觸控螢幕體驗。"
+          }
+        }
+      }
+    },
+    "Touchpad" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "触控板"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "觸控板"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "觸控板"
           }
         }
       }
@@ -19036,6 +22769,75 @@
         }
       }
     },
+    "tvOSManualIpTip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tap the touch surface in the iPhone/iPad Apple TV Remote, then enter the IP address on your iPhone/iPad."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "请点击 iPhone/iPad 的 Apple TV 遥控界面触控板，从 iPhone/iPad 输入 IP 地址"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請點擊 iPhone/iPad Apple TV 遙控介面觸控板，從 iPhone/iPad 輸入 IP 位址"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "請點擊 iPhone/iPad Apple TV 遙控介面觸控板，從 iPhone/iPad 輸入 IP 位址"
+          }
+        }
+      }
+    },
+    "tvOSRemoteTextInputPlaceholder" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hold [LT] to end with Enter. Or Type on iPhone"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "按住 [LT] 完成发送 Enter，或用 iPhone 输入文本"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "按住 [LT] 完成發送Enter，或用 iPhone 輸入文本"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "按住 [LT] 完成發送Enter，或用 iPhone 輸入文本"
+          }
+        }
+      }
+    },
+    "tvOSRemoteTextInputTip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter text from iPhone/iPad · ❮ New line · ⏯︎ End text input"
+          }
+        }
+      }
+    },
     "Unable to detect purchased product: %@" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -19153,6 +22955,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "上箭頭"
+          }
+        }
+      }
+    },
+    "Use Built-in Mic" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用内置麦克风"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用內建麥克風"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "使用內建麥克風"
           }
         }
       }
@@ -19437,6 +23262,58 @@
         }
       }
     },
+    "Visible" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可见(绝对坐标)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可見(絕對座標)"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "可見(絕對座標)"
+          }
+        }
+      }
+    },
+    "Voice Capture Mode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Voice Capture Mode"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "语音采集模式"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "語音擷取模式"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "語音擷取模式"
+          }
+        }
+      }
+    },
     "VoidLink delivers better performance now!" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -19479,6 +23356,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "等待控制器接入……"
+          }
+        }
+      }
+    },
+    "Waiting for Game Controller ..." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for Game Controller ..."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在等待手柄接入 ..."
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在等待遊戲控制器連接 ..."
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在等待遊戲控制器連接 ..."
           }
         }
       }
@@ -20002,6 +23908,12 @@
         }
       }
     },
+    "Xbox + PS" : {
+      "extractionState" : "manual"
+    },
+    "Xbox 360" : {
+      "extractionState" : "manual"
+    },
     "Y Offset" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -20050,6 +23962,52 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "偏航係數: %.2f"
+          }
+        }
+      }
+    },
+    "Yaw Sensitivity" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "偏航灵敏度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "偏航靈敏度"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "偏航靈敏度"
+          }
+        }
+      }
+    },
+    "Yaw&Pitch → Right Stick" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "偏航/俯仰→右摇杆"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "偏航/俯仰→右搖桿"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "偏航/俯仰→右搖桿"
           }
         }
       }
@@ -20125,6 +24083,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "https://voidlink.yuque.com/org-wiki-voidlink-znirha/fa3tgr/iy4zgh86odhfgf6h"
+          }
+        }
+      }
+    },
+    "YUV 4:4:4" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "YUV 4:4:4"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "YUV 4:4:4"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "YUV 4:4:4"
           }
         }
       }

@@ -13,6 +13,10 @@
 		180B87D92E65DF27007D9E22 /* RecorderCallbacks.c in Sources */ = {isa = PBXBuildFile; fileRef = 180B87D52E65DF27007D9E22 /* RecorderCallbacks.c */; };
 		180B87DA2E65DF27007D9E22 /* rswrapper.c in Sources */ = {isa = PBXBuildFile; fileRef = 180B87DB2E65DF27007D9E22 /* rswrapper.c */; };
 		180B87DC2E65DF27007D9E22 /* rswrapper.c in Sources */ = {isa = PBXBuildFile; fileRef = 180B87DB2E65DF27007D9E22 /* rswrapper.c */; };
+		1815D5002E6E0001007D9E22 /* Ds5HapticsStream.c in Sources */ = {isa = PBXBuildFile; fileRef = 1815D5042E6E0001007D9E22 /* Ds5HapticsStream.c */; };
+		1815D5012E6E0001007D9E22 /* Ds5HapticsIrStream.c in Sources */ = {isa = PBXBuildFile; fileRef = 1815D5062E6E0001007D9E22 /* Ds5HapticsIrStream.c */; };
+		1815D5022E6E0001007D9E22 /* Ds5HapticsStream.c in Sources */ = {isa = PBXBuildFile; fileRef = 1815D5042E6E0001007D9E22 /* Ds5HapticsStream.c */; };
+		1815D5032E6E0001007D9E22 /* Ds5HapticsIrStream.c in Sources */ = {isa = PBXBuildFile; fileRef = 1815D5062E6E0001007D9E22 /* Ds5HapticsIrStream.c */; };
 		983091DE24CEB69B00A0835D /* ConnectionTester.c in Sources */ = {isa = PBXBuildFile; fileRef = 983091DD24CEB69B00A0835D /* ConnectionTester.c */; };
 		983091DF24CEB69B00A0835D /* ConnectionTester.c in Sources */ = {isa = PBXBuildFile; fileRef = 983091DD24CEB69B00A0835D /* ConnectionTester.c */; };
 		98AB2E401CAD425A0089BB98 /* AudioStream.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E1A1CAD423B0089BB98 /* AudioStream.c */; };
@@ -26,6 +30,7 @@
 		98AB2E481CAD425A0089BB98 /* Platform.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E311CAD423B0089BB98 /* Platform.c */; };
 		98AB2E491CAD425A0089BB98 /* PlatformSockets.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E331CAD423B0089BB98 /* PlatformSockets.c */; };
 		98AB2E4B1CAD425A0089BB98 /* RtspConnection.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E391CAD423B0089BB98 /* RtspConnection.c */; };
+		98AB2E591CAD425A0089BB98 /* DynamicHdr.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E5A1CAD425A0089BB98 /* DynamicHdr.c */; };
 		98AB2E4C1CAD425A0089BB98 /* RtspParser.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E3A1CAD423B0089BB98 /* RtspParser.c */; };
 		98AB2E4D1CAD425A0089BB98 /* SdpGenerator.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E3B1CAD423B0089BB98 /* SdpGenerator.c */; };
 		98AB2E4E1CAD425A0089BB98 /* VideoDepacketizer.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E3D1CAD423B0089BB98 /* VideoDepacketizer.c */; };
@@ -60,6 +65,7 @@
 		FB1A680221324F4900507771 /* Platform.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E311CAD423B0089BB98 /* Platform.c */; };
 		FB1A680321324F4900507771 /* PlatformSockets.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E331CAD423B0089BB98 /* PlatformSockets.c */; };
 		FB1A680521324F4900507771 /* RtspConnection.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E391CAD423B0089BB98 /* RtspConnection.c */; };
+		FB1A681321324F4900507771 /* DynamicHdr.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E5A1CAD425A0089BB98 /* DynamicHdr.c */; };
 		FB1A680621324F4900507771 /* RtspParser.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E3A1CAD423B0089BB98 /* RtspParser.c */; };
 		FB1A680721324F4900507771 /* SdpGenerator.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E3B1CAD423B0089BB98 /* SdpGenerator.c */; };
 		FB1A680821324F4900507771 /* VideoDepacketizer.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E3D1CAD423B0089BB98 /* VideoDepacketizer.c */; };
@@ -92,6 +98,10 @@
 		180B87D52E65DF27007D9E22 /* RecorderCallbacks.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = RecorderCallbacks.c; sourceTree = "<group>"; };
 		180B87DB2E65DF27007D9E22 /* rswrapper.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = rswrapper.c; sourceTree = "<group>"; };
 		180B87DD2E65DF27007D9E22 /* rswrapper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = rswrapper.h; sourceTree = "<group>"; };
+		1815D5042E6E0001007D9E22 /* Ds5HapticsStream.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Ds5HapticsStream.c; sourceTree = "<group>"; };
+		1815D5052E6E0001007D9E22 /* Ds5HapticsStream.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Ds5HapticsStream.h; sourceTree = "<group>"; };
+		1815D5062E6E0001007D9E22 /* Ds5HapticsIrStream.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Ds5HapticsIrStream.c; sourceTree = "<group>"; };
+		1815D5072E6E0001007D9E22 /* Ds5HapticsIrStream.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Ds5HapticsIrStream.h; sourceTree = "<group>"; };
 		983091DD24CEB69B00A0835D /* ConnectionTester.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ConnectionTester.c; sourceTree = "<group>"; };
 		98AB2DF01CAD422B0089BB98 /* callbacks.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = callbacks.c; sourceTree = "<group>"; };
 		98AB2DF11CAD422B0089BB98 /* ChangeLog */ = {isa = PBXFileReference; lastKnownFileType = text; path = ChangeLog; sourceTree = "<group>"; };
@@ -150,6 +160,7 @@
 		98AB2E351CAD423B0089BB98 /* PlatformThreads.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PlatformThreads.h; sourceTree = "<group>"; };
 		98AB2E381CAD423B0089BB98 /* Rtsp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Rtsp.h; sourceTree = "<group>"; };
 		98AB2E391CAD423B0089BB98 /* RtspConnection.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = RtspConnection.c; sourceTree = "<group>"; };
+		98AB2E5A1CAD425A0089BB98 /* DynamicHdr.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = DynamicHdr.c; sourceTree = "<group>"; };
 		98AB2E3A1CAD423B0089BB98 /* RtspParser.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = RtspParser.c; sourceTree = "<group>"; };
 		98AB2E3B1CAD423B0089BB98 /* SdpGenerator.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = SdpGenerator.c; sourceTree = "<group>"; };
 		98AB2E3C1CAD423B0089BB98 /* Video.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Video.h; sourceTree = "<group>"; };
@@ -280,6 +291,10 @@
 				98AB2E1D1CAD423B0089BB98 /* Connection.c */,
 				983091DD24CEB69B00A0835D /* ConnectionTester.c */,
 				98AB2E1E1CAD423B0089BB98 /* ControlStream.c */,
+				1815D5062E6E0001007D9E22 /* Ds5HapticsIrStream.c */,
+				1815D5072E6E0001007D9E22 /* Ds5HapticsIrStream.h */,
+				1815D5042E6E0001007D9E22 /* Ds5HapticsStream.c */,
+				1815D5052E6E0001007D9E22 /* Ds5HapticsStream.h */,
 				98AB2E1F1CAD423B0089BB98 /* FakeCallbacks.c */,
 				98AB2E201CAD423B0089BB98 /* Input.h */,
 				98AB2E211CAD423B0089BB98 /* InputStream.c */,
@@ -288,6 +303,7 @@
 				98AB2E241CAD423B0089BB98 /* LinkedBlockingQueue.c */,
 				98AB2E251CAD423B0089BB98 /* LinkedBlockingQueue.h */,
 				98AB2E261CAD423B0089BB98 /* Misc.c */,
+				98AB2E5A1CAD425A0089BB98 /* DynamicHdr.c */,
 				98AB2E311CAD423B0089BB98 /* Platform.c */,
 				98AB2E321CAD423B0089BB98 /* Platform.h */,
 				98B8C2B5262BC1220027F659 /* PlatformCrypto.c */,
@@ -419,11 +435,14 @@
 				180B87D72E65DF27007D9E22 /* RecorderCallbacks.c in Sources */,
 				FB1A67FC21324F4900507771 /* Connection.c in Sources */,
 				FB1A67FD21324F4900507771 /* ControlStream.c in Sources */,
+				1815D5022E6E0001007D9E22 /* Ds5HapticsStream.c in Sources */,
+				1815D5032E6E0001007D9E22 /* Ds5HapticsIrStream.c in Sources */,
 				FB1A67FE21324F4900507771 /* FakeCallbacks.c in Sources */,
 				983091DF24CEB69B00A0835D /* ConnectionTester.c in Sources */,
 				FB1A67FF21324F4900507771 /* InputStream.c in Sources */,
 				FB1A680021324F4900507771 /* LinkedBlockingQueue.c in Sources */,
 				FB1A680121324F4900507771 /* Misc.c in Sources */,
+				FB1A681321324F4900507771 /* DynamicHdr.c in Sources */,
 				FB1A680221324F4900507771 /* Platform.c in Sources */,
 				FB1A680321324F4900507771 /* PlatformSockets.c in Sources */,
 				FB1A680521324F4900507771 /* RtspConnection.c in Sources */,
@@ -459,11 +478,14 @@
 				180B87D92E65DF27007D9E22 /* RecorderCallbacks.c in Sources */,
 				98AB2E421CAD425A0089BB98 /* Connection.c in Sources */,
 				98AB2E431CAD425A0089BB98 /* ControlStream.c in Sources */,
+				1815D5002E6E0001007D9E22 /* Ds5HapticsStream.c in Sources */,
+				1815D5012E6E0001007D9E22 /* Ds5HapticsIrStream.c in Sources */,
 				98AB2E441CAD425A0089BB98 /* FakeCallbacks.c in Sources */,
 				98AB2E451CAD425A0089BB98 /* InputStream.c in Sources */,
 				983091DE24CEB69B00A0835D /* ConnectionTester.c in Sources */,
 				98AB2E461CAD425A0089BB98 /* LinkedBlockingQueue.c in Sources */,
 				98AB2E471CAD425A0089BB98 /* Misc.c in Sources */,
+				98AB2E591CAD425A0089BB98 /* DynamicHdr.c in Sources */,
 				98AB2E481CAD425A0089BB98 /* Platform.c in Sources */,
 				98AB2E491CAD425A0089BB98 /* PlatformSockets.c in Sources */,
 				98AB2E4B1CAD425A0089BB98 /* RtspConnection.c in Sources */,
@@ -616,6 +638,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
+				__DIAGNOSE_INVALID_DEPLOYMENT_TARGET_AS_ERROR = No;
 			};
 			name = Debug;
 		};
@@ -676,6 +699,7 @@
 				PROVISIONING_PROFILE = "";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
+				__DIAGNOSE_INVALID_DEPLOYMENT_TARGET_AS_ERROR = No;
 			};
 			name = Release;
 		};
@@ -696,7 +720,8 @@
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvsimulator appletvos";
+				TVOS_DEPLOYMENT_TARGET = 16.0;
 			};
 			name = Debug;
 		};
@@ -717,7 +742,8 @@
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
-				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos appletvsimulator appletvos";
+				TVOS_DEPLOYMENT_TARGET = 16.0;
 			};
 			name = Release;
 		};

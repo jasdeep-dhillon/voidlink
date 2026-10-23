@@ -35,9 +35,11 @@ final class GamepadNavigationIllustrationHud: UIView {
     private static var actionStateMinimumEndTimes: [ControllerElement: CFTimeInterval] = [:]
     private static var pendingActionStateWorkItems: [ControllerElement: DispatchWorkItem] = [:]
     private static var pendingClearHudWorkItem: DispatchWorkItem?
+    private static var presentationSuspendedForTvOSSystemTextInput = false
     private static let minimumActionStateDuration: CFTimeInterval = 0.09
-    private static let hudScale: CGFloat = PublicUtils.isIPhone ? 0.74 : 1
-    private static let hudWidth: CGFloat = 235
+    private static let hudScale: CGFloat = PublicUtils.isIPhone ? 0.74 : (PublicUtils.isTVOS ? 1.3 : 1)
+    private static let hudWidth: CGFloat = {
+        return 235 * hudScale}()
     private static let edgeMargin: CGFloat = PublicUtils.isIPhone ? 5 : 24
     private var hints: [Hint] = []
 
@@ -72,7 +74,9 @@ final class GamepadNavigationIllustrationHud: UIView {
 
     @discardableResult
     static func showInKeyWindow() -> GamepadNavigationIllustrationHud? {
-        guard let window = keyWindow(), ControllerUtil.primaryGCController != nil else {
+        guard !presentationSuspendedForTvOSSystemTextInput,
+              let window = keyWindow(),
+              ControllerUtil.primaryGCController != nil else {
             return nil
         }
         
@@ -98,6 +102,7 @@ final class GamepadNavigationIllustrationHud: UIView {
 
 
     @objc static func updateNavigationElements(_ elements: [ControllerNavigationElement], forceDisplay: Bool = false) {
+        guard !presentationSuspendedForTvOSSystemTextInput else { return }
         if !forceDisplay {
             guard ControllerNavigator.enabled, ControllerUtil.primaryGCController != nil else {return}
             guard !ControllerNavigator.stickReleasedInRadialMenu else {return}
@@ -114,6 +119,7 @@ final class GamepadNavigationIllustrationHud: UIView {
         for element in elements {
             print("element \(element.action)")
         } */
+        
         updateNavigationElements(elements, forceDisplay: forceDisplay)
     }
 
@@ -151,9 +157,24 @@ final class GamepadNavigationIllustrationHud: UIView {
             requestHudDetachKeepingMinimumActionDuration()
         }
     }
+
+    @objc static func setTvOSSystemTextInputActive(_ active: Bool) {
+#if os(tvOS)
+        PublicUtils.runOnMain {
+            presentationSuspendedForTvOSSystemTextInput = active
+            if active {
+                finishHudDetach()
+            } else {
+                updateHud()
+            }
+        }
+#endif
+    }
     
     func updateTheme() {
-        let isDark = ThemeManager.userInterfaceStyle() == .dark
+        let isStreaming = (ControllerNavigator.radialMenuDelegate as? MainFrameViewController)?.isStreaming() == true
+        let isDark = !isStreaming && ThemeManager.userInterfaceStyle() == .dark
+        let textColor = isStreaming ? UIColor.black : ThemeManager.textColor
 
         backgroundColor = isDark
             ? UIColor(red: 28.0 / 255.0, green: 28.0 / 255.0, blue: 30.0 / 255.0, alpha: 0.62)
@@ -189,7 +210,7 @@ final class GamepadNavigationIllustrationHud: UIView {
                     imageView.tintColor = isInAction ? ThemeManager.appPrimaryColor.withAlphaComponent(isDark ? 1 : 1) : ThemeManager.appPrimaryColor.withAlphaComponent(isDark ? 0.83 : 0.83)
                 }
             }
-            updateTitleColors(in: titleView, color: ThemeManager.textColor.withAlphaComponent(isDark ? 0.69 : 0.6))
+            updateTitleColors(in: titleView, color: textColor.withAlphaComponent(isDark ? 0.69 : 0.6))
         }
     }
 
@@ -198,22 +219,22 @@ final class GamepadNavigationIllustrationHud: UIView {
         isUserInteractionEnabled = false
         containerView.translatesAutoresizingMaskIntoConstraints = false
         containerView.isUserInteractionEnabled = false
-        transform = CGAffineTransform(scaleX: Self.hudScale, y: Self.hudScale)
-        layer.cornerRadius = 18
+        // transform = CGAffineTransform(scaleX: Self.hudScale, y: Self.hudScale)
+        layer.cornerRadius = 18 * GamepadNavigationIllustrationHud.hudScale
         layer.cornerCurve = .continuous
-        layer.borderWidth = 1
+        layer.borderWidth = 1 * GamepadNavigationIllustrationHud.hudScale
 
         contentStackView.axis = .vertical
         contentStackView.alignment = .leading
-        contentStackView.spacing = 6
+        contentStackView.spacing = 6 * GamepadNavigationIllustrationHud.hudScale
         contentStackView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(contentStackView)
 
         NSLayoutConstraint.activate([
-            contentStackView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12),
-            contentStackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
-            contentStackView.topAnchor.constraint(equalTo: topAnchor, constant: 10),
-            contentStackView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -10)
+            contentStackView.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12 * GamepadNavigationIllustrationHud.hudScale),
+            contentStackView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12 * GamepadNavigationIllustrationHud.hudScale),
+            contentStackView.topAnchor.constraint(equalTo: topAnchor, constant: 10 * GamepadNavigationIllustrationHud.hudScale),
+            contentStackView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -10 * GamepadNavigationIllustrationHud.hudScale)
         ])
 
         reloadHintRows()
@@ -298,8 +319,8 @@ final class GamepadNavigationIllustrationHud: UIView {
             let trailingConstraint = containerView.trailingAnchor.constraint(equalTo: window.safeAreaLayoutGuide.trailingAnchor)
             self.trailingConstraint = trailingConstraint
             windowConstraints = [
-                containerView.widthAnchor.constraint(equalToConstant: Self.hudWidth * Self.hudScale),
-                containerView.heightAnchor.constraint(equalTo: heightAnchor, multiplier: Self.hudScale),
+                containerView.widthAnchor.constraint(equalToConstant: Self.hudWidth * 1),
+                containerView.heightAnchor.constraint(equalTo: heightAnchor, multiplier: 1),
                 trailingConstraint,
                 containerView.bottomAnchor.constraint(equalTo: window.safeAreaLayoutGuide.bottomAnchor, constant: -Self.edgeMargin),
 
@@ -334,7 +355,7 @@ final class GamepadNavigationIllustrationHud: UIView {
         let rowStackView = UIStackView(arrangedSubviews: [keyView, titleView])
         rowStackView.axis = .horizontal
         rowStackView.alignment = .center
-        rowStackView.spacing = 8
+        rowStackView.spacing = 8 * GamepadNavigationIllustrationHud.hudScale
         return rowStackView
     }
 
@@ -343,7 +364,7 @@ final class GamepadNavigationIllustrationHud: UIView {
             let stackView = UIStackView(arrangedSubviews: titles.map { makeTitleLabel(text: $0, isMergedTitle: true) })
             stackView.axis = .vertical
             stackView.alignment = .leading
-            stackView.spacing = 1
+            stackView.spacing = 1 * GamepadNavigationIllustrationHud.hudScale
             stackView.setContentCompressionResistancePriority(.required, for: .horizontal)
             return stackView
         }
@@ -354,7 +375,7 @@ final class GamepadNavigationIllustrationHud: UIView {
     private func makeTitleLabel(text: String, isMergedTitle: Bool) -> UILabel {
         let titleLabel = UILabel()
         titleLabel.text = text
-        titleLabel.font = UIFont.roundedSystemFont(ofSize: isMergedTitle ? 12.5 : 14, weight: .medium)
+        titleLabel.font = UIFont.roundedSystemFont(ofSize: (isMergedTitle ? 12.5 : 14) * GamepadNavigationIllustrationHud.hudScale, weight: .medium)
         titleLabel.adjustsFontSizeToFitWidth = true
         titleLabel.minimumScaleFactor = isMergedTitle ? 0.55 : 0.2
         titleLabel.numberOfLines = 1
@@ -377,8 +398,8 @@ final class GamepadNavigationIllustrationHud: UIView {
         keyContainerView.backgroundColor = .clear
 
         NSLayoutConstraint.activate([
-            keyContainerView.widthAnchor.constraint(equalToConstant: 50),
-            keyContainerView.heightAnchor.constraint(equalToConstant: PublicUtils.isIPhone ? 38 : 42)
+            keyContainerView.widthAnchor.constraint(equalToConstant: 50 * GamepadNavigationIllustrationHud.hudScale),
+            keyContainerView.heightAnchor.constraint(equalToConstant: (PublicUtils.isIPhone ? 38 : 42) * GamepadNavigationIllustrationHud.hudScale)
         ])
 
         let borderView = UIView()
@@ -386,16 +407,16 @@ final class GamepadNavigationIllustrationHud: UIView {
         borderView.translatesAutoresizingMaskIntoConstraints = false
         borderView.isUserInteractionEnabled = false
         borderView.backgroundColor = .clear
-        borderView.layer.cornerRadius = 13
+        borderView.layer.cornerRadius = 13 * GamepadNavigationIllustrationHud.hudScale
         borderView.layer.cornerCurve = .continuous
-        borderView.layer.borderWidth = 1
+        borderView.layer.borderWidth = 1 * GamepadNavigationIllustrationHud.hudScale
         borderView.layer.masksToBounds = true
         keyContainerView.addSubview(borderView)
 
         let keyView = UIView()
         keyView.tag = Self.keyContentViewTag
         keyView.translatesAutoresizingMaskIntoConstraints = false
-        keyView.layer.cornerRadius = 12
+        keyView.layer.cornerRadius = 12 * GamepadNavigationIllustrationHud.hudScale
         keyView.layer.cornerCurve = .continuous
         keyView.layer.masksToBounds = true
         keyContainerView.addSubview(keyView)
@@ -415,11 +436,11 @@ final class GamepadNavigationIllustrationHud: UIView {
         switch content {
         case .text(let text):
             let keyLabel = InsetLabel()
-            keyLabel.contentInsets = UIEdgeInsets(top: 0, left: 6, bottom: 0, right: 6)
+            keyLabel.contentInsets = UIEdgeInsets(top: 0, left: 6*GamepadNavigationIllustrationHud.hudScale, bottom: 0, right: 6*GamepadNavigationIllustrationHud.hudScale)
             keyLabel.translatesAutoresizingMaskIntoConstraints = false
             keyLabel.text = text
             keyLabel.textAlignment = .center
-            keyLabel.font = UIFont.roundedSystemFont(ofSize: 12, weight: PublicUtils.isIPhone ? .semibold : .medium)
+            keyLabel.font = UIFont.roundedSystemFont(ofSize: 12 * GamepadNavigationIllustrationHud.hudScale, weight: PublicUtils.isIPhone ? .semibold : .medium)
             keyLabel.adjustsFontSizeToFitWidth = true
             keyLabel.minimumScaleFactor = 0.2
             keyLabel.numberOfLines = 1
@@ -435,7 +456,7 @@ final class GamepadNavigationIllustrationHud: UIView {
             let imageView = UIImageView(image: UIImage(systemName: symbolName))
             imageView.translatesAutoresizingMaskIntoConstraints = false
             imageView.contentMode = .scaleAspectFit
-            imageView.preferredSymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 18, weight: .medium)
+            imageView.preferredSymbolConfiguration = UIImage.SymbolConfiguration(pointSize: 18 * GamepadNavigationIllustrationHud.hudScale, weight: .medium)
             keyView.addSubview(imageView)
             NSLayoutConstraint.activate([
                 imageView.centerXAnchor.constraint(equalTo: keyView.centerXAnchor),
@@ -514,7 +535,7 @@ final class GamepadNavigationIllustrationHud: UIView {
         DispatchQueue.main.asyncAfter(deadline: .now() + remainingDuration, execute: workItem)
     }
 
-    private static func finishHudDetach() {
+    static func finishHudDetach() {
         pendingClearHudWorkItem?.cancel()
         pendingClearHudWorkItem = nil
         pendingActionStateWorkItems.values.forEach { $0.cancel() }

@@ -18,14 +18,17 @@
 #import "KeyboardSupport.h"
 #import "VoidLink-Swift.h"
 #import "NativeTouchPointer.h"
+#if !TARGET_OS_TV
 #import "NativeTouchHandler.h"
 #import "PureNativeTouchHandler.h"
 #import "RelativeTouchHandler.h"
 #import "AbsoluteTouchHandler.h"
-#import "KeyboardInputField.h"
 #import "CustomTapGestureRecognizer.h"
+#endif
+#import "KeyboardInputField.h"
 #import "LocalizationHelper.h"
 #import "StreamFrameViewController.h"
+#import "SceneDelegate.h"
 
 
 #if TARGET_OS_TV
@@ -38,6 +41,9 @@
 
 
 static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
+// Keeps the input field nonempty so we can distinguish Backspace from ordinary input
+// without showing a character in the tvOS system keyboard.
+static NSString * const KeyboardInputSentinel = @"\u200B";
 
 /*
  Stream Video has been moved out of this class to _renderView in StreamFrameViewController.
@@ -49,6 +55,10 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
     KeyboardInputField* keyInputField;
     BOOL isInputingText;
     bool dockedKeyboardActionDetected;
+#if TARGET_OS_TV
+    BOOL tvOSRemoteTextInputLoopActive;
+    UILabel* tvOSRemoteTextInputTip;
+#endif
     
     bool isPencilHovering;
     NSMutableSet* keysDown;
@@ -75,10 +85,12 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
     BOOL hasUserInteracted;
 
     NSDictionary<NSString *, NSNumber *> *dictCodes;
+#if !TARGET_OS_TV
     CustomTapGestureRecognizer *keyboardToggleRecognizer;
+#endif
     UIPanGestureRecognizer *discreteMouseWheelRecognizer;
     UIPanGestureRecognizer *continuousMouseWheelRecognizer;
-#if defined(__IPHONE_16_1) || defined(__TVOS_16_1)
+#if !TARGET_OS_TV && (defined(__IPHONE_16_1) || defined(__TVOS_16_1))
     UIHoverGestureRecognizer *stylusHoverRecognizer;
 #endif
     CGFloat designatedSoftKeyboardHeight;
@@ -98,6 +110,13 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
              gameProfile:(OSCProfile* )profile
  streamFrameTopLayerView:(UIView* )topLayerView{
     if(!self.streamFrameVC) self.streamFrameVC = (StreamFrameViewController* )[PublicUtils parentViewControllerForView:self];
+
+#if TARGET_OS_TV
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:VoidLinkTvOSRemoteMenuTappedNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:VoidLinkTvOSRemotePlayPauseTappedNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(tvOSRemoteMenuTapped:) name:VoidLinkTvOSRemoteMenuTappedNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(tvOSRemotePlayPauseTapped:) name:VoidLinkTvOSRemotePlayPauseTappedNotification object:nil];
+#endif
     
     self->comboKeyModifierFlags = (UIKeyModifierControl|UIKeyModifierAlternate|UIKeyModifierShift);
 
@@ -142,8 +161,7 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
     // [self->streamFrameTopLayerView addGestureRecognizer:keyboardToggleRecognizer]; //add to the superview in other modes
     
 #if TARGET_OS_TV
-    // tvOS requires RelativeTouchHandler to manage Apple Remote input
-    self->touchHandler = [[RelativeTouchHandler alloc] initWithView:self];
+    self->touchHandler = nil;
 #else
     
     PencilHandler.shared = [[PencilHandler alloc] initWithStreamView:self settings:settings];
@@ -231,6 +249,12 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
 }
 
 - (void)updateTouchHandlerWithProfile:(OSCProfile* )profile{
+#if TARGET_OS_TV
+    touchMode = TouchDisabled;
+    self->touchHandler = nil;
+    sessionTouchHandler = nil;
+    (void)profile;
+#else
     touchMode = profile.touchMode;
     switch (touchMode) {
         case NativeTouch:
@@ -260,9 +284,13 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
     }
     sessionTouchHandler = touchHandler;
     if(_streamFrameVC.touchDisabled) touchHandler = nil;
+#endif
 }
 
 - (void)refreshKeyboardToggleRecognizer:(uint8_t)numberOfTouches{
+#if TARGET_OS_TV
+    (void)numberOfTouches;
+#else
     [self->_streamFrameTopLayerView removeGestureRecognizer:keyboardToggleRecognizer];
     keyboardToggleRecognizer = [[CustomTapGestureRecognizer alloc] initWithTarget:self action:@selector(toggleKeyboard)];
     keyboardToggleRecognizer.numberOfTouchesRequired = numberOfTouches; //will be changed accordinly by touch modes.
@@ -271,9 +299,13 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
     keyboardToggleRecognizer.delaysTouchesEnded = NO;
     [self->_streamFrameTopLayerView addGestureRecognizer:keyboardToggleRecognizer];
     keyboardToggleRecognizer.touchCapturingView = self;
+#endif
 }
 
 - (void)keyboardWillShow:(NSNotification *)notification{
+#if TARGET_OS_TV
+    (void)notification;
+#else
     // NSLog(@"keyboard will show markmark %f", CACurrentMediaTime());
     dockedKeyboardActionDetected = true;
     NSLog(@"keyboard will show markmark %d", isInputingText);
@@ -326,6 +358,7 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
         [keyboardToggleTip removeFromSuperview];
     }
     NSLog(@"keyboard will show %f", CACurrentMediaTime());
+#endif
 }
 
 - (void)handleNonStandardKeyboard:(NSNotification *)notification{
@@ -333,11 +366,12 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
     dispatch_after(delayTime, dispatch_get_main_queue(), ^{// Code to execute after the delay
         if(!self->dockedKeyboardActionDetected){
             if(self->keyboardToggleTip.superview && !self->keyboardToggleTip.hidden) [OnScreenWidgetView restoreFromTemporaryHideAll];
-            [self->keyboardToggleTip removeFromSuperview];
             if(!self->isInputingText) [self keyboardWillHide];
             [self refreshKeyboardToggleRecognizer:self->settings.keyboardToggleFingers.intValue];
             self->dockedKeyboardActionDetected = false;
+            // [self->_streamFrameVC setNeedsUpdateOfScreenEdgesDeferringSystemGestures];
         }
+        [self->keyboardToggleTip removeFromSuperview];
         return;
     });
 
@@ -378,6 +412,9 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
 
 // this method also deals with recovering streamview when local keyboard is turned off
 - (void)keyboardWillHide{
+#if TARGET_OS_TV
+    return;
+#else
     if (@available(iOS 13.0, *)) {
         InputAccessoryBar* bar = (InputAccessoryBar* ) keyInputField.inputAccessoryView;
         if(bar) [bar releasePressedKeys];
@@ -394,9 +431,11 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
         [self liftMetalVideoViewIfNeeded:0];
         
         isInputingText = NO;
-        
-        [keyInputField removeFromSuperview];
     }
+    
+    [keyInputField resignFirstResponder];
+    [keyInputField removeFromSuperview];
+#endif
 }
 
 - (void)liftMetalVideoViewIfNeeded:(CGFloat)liftHeight {
@@ -452,8 +491,75 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
 
         // reserve height for navigation bar
     ]];
-
 }
+
+#if TARGET_OS_TV
+
+- (void)remoteTextInputForTvOS {
+    if(PublicUtils.isTVOS){
+        if(tvOSRemoteTextInputLoopActive) return;
+        
+        [GamepadNavigationIllustrationHud setTvOSSystemTextInputActive:YES];
+        
+        keyInputField.placeholder = [LocalizationHelper localizedStringForKey:@"tvOSRemoteTextInputPlaceholder"];
+        keyInputField.accessibilityIdentifier = @"streamRemoteTextField";
+        keyInputField.inputView.hidden = true;
+        if (!tvOSRemoteTextInputTip) {
+            tvOSRemoteTextInputTip = [[UILabel alloc] init];
+            tvOSRemoteTextInputTip.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.5];
+            tvOSRemoteTextInputTip.font = [UIFont systemFontOfSize:36];
+            tvOSRemoteTextInputTip.textAlignment = NSTextAlignmentCenter;
+            tvOSRemoteTextInputTip.textColor = [[UIColor whiteColor] colorWithAlphaComponent:0.9];
+            tvOSRemoteTextInputTip.numberOfLines = 1;
+            tvOSRemoteTextInputTip.layer.cornerRadius = 10;
+            tvOSRemoteTextInputTip.clipsToBounds = YES;
+            tvOSRemoteTextInputTip.translatesAutoresizingMaskIntoConstraints = NO;
+        }
+        tvOSRemoteTextInputTip.text = [LocalizationHelper localizedStringForKey:@"tvOSRemoteTextInputTip"];
+        if (!tvOSRemoteTextInputTip.superview) {
+            [self addSubview:tvOSRemoteTextInputTip];
+            [NSLayoutConstraint activateConstraints:@[
+                [tvOSRemoteTextInputTip.leadingAnchor constraintEqualToAnchor:self.leadingAnchor constant:16],
+                [tvOSRemoteTextInputTip.topAnchor constraintEqualToAnchor:self.topAnchor constant:16],
+                [tvOSRemoteTextInputTip.heightAnchor constraintEqualToConstant:64],
+            ]];
+        }
+        tvOSRemoteTextInputLoopActive = YES;
+        [self restartTVOSTextInputSession];
+    }
+}
+
+- (void)restartTVOSTextInputSession {
+    [self addSubview:keyInputField];
+    keyInputField.delegate = self;
+    keyInputField.text = @"";
+    [keyInputField becomeFirstResponder];
+    [keyInputField removeTarget:self action:@selector(onKeyboardPressed:) forControlEvents:UIControlEventEditingChanged];
+    [keyInputField addTarget:self action:@selector(onKeyboardPressed:) forControlEvents:UIControlEventEditingChanged];
+    [keyInputField.undoManager disableUndoRegistration];
+}
+
+- (void)tvOSRemoteMenuTapped:(NSNotification *)notification {
+    NSLog(@"StreamView received Menu tap");
+    [keyInputField resignFirstResponder];
+    [keyInputField removeFromSuperview];
+    LiSendKeyboardEvent(0x0d, KEY_ACTION_DOWN, 0);
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(50 * NSEC_PER_MSEC)), dispatch_get_main_queue(), ^{
+        LiSendKeyboardEvent(0x0d, KEY_ACTION_UP, 0);
+        if(self->tvOSRemoteTextInputLoopActive) [self restartTVOSTextInputSession];
+    });
+}
+
+- (void)tvOSRemotePlayPauseTapped:(NSNotification *)notification {
+    NSLog(@"StreamView received Play/Pause tap");
+    tvOSRemoteTextInputLoopActive = NO;
+    [GamepadNavigationIllustrationHud setTvOSSystemTextInputActive:NO];
+    [keyInputField resignFirstResponder];
+    [keyInputField removeFromSuperview];
+    [tvOSRemoteTextInputTip removeFromSuperview];
+}
+
+#endif
 
 
 - (void)toggleKeyboard{
@@ -463,13 +569,13 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
         [keyInputField resignFirstResponder];
         if(self->keyboardToggleTip.superview && !self->keyboardToggleTip.hidden) [OnScreenWidgetView restoreFromTemporaryHideAll];
         [keyboardToggleTip removeFromSuperview];
-        [OnScreenWidgetView restoreFromTemporaryHideAll];
+        // [OnScreenWidgetView restoreFromTemporaryHideAll];
     } else {
         Log(LOG_D, @"Opening the keyboard");
         [self addSubview:keyInputField];
         // Prepare the textbox used to capture keyboard events.
         keyInputField.delegate = self;
-        keyInputField.text = @"0";
+        keyInputField.text = KeyboardInputSentinel;
     #if !TARGET_OS_TV
     // Prepare the toolbar above the keyboard for more options
         if(settings.showKeyboardToolbar){
@@ -679,7 +785,11 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
         
     newProfile.unfoldedExclusiveFolderSequence = OnScreenWidgetView.unfoldedExclusiveFolderSequence;
     newProfile.postExclusiveUnfoldedSequences = OnScreenWidgetView.postExclusiveUnfoldedSequences;
+#if TARGET_OS_TV
+    newProfile.gamepadOverlayEnabled = false;
+#else
     newProfile.gamepadOverlayEnabled = _streamFrameVC.virtualGamepadOverlay != nil;
+#endif
 
     newProfile.normalizedStreamViewOffset = CGPointMake(_streamFrameVC.streamViewMagnifierContentOffset.x/self.bounds.size.width, _streamFrameVC.streamViewMagnifierContentOffset.y/self.bounds.size.height);
     newProfile.streamViewScale = _streamFrameVC.streamViewMagnifierZoomScale;
@@ -714,6 +824,7 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
         
         OnScreenWidgetView.buttonVisualFeedbackEnabled = self->settings.buttonVisualFeedback;
         OnScreenWidgetView.gamepadOverlayFLag = profile.gamepadOverlayEnabled;
+        ControllerUtil.dualSenseHapticTransient = profile.dualSenseTransient;
 
         bool hasLegacyWidget = false;
         if(reloadWidgets && !OnScreenWidgetView.editMode){
@@ -722,8 +833,10 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
             
             self->_streamFrameVC.touchDisabled = false;
             self->_streamFrameVC.singleTouchDisabled = false;
+#if !TARGET_OS_TV
             PencilHandler* pencilHandler = [PencilHandler shared];
             if(pencilHandler) pencilHandler.disableTilt = false;
+#endif
 
             bool sequenceGenerated = false;
             bool hasMovableWidget = false;
@@ -733,6 +846,8 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
                 OnScreenButtonState* buttonState = [self->oscProfileMan unarchiveButtonStateEncoded:buttonStateEncoded];
                 if(buttonState.widgetType == CustomOnScreenWidget){
                     OnScreenWidgetView* widgetView = [OnScreenWidgetView widgetWithCmdString:buttonState.name buttonLabel:buttonState.alias shape:buttonState.widgetShape profile:profile]; //reconstruct widgetView
+                    
+                    if(PublicUtils.isTVOS && widgetView.widgetType == WidgetTypeEnumTouchPad) continue;
                     
                     widgetView.functionalWidgetDelegate = (id<OnScreenFunctionalWidgetDelegate>)self->_streamFrameVC;
                     widgetView.motionHandler = motionHandler;
@@ -858,7 +973,9 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
         }
         
         if(reloadWidgets && !OnScreenWidgetView.editMode){
+#if !TARGET_OS_TV
             [PencilHandler.shared setupPressureLUTWithProfile:profile];
+#endif
         }
         
         [self.streamFrameVC restorePersistedStreamViewOffsetAndScaleWithProfile:profile];
@@ -941,6 +1058,21 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
     return 90 - MIN(90, altitudeDegs);
 }
 
+static CGFloat previousRollAngle = 0;
+- (uint16_t)getBarrelRollFromRollAngle:(CGFloat)rollAngle API_AVAILABLE(ios(17.5)) {
+    if(previousRollAngle == 0){
+        previousRollAngle = rollAngle;
+    }
+    else {
+        PencilHandler.barrelRollChanged = rollAngle != previousRollAngle;
+    }
+    
+    CGFloat degrees = rollAngle * (180.0 / M_PI);
+    CGFloat uiKitRoll = fmod(fmod(degrees, 360.0) + 360.0, 360.0);
+    CGFloat twist = fmod(360.0 - uiKitRoll, 360.0);
+    return ((uint16_t)lround(twist)) % 360;
+}
+
 - (BOOL)sendStylusEvent:(UITouch*)event {
     uint8_t type;
     
@@ -972,11 +1104,17 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
     
     // CGFloat pressure = (event.force / event.maximumPossibleForce) / sin(event.altitudeAngle);
     
-    return LiSendPenEvent(type, LI_TOOL_TYPE_PEN, 0, location.x / videoSize.width, location.y / videoSize.height,
-                          (event.force / event.maximumPossibleForce) / sin(event.altitudeAngle),
-                          0.0f, 0.0f,
-                          [self getRotationFromAzimuthAngle:[event azimuthAngleInView:self]],
-                          [self getTiltFromAltitudeAngle:event.altitudeAngle]) != LI_ERR_UNSUPPORTED;
+    uint16_t barrelRoll = LI_BARREL_ROLL_UNKNOWN;
+    if (@available(iOS 17.5, *)) {
+        barrelRoll = [self getBarrelRollFromRollAngle:event.rollAngle];
+    }
+
+    return LiSendPenEventWithBarrelRoll(type, LI_TOOL_TYPE_PEN, 0, location.x / videoSize.width, location.y / videoSize.height,
+                                        (event.force / event.maximumPossibleForce) / sin(event.altitudeAngle),
+                                        0.0f, 0.0f,
+                                        [self getRotationFromAzimuthAngle:[event azimuthAngleInView:self]],
+                                        [self getTiltFromAltitudeAngle:event.altitudeAngle],
+                                        barrelRoll) != LI_ERR_UNSUPPORTED;
 }
 
 - (void)sendStylusHoverEvent:(UIHoverGestureRecognizer*)gesture API_AVAILABLE(ios(13.0)) {
@@ -1009,7 +1147,6 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
 
     CGPoint originalLocation = [gesture locationInView:self];
     CGPoint location = [self adjustCoordinatesForVideoArea:originalLocation];
-    NSLog(@" location %f, %f", location.x, location.y);
     PencilHandler* handler = PencilHandler.shared;
     location = CGPointApplyAffineTransform(location, CGAffineTransformMakeTranslation(handler.pencilTipOffset.x, handler.pencilTipOffset.y));
     
@@ -1024,19 +1161,24 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
     
     uint16_t rotationAngle = LI_ROT_UNKNOWN;
     uint8_t tiltAngle = LI_TILT_UNKNOWN;
+    uint16_t barrelRoll = LI_BARREL_ROLL_UNKNOWN;
 #if defined(__IPHONE_16_4) || defined(__TVOS_16_4)
     if (@available(iOS 16.4, *)) {
         rotationAngle = [self getRotationFromAzimuthAngle:[gesture azimuthAngleInView:self]];
         tiltAngle = [self getTiltFromAltitudeAngle:gesture.altitudeAngle];
     }
 #endif
+
+    if (@available(iOS 17.5, *)) {
+        barrelRoll = [self getBarrelRollFromRollAngle:gesture.rollAngle];
+    }
     
     
     dispatch_after(0, dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE,0), ^{// Code to execute after the delay
         if(PencilHandler.isDrawing && PencilHandler.pencilAndHoverMode == pencilOnly && PencilHandler.pencilAndHoverMode == hoverDisabled) return;
         switch (PencilHandler.pencilAndHoverMode) {
             case pencilOnly:
-                LiSendPenEvent(type, LI_TOOL_TYPE_PEN, 0, location.x / videoSize.width, location.y / videoSize.height, distance, 0.0f, 0.0f, rotationAngle, tiltAngle);
+                LiSendPenEventWithBarrelRoll(type, LI_TOOL_TYPE_PEN, 0, location.x / videoSize.width, location.y / videoSize.height, distance, 0.0f, 0.0f, rotationAngle, tiltAngle, barrelRoll);
                 break;
             case pencilToMouse:
                 if(gesture.state != UIGestureRecognizerStateEnded) [self updateCursorLocation:originalLocation isMouse:NO];
@@ -1057,7 +1199,9 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
 #endif
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-#if !TARGET_OS_TV
+#if TARGET_OS_TV
+    return;
+#else
     // if (@available(iOS 13.4, *)) {
     // cancel restriction of native touch for iOS13.3 & lower
     if (touchMode == NativeTouchOnly) {
@@ -1081,7 +1225,6 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
         [nonPencilTouches minusSet:pencilTouches];
     }
     
-#endif
     if ([self handleMouseButtonEvent:BUTTON_ACTION_PRESS
                           forTouches:touches
                            withEvent:event]) {
@@ -1100,6 +1243,7 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
         [self->touchHandler touchesBegan:targetTouches withEvent:event];
     }
     else if(![_onScreenControls handleTouchDownEvent:targetTouches]) [touchHandler touchesBegan:targetTouches withEvent:event];
+#endif
 }
 
 - (UIBarButtonItem *)createButtonWithImageNamed:(NSString *)imageName backgroundColor:(UIColor *)backgroundColor target:(id)target action:(SEL)action keyCode:(NSInteger)keyCode isToggleable:(BOOL)isToggleable isDoneButton:(bool)isDoneButton {
@@ -1260,7 +1404,6 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
                 return;
             }
         }
-#endif
     }
     NSMutableSet* nonPencilTouches;
     if(pencilTouches.count>0){
@@ -1272,11 +1415,18 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
     hasUserInteracted = YES;
     
     NSSet* targetTouches = nonPencilTouches ? nonPencilTouches : touches;
+    
+    if(!touchHandler) {
+        [sessionTouchHandler touchesMoved:targetTouches withEvent:event];
+        return;
+    }
+    
     if(self->touchMode != AbsoluteTouch){
         [self->touchHandler touchesMoved:targetTouches withEvent:event];
         if([self isOnScreenWidgetEnabled]) [self->_onScreenControls handleTouchMovedEvent:targetTouches];
     }
     else if(![self->_onScreenControls handleTouchMovedEvent:targetTouches]) [self->touchHandler touchesMoved:targetTouches withEvent:event];
+#endif
 }
 
 - (void) handleKeyCombos:(UIPress*) press{
@@ -1391,7 +1541,9 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-#if !TARGET_OS_TV
+#if TARGET_OS_TV
+    return;
+#else
 
     if (touchMode == NativeTouchOnly) {
         [touchHandler touchesEnded:touches withEvent:event];
@@ -1411,7 +1563,6 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
         [nonPencilTouches minusSet:pencilTouches];
     }
 
-#endif
     if ([self handleMouseButtonEvent:BUTTON_ACTION_RELEASE
                           forTouches:nonPencilTouches ? nonPencilTouches : touches
                            withEvent:event]) {
@@ -1424,11 +1575,18 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
     hasUserInteracted = YES;
     
     NSSet* targetTouches = nonPencilTouches ? nonPencilTouches : touches;
+    
+    if(!touchHandler) {
+        [sessionTouchHandler touchesEnded:targetTouches withEvent:event];
+        return;
+    }
+    
     if(touchMode != AbsoluteTouch){
         [self->touchHandler touchesEnded:targetTouches withEvent:event]; // when touches ended, must call the native touchhandler before onScreenControls, since the NSSet of touches captured by on screen button shall be updated later
         if([self isOnScreenWidgetEnabled]) [self->_onScreenControls handleTouchUpEvent:targetTouches];
     }
     else if(![_onScreenControls handleTouchUpEvent:targetTouches]) [touchHandler touchesEnded:targetTouches withEvent:event];
+#endif
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -1597,53 +1755,87 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
 
 - (BOOL)textFieldShouldReturn:(UITextField *)textField {
     // This method is called when the "Return" key is pressed.
+    
+    if(PublicUtils.isTVOS) {
+        [keyInputField resignFirstResponder];
+        [keyInputField removeFromSuperview];
+        return false;
+    }
+    
     LiSendKeyboardEvent(0x0d, KEY_ACTION_DOWN, 0);
     usleep(50 * 1000);
     LiSendKeyboardEvent(0x0d, KEY_ACTION_UP, 0);
+    
     return NO;
 }
 
 - (void)textFieldDidEndEditing:(UITextField *)textField {
+#if TARGET_OS_TV
+    if (textField == keyInputField) {
+        NSString *inputText = textField.text ?: @"";
+        NSString *textToSend = [inputText stringByReplacingOccurrencesOfString:KeyboardInputSentinel withString:@""];
+        textField.text = @"";
+
+        if (textToSend.length > 0) {
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+                const char *utf8String = textToSend.UTF8String;
+                LiSendUtf8TextEvent(utf8String, (int)strlen(utf8String));
+            });
+        }
+    }
+#endif
     for (NSNumber* keyCode in keysDown) {
         LiSendKeyboardEvent([keyCode shortValue], KEY_ACTION_UP, 0);
     }
     [keysDown removeAllObjects];
 }
 
+#if !TARGET_OS_TV
 - (void)inputAccessoryBarDidTapClose:(InputAccessoryBar *)bar  API_AVAILABLE(ios(13.0)){
     [keyInputField resignFirstResponder];
     isInputingText = false;
 }
+#endif
 
 - (void)onKeyboardPressed:(UITextField *)textField {
 
     if (textField.markedTextRange) return;
 
+#if TARGET_OS_TV
+    return;
+#else
+
     NSString* inputText = textField.text;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
         // If the text became empty, we know the user pressed the backspace key.
         if ([inputText isEqual:@""]) {
+#if TARGET_OS_TV
+            // tvOS can emit an empty editing change when it ends or starts an
+            // iPhone Remote text-input session. Backspace is handled by the
+            // delegate method above, where an actual deletion is explicit.
+            return;
+#else
             LiSendKeyboardEvent(0x08, KEY_ACTION_DOWN, 0);
             usleep(50 * 1000);
             LiSendKeyboardEvent(0x08, KEY_ACTION_UP, 0);
+#endif
         } else {
-            // Character 0 will be our known sentinel value
+            NSUInteger sentinelLength = KeyboardInputSentinel.length;
             
             // Check if any characters exist which can't be represented in a basic key event
-            for (int i = 1; i < [inputText length]; i++) {
+            for (NSUInteger i = sentinelLength; i < inputText.length; i++) {
                 struct KeyEvent event = [KeyboardSupport translateKeyEvent:[inputText characterAtIndex:i] withModifierFlags:0];
                 if (event.keycode == 0) {
                     // We found an unknown key, so send the entire string as UTF-8
-                    const char* utf8String = [inputText UTF8String];
-                    
-                    // Skip the first character which is our sentinel
-                    LiSendUtf8TextEvent(utf8String + 1, (int)strlen(utf8String) - 1);
+                    NSString *textToSend = [inputText substringFromIndex:sentinelLength];
+                    const char* utf8String = textToSend.UTF8String;
+                    LiSendUtf8TextEvent(utf8String, (int)strlen(utf8String));
                     return;
                 }
             }
             
             // We didn't find any unknown characters, so send them all as basic key events
-            for (int i = 1; i < [inputText length]; i++) {
+            for (NSUInteger i = sentinelLength; i < inputText.length; i++) {
                 struct KeyEvent event = [KeyboardSupport translateKeyEvent:[inputText characterAtIndex:i] withModifierFlags:0];
                 assert(event.keycode != 0);
                 [self sendLowLevelEvent:event];
@@ -1652,11 +1844,12 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
     });
     
     // Reset text field back to known state
-    textField.text = @"0";
+    textField.text = KeyboardInputSentinel;
     
     // Move the insertion point back to the end of the text box
     UITextRange *textRange = [textField textRangeFromPosition:textField.endOfDocument toPosition:textField.endOfDocument];
     [textField setSelectedTextRange:textRange];
+#endif
 }
 
 - (void)specialCharPressed:(UIKeyCommand *)cmd {
@@ -1782,13 +1975,17 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
 }
 
 - (void)alterAbsTouchDragWith:(int32_t)mouseButton{
+#if !TARGET_OS_TV
     if([touchHandler isKindOfClass:[AbsoluteTouchHandler class]]){
         AbsoluteTouchHandler* handler = (AbsoluteTouchHandler* )touchHandler;
         AbsoluteTouchHandler.mouseButtonForCursorMove = mouseButton;
         [handler pauseLeftButtonDrag];
     }
     else return;
+#endif
 }
+
+#if !TARGET_OS_TV
 
 - (void)switchPencilHover{
     [_pencilHandler switchPencilHover];
@@ -1813,19 +2010,26 @@ static const double X1_MOUSE_SPEED_DIVISOR = 2.5;
     touchHandler = disabled ? nil : sessionTouchHandler;
 }
 
+- (BOOL)isMultipleTouchEnabled {
+    return YES;
+}
+
+#endif
+
 - (void)cleanUp{
+#if TARGET_OS_TV
+    tvOSRemoteTextInputLoopActive = NO;
+    [GamepadNavigationIllustrationHud setTvOSSystemTextInputActive:NO];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:VoidLinkTvOSRemoteMenuTappedNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:VoidLinkTvOSRemotePlayPauseTappedNotification object:nil];
+#endif
     [keyInputField resignFirstResponder];
+    keyInputField.backspaceHandler = nil;
     keyInputField.delegate = nil;
 }
 
 - (void)dealloc{
     NSLog(@"dealloc streamView %f", CACurrentMediaTime());
 }
-
-#if !TARGET_OS_TV
-- (BOOL)isMultipleTouchEnabled {
-    return YES;
-}
-#endif
 
 @end

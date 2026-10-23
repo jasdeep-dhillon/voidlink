@@ -11,7 +11,15 @@
 
 #import "AppDelegate.h"
 #import "MainFrameViewController.h"
+#import "SceneDelegate.h"
 #import "VoidLink-Swift.h"
+#import "DataManager.h"
+
+#if TARGET_OS_TV
+@interface AppDelegate ()
+@property (nonatomic, strong) TemporarySettings *tvOSInitialSettingsSnapshot;
+@end
+#endif
 
 @implementation AppDelegate
 
@@ -29,33 +37,30 @@ static NSString* DB_NAME = @"Limelight_iOS.sqlite";
 
 #pragma mark - UISceneSession lifecycle
 
-- (UISceneConfiguration *)application:(UIApplication *)application configurationForConnectingSceneSession:(UISceneSession *)connectingSceneSession options:(UISceneConnectionOptions *)options API_AVAILABLE(ios(13.0)){
-    return [[UISceneConfiguration alloc] initWithName:@"Default Configuration" sessionRole:connectingSceneSession.role];
+- (UISceneConfiguration *)application:(UIApplication *)application configurationForConnectingSceneSession:(UISceneSession *)connectingSceneSession options:(UISceneConnectionOptions *)options API_AVAILABLE(ios(13.0), tvos(13.0)){
+    UISceneConfiguration *configuration = [[UISceneConfiguration alloc] initWithName:@"Default Configuration" sessionRole:connectingSceneSession.role];
+    configuration.delegateClass = SceneDelegate.class;
+    return configuration;
 }
 
-- (void)application:(UIApplication *)application didDiscardSceneSessions:(NSSet<UISceneSession *> *)sceneSessions API_AVAILABLE(ios(13.0)){
+- (void)application:(UIApplication *)application didDiscardSceneSessions:(NSSet<UISceneSession *> *)sceneSessions API_AVAILABLE(ios(13.0), tvos(13.0)){
 }
 
 
 #if !TARGET_OS_TV
 
-/*
-// orietation limitatioin test
 - (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window {
-    UIViewController *topController = window.rootViewController;
-    while (topController.presentedViewController) {
-        topController = topController.presentedViewController;
-    }
-    return [topController supportedInterfaceOrientations];
-}
-*/
+    DataManager *dataMan = [[DataManager alloc] init];
+    Settings *currentSettings = [dataMan retrieveSettings];
 
-/*
-- (UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window {
-    NSLog(@"orientation limit");
-        return UIInterfaceOrientationMaskLandscape;
+    if (currentSettings.unlockDisplayOrientation) {
+        return UIInterfaceOrientationMaskAll;
+    }
+
+    return PublicUtils.isIPhone
+        ? UIInterfaceOrientationMaskLandscape
+        : [PublicUtils getCurrentOrientationForWindow:window];
 }
-*/
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for command tool customization after application launch (works only when user default is nil)
@@ -90,6 +95,37 @@ static NSString* DB_NAME = @"Limelight_iOS.sqlite";
 - (void)application:(UIApplication *)application performActionForShortcutItem:(UIApplicationShortcutItem *)shortcutItem completionHandler:(void (^)(BOOL succeeded))completionHandler {
     _pcUuidToLoad = (NSString*)[shortcutItem.userInfo objectForKey:@"UUID"];
     _shortcutCompletionHandler = completionHandler;
+}
+#endif
+
+#if TARGET_OS_TV
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    [CommandManager presetDefaultCommands];
+    [GenericUtils installSegmentedControlPreviousSelectionTracking];
+    [PublicUtils installTextFieldControllerUserInteractionTracking];
+    [IAPManager shared];
+
+    // tvOS mounts the settings view lazily when its reveal menu first opens.
+    // Read its Core Data snapshot now so that first presentation is RAM-only.
+    DataManager *dataManager = [[DataManager alloc] init];
+    self.tvOSInitialSettingsSnapshot = [dataManager getSettings];
+    return YES;
+}
+
+- (TemporarySettings *)consumeTvOSInitialSettingsSnapshot {
+    TemporarySettings *snapshot = self.tvOSInitialSettingsSnapshot;
+    self.tvOSInitialSettingsSnapshot = nil;
+    return snapshot;
+}
+
+- (TemporarySettings *)peekTvOSInitialSettingsSnapshot {
+    return self.tvOSInitialSettingsSnapshot;
+}
+
+- (void)refreshTvOSInitialSettingsSnapshot:(TemporarySettings *)snapshot {
+    if (self.tvOSInitialSettingsSnapshot != nil) {
+        self.tvOSInitialSettingsSnapshot = snapshot;
+    }
 }
 #endif
 
@@ -197,15 +233,44 @@ static NSString* DB_NAME = @"Limelight_iOS.sqlite";
     // We must ensure the persistent store is ready to opened
     [self preparePersistentStore];
     
-    if (![_persistentStoreCoordinator addPersistentStoreWithType:storeType configuration:nil URL:[self getStoreURL] options:options error:&error]) {
-        // Log the error
+    NSPersistentStore *store =
+    [_persistentStoreCoordinator addPersistentStoreWithType:storeType
+                                              configuration:nil
+                                                        URL:[self getStoreURL]
+                                                    options:options
+                                                      error:&error];
+    
+    if (store == nil) {
         Log(LOG_E, @"Critical database error: %@, %@", error, [error userInfo]);
         
-        // Drop the database
+        // Old database is incompatible. Remove both the cached copy
+        // and the NSUserDefaults backup on tvOS.
         [self dropDatabase];
         
-        // Try again
-        return [self persistentStoreCoordinator];
+        // The store file no longer exists now.
+        // Retry with the current managed object model.
+        // Core Data will create a brand-new empty store automatically.
+        error = nil;
+        
+        store =
+        [_persistentStoreCoordinator addPersistentStoreWithType:storeType
+                                                  configuration:nil
+                                                            URL:[self getStoreURL]
+                                                        options:options
+                                                          error:&error];
+        
+        if (store == nil) {
+            Log(LOG_E,
+                @"Failed to create fresh database: %@, %@",
+                error,
+                [error userInfo]);
+            
+            // Never return a coordinator with zero persistent stores.
+            _persistentStoreCoordinator = nil;
+            return nil;
+        }
+        
+        Log(LOG_I, @"Created fresh database using current Core Data model");
     }
     
     return _persistentStoreCoordinator;

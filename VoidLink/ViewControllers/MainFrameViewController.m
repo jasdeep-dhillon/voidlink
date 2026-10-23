@@ -11,6 +11,7 @@
 @import ImageIO;
 
 #import "MainFrameViewController.h"
+#import "SceneDelegate.h"
 #import "CryptoManager.h"
 #import "HttpManager.h"
 #import "Connection.h"
@@ -28,7 +29,9 @@
 #import "ConnectionHelper.h"
 #import "LocalizationHelper.h"
 #import "Plot.h"
+#if !TARGET_OS_TV
 #import "CustomEdgeSlideGestureRecognizer.h"
+#endif
 #import "DataManager.h"
 #import "VoidLink-Swift.h"
 
@@ -44,10 +47,27 @@
 
 
 @interface MainFrameViewController() <AppCallback, HostCardActionDelegate, AppViewUpdateLoopDelegate, ControllerNavigatorRadialMenuDelegate, ControllerUtilDelegate>
+#if TARGET_OS_TV
+@property (weak, nonatomic) ProfileSelectorViewController* gameProfileSelectorVC;
+#else
 @property (weak, nonatomic) LayoutOnScreenControlsViewController* gameProfileSelectorVC;
+#endif
 @property (nonatomic, strong, readwrite) NSArray<TemporaryApp *> *sortedAppList;
 @property (nonatomic, assign) bool settingsViewExpanded;
 @end
+
+#if TARGET_OS_TV
+@interface MainFrameViewController (TVProfileSelector)
+- (void)openGameProfileSeletorWithAnimated:(bool)animated;
+@end
+#endif
+
+static NSArray<UIBarButtonItem *> *VLBarButtonItems(UIBarButtonItem *first, UIBarButtonItem *second) {
+    NSMutableArray<UIBarButtonItem *> *items = [NSMutableArray arrayWithCapacity:2];
+    if (first) [items addObject:first];
+    if (second) [items addObject:second];
+    return items;
+}
 
 @implementation MainFrameViewController {
     UILabel* waterMark;
@@ -84,10 +104,6 @@
     id _controllerDisconnectObserver;
     UIView* _debugGamepadOverlay;
 
-
-#if TARGET_OS_TV
-    UITapGestureRecognizer* _menuRecognizer;
-#endif
 }
 static NSMutableSet* hostList;
 
@@ -152,6 +168,12 @@ static NSMutableSet* hostList;
 
 - (void)updateTitle {
 
+#if TARGET_OS_TV
+    self.navigationController.navigationBar.titleTextAttributes = @{
+        NSFontAttributeName: [UIFont systemFontOfSize:PublicUtils.isTVOS?42:20 weight: PublicUtils.isTVOS?UIFontWeightSemibold:UIFontWeightMedium],
+        NSForegroundColorAttributeName: ThemeManager.textColor
+    };
+#else
     if (@available(iOS 13.0, *)) {
         UINavigationBarAppearance* appearance = navBarAppearanceStandard;
         NSDictionary* titleTextAttributes = @{
@@ -161,6 +183,7 @@ static NSMutableSet* hostList;
         appearance.titleTextAttributes = titleTextAttributes;
         navBarAppearanceStandard = appearance;
     }
+#endif
 
     if (_selectedHost != nil) {
         self.title = _selectedHost.name;
@@ -170,6 +193,7 @@ static NSMutableSet* hostList;
         self.title = [LocalizationHelper localizedStringForKey: @"Searching for PCs on your network..."] ;
     }
     else {
+#if !TARGET_OS_TV
         if (@available(iOS 13.0, *)) {
 
             UINavigationBarAppearance* appearance = navBarAppearanceStandard;
@@ -180,12 +204,16 @@ static NSMutableSet* hostList;
             appearance.titleTextAttributes = titleTextAttributes;
             navBarAppearanceStandard = appearance;
         }
+#endif
         /*
         self.navigationController.navigationBar.titleTextAttributes = @{
             NSFontAttributeName: [UIFont systemFontOfSize:24 weight:UIFontWeightSemibold],
             NSForegroundColorAttributeName: ThemeManager.textColor // 可选，设置标题颜色
         };*/
-        self.title = [LocalizationHelper localizedStringForKey: @"Hosts" ];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            self.title = [LocalizationHelper localizedStringForKey:
+                          (PublicUtils.isTVOS && self->_hostCollectionVC.items.count>0) ? @"" : @"Hosts" ];
+        });
         //self.title = nil;
     }
     [self applyNavBarAppearance];
@@ -340,11 +368,6 @@ static NSMutableSet* hostList;
 
 - (void)switchToHostView {
     _enteredAppView = false;
-#if TARGET_OS_TV
-    // Remove the menu button intercept to allow the app to exit
-    // when at the host selection view.
-    [self.navigationController.view removeGestureRecognizer:_menuRecognizer];
-#endif
     [_appManager stopRetrieving];
     _showHiddenApps = NO;
     _selectedHost = nil;
@@ -354,7 +377,9 @@ static NSMutableSet* hostList;
     self.hostCollectionVC.view.hidden = NO;
     self.collectionView.hidden = YES;
     [self updateTitle];
-    self.navigationItem.rightBarButtonItems = @[_helpButton, _addHostButton];
+    self.navigationItem.rightBarButtonItems = PublicUtils.isTVOS
+                                            ? VLBarButtonItems(nil, nil)
+                                            : VLBarButtonItems(_helpButton, _addHostButton);
     self.revealViewController.mainFrameIsInHostView = true;  // to allow orientation change only in app view, tell top view controller the mainframe is not in host view
     
     if (@available(iOS 13.0, *)){
@@ -404,8 +429,8 @@ static NSMutableSet* hostList;
     // [self.collectionView setContentOffset:CGPointZero animated:NO];
     
     [self attachWaterMark];
-    self.navigationItem.rightBarButtonItems = @[_upButton];
-    self.revealViewController.mainFrameIsInHostView = false;  
+    self.navigationItem.rightBarButtonItems = VLBarButtonItems(PublicUtils.tvOS26Aavailable || !PublicUtils.isTVOS ? _upButton : nil, nil);
+    self.revealViewController.mainFrameIsInHostView = false;
     // [self disableNavigation];
     [self updateTitle];
     [self alreadyPaired];
@@ -536,11 +561,6 @@ static NSMutableSet* hostList;
     [self.collectionView setCollectionViewLayout:self.collectionViewLayout];
     [self.collectionView reloadData]; //for new scroll host view reloading mechanism
     [self.view addSubview:self.collectionView]; //for new scroll host view reloading mechanism
-    
-#if TARGET_OS_TV
-    // Intercept the menu key to go back to the host page
-    [self.navigationController.view addGestureRecognizer:_menuRecognizer];
-#endif
     
     // 若未在线或未配对, 有以下:
     
@@ -747,18 +767,24 @@ static NSMutableSet* hostList;
 }
 
 - (void) addHostTapped {
+    [self applyThemeToNavigationControls];
     Log(LOG_D, @"Tapped add host");
     GenericUtils.autoPopSoftKeyboard = !PublicUtils.isIPhone;
     UIAlertController* alertController = [UIAlertController alertControllerWithTitle:[LocalizationHelper localizedStringForKey:@"Add Host Manually"]
-                                                                             message:[LocalizationHelper localizedStringForKey:@"Enter IP address to add host manually"]
+                                                                             message:[LocalizationHelper localizedStringForKey:PublicUtils.isTVOS ? @"tvOSManualIpTip" : @"Enter IP address to add host manually"]
                                                                       preferredStyle:UIAlertControllerStyleAlert];
 
     [alertController addTextFieldWithConfigurationHandler:^(UITextField *textField) {
-        textField.placeholder = @"192.168.0.100 or [2001:db8::1]";
+        textField.placeholder = PublicUtils.isTVOS ? @"Enter host IP for VoidLink TV from iPhone/iPad" : @"192.168.0.100 or [2001:db8::1]";
         textField.keyboardType = UIKeyboardTypeASCIICapable;
         textField.autocorrectionType = UITextAutocorrectionTypeNo;
         textField.spellCheckingType = UITextSpellCheckingTypeNo;
         textField.delegate = self;
+        if(PublicUtils.isTVOS){
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                [textField becomeFirstResponder];
+            });
+        }
     }];
 
     [alertController addAction:[UIAlertAction actionWithTitle:[LocalizationHelper localizedStringForKey:@"Cancel"]
@@ -882,6 +908,7 @@ static NSMutableSet* hostList;
     _streamConfig.asyncNativeTouchPriority = streamSettings.asyncNativeTouchPriority; // new streamConfig segment
     _streamConfig.gyroMode = [streamSettings.gyroMode intValue];
     _streamConfig.emulatedControllerType = streamSettings.emulatedControllerType.intValue;
+    _streamConfig.hapticEngine = streamSettings.hapticEngine.intValue;
     //NSLog(@"gyroMode from settings: %ld", _streamConfig.gyroMode);
     
     // multiController must be set before calling getConnectedGamepadMask
@@ -900,17 +927,17 @@ static NSMutableSet* hostList;
     int numberOfChannels = MIN([streamSettings.audioConfig intValue], physicalOutputChannels);
     
     Log(LOG_I, @"Selected number of audio channels %d", numberOfChannels);
-    if (numberOfChannels >= 8) {
+    if (numberOfChannels >= AudioConfigSDL71) {
         _streamConfig.audioConfiguration = AUDIO_CONFIGURATION_71_SURROUND;
     }
-    else if (numberOfChannels >= 6) {
+    else if (numberOfChannels >= AudioConfigSDL51) {
         _streamConfig.audioConfiguration = AUDIO_CONFIGURATION_51_SURROUND;
     }
     else {
         _streamConfig.audioConfiguration = AUDIO_CONFIGURATION_STEREO;
     }
     
-    Connection.useSystemAudioEngine = streamSettings.audioConfig.intValue == 2;
+    Connection.useSystemAudioEngine = streamSettings.audioConfig.intValue == AudioConfigStereo;
     
     bool sdrPerformanceWorkaround = false;
     switch (streamSettings.preferredCodec) {
@@ -1235,7 +1262,6 @@ static NSMutableSet* hostList;
     return nil;
 }
 
-#if !TARGET_OS_TV
 
 - (void)expandSettingsView { //simulate pressing the setting button, called from setting view controller.
     if (currentPosition == FrontViewPositionLeft) {
@@ -1249,35 +1275,20 @@ static NSMutableSet* hostList;
     }
 }
 
-- (void)profilesButtonTapped {
-    if([GenericUtils isFirstTappingGameProfileSelectorFromMainFrame]){
-        
-        DataManager* dataMan = [[DataManager alloc] init];
-        Settings* settings = [dataMan retrieveSettings];
-
-        
-        NSString* edgeSide = settings.slideToSettingsScreenEdge.intValue != UIRectEdgeLeft ? [LocalizationHelper localizedStringForKey:@"left"] : [LocalizationHelper localizedStringForKey:@"right"];
-        NSString* slideDist = [NSString stringWithFormat:@"%d%%", (int)(settings.slideToSettingsDistance.floatValue*100)];
-
-        [AlertControllerUtil showAlertIn:self
-                                        title:[LocalizationHelper localizedStringForKey:@"Game Profile"]
-                                      message:[LocalizationHelper localizedStringForKey:@"gameProfileIntroduction", edgeSide, slideDist]
-                                   withCancel:NO
-                                  buttonTitle:[LocalizationHelper localizedStringForKey:@"Got it!"]
-                                    countdown:6
-                                       action:^{}
-                                   completion:^{
-            [self openGameProfileSeletorWithAnimated:false];
-        }];
-    }
-    else [self openGameProfileSeletorWithAnimated:false];
-}
-
 - (void)openGameProfileSeletorWithAnimated:(bool)animated {
     if(self.settingsViewController){
         [self.settingsViewController mainFrameGameProfileButtonTapped:animated];
         return;
     }
+
+#if TARGET_OS_TV
+    ProfileSelectorViewController *profileSelectorVC = [[ProfileSelectorViewController alloc] init];
+    profileSelectorVC.loadingMode = ProfileSelectorLoadingModeSelectProfileFromMainFrame;
+    profileSelectorVC.modalPresentationStyle = UIModalPresentationOverCurrentContext;
+    self.gameProfileSelectorVC = profileSelectorVC;
+    [self presentViewController:profileSelectorVC animated:animated completion:nil];
+    
+#else
     
     LayoutOnScreenControlsViewController* layoutToolVC;
     BOOL isIPhone = ([UIDevice currentDevice].userInterfaceIdiom == UIUserInterfaceIdiomPhone);
@@ -1302,7 +1313,35 @@ static NSMutableSet* hostList;
     [self presentViewController:layoutToolVC animated:false completion:^{
         [layoutToolVC presentProfileSelectorWith:ProfileSelectorLoadingModeSelectProfileFromMainFrame animated:animated];
     }];
+#endif
 }
+
+#if !TARGET_OS_TV
+- (void)profilesButtonTapped {
+    if([GenericUtils isFirstTappingGameProfileSelectorFromMainFrame]){
+        
+        DataManager* dataMan = [[DataManager alloc] init];
+        Settings* settings = [dataMan retrieveSettings];
+
+        
+        NSString* edgeSide = settings.slideToSettingsScreenEdge.intValue != UIRectEdgeLeft ? [LocalizationHelper localizedStringForKey:@"left"] : [LocalizationHelper localizedStringForKey:@"right"];
+        NSString* slideDist = [NSString stringWithFormat:@"%d%%", (int)(settings.slideToSettingsDistance.floatValue*100)];
+
+        [AlertControllerUtil showAlertIn:self
+                                        title:[LocalizationHelper localizedStringForKey:@"Game Profile"]
+                                      message:[LocalizationHelper localizedStringForKey:@"gameProfileIntroduction", edgeSide, slideDist]
+                                   withCancel:NO
+                                  buttonTitle:[LocalizationHelper localizedStringForKey:@"Got it!"]
+                                    countdown:6
+                                       action:^{}
+                                   completion:^{
+            [self openGameProfileSeletorWithAnimated:false];
+        }];
+    }
+    else [self openGameProfileSeletorWithAnimated:false];
+}
+
+#endif
 
 // currently obselete:
 - (void) setNeedsUpdateAllowedOrientation{
@@ -1324,12 +1363,16 @@ static NSMutableSet* hostList;
             if(!self.revealViewController.isStreaming) [ControllerNavigator setUINavigationDelegate: self.isInAppView ? self : self.hostCollectionVC];
             else [ControllerNavigator setUINavigationDelegate: [StreamFrameViewController sharedInstance]];
         }
+#if !TARGET_OS_TV
         if (@available(iOS 26.0, *)) {
             _settingsButton.sharesBackground = false;
             _profilesButton.sharesBackground = false;
         }
-        self.navigationItem.leftBarButtonItems = @[_settingsButton, _profilesButton];
-        
+#endif
+        self.navigationItem.leftBarButtonItems = PublicUtils.isTVOS
+        ? VLBarButtonItems(_settingsButton, nil)
+        : VLBarButtonItems(_settingsButton, _profilesButton);
+
         if(streamFrameViewController.streamMan){
             // NSLog(@"setNeedRequeuing %f", CACurrentMediaTime());
             double delayInSeconds = 0.1;
@@ -1340,9 +1383,14 @@ static NSMutableSet* hostList;
         }
     }
     else {
+#if TARGET_OS_TV
+        [self.settingsViewController consumeTvOSInitialSettingsSnapshotForMenuPresentation];
+#endif
         if(self.revealViewController.isStreaming) self.settingsExpandedInStreamView = true; //notify mainFrameViewContorller that this is a setting expansion in stream view, some settings shall be disabled.
         if (@available(iOS 13.0, *)) [ControllerNavigator setUINavigationDelegate:self.settingsViewController];
-        self.navigationItem.leftBarButtonItems = @[_profilesButton];
+        self.navigationItem.leftBarButtonItems = PublicUtils.isTVOS
+        ? VLBarButtonItems(nil, nil)
+        : VLBarButtonItems(_profilesButton, nil);
         [self.settingsViewController updateTheme];
     }
 
@@ -1355,6 +1403,17 @@ static NSMutableSet* hostList;
     // TemporarySettings* currentSettings = [dataMan getSettings];
 
     [streamFrameViewController setUserInteractionEnabledForStreamView:!_settingsExpandedInStreamView || position == FrontViewPositionLeft];
+    if (@available(iOS 14.0, *)) {
+        if (self.settingsViewController.usesSwiftUISettings) {
+            [self.settingsViewController updateSwiftUISettingsStreamingState:revealController.isStreaming
+                                                               menuIsOpening:position != FrontViewPositionLeft];
+            if (position != FrontViewPositionLeft && ControllerUtil.primaryGCController) {
+                [ControllerNavigator restoreUINavigationHighlight];
+            }
+            return;
+        }
+    }
+#if !TARGET_OS_TV
     [self.settingsViewController setHidden:_settingsExpandedInStreamView forStack:self.settingsViewController.resolutionStack];
     [self.settingsViewController setHidden:_settingsExpandedInStreamView forStack:self.settingsViewController.fpsStack];
     // [self.settingsViewController widget:self.settingsViewController.bitrateSlider setEnabled:!self.settingsExpandedInStreamView];
@@ -1401,8 +1460,13 @@ static NSMutableSet* hostList;
     // Enable frame pacing mode selector only if not in stream view AND not in performance mode
     BOOL shouldEnableFrameQueueSettings = !_settingsExpandedInStreamView && (self.settingsViewController.renderingBackendSelector.selectedSegmentIndex != RENDER_METAL);
     // [self.settingsViewController.framePacingModeSelector setEnabled:shouldEnableFrameQueueSettings];
-    [self.settingsViewController.framePacingModeSelector setEnabled:!_settingsExpandedInStreamView forSegmentAtIndex:FramePacingModeOff];
-    [self.settingsViewController.framePacingModeSelector setEnabled:!_settingsExpandedInStreamView forSegmentAtIndex:FramePacingModeLegacy];
+    
+    if(self.settingsViewController.framePacingModeSelector.selectedSegmentIndex != FramePacingModeOff
+       && self.settingsViewController.framePacingModeSelector.selectedSegmentIndex != FramePacingModeLegacy) {
+        [self.settingsViewController.framePacingModeSelector setEnabled:!_settingsExpandedInStreamView forSegmentAtIndex:FramePacingModeOff];
+        [self.settingsViewController.framePacingModeSelector setEnabled:!_settingsExpandedInStreamView forSegmentAtIndex:FramePacingModeLegacy];
+    }
+    else [self.settingsViewController.framePacingModeSelector setEnabled:!_settingsExpandedInStreamView];
     
     if(FrameInterpolator.deviceSupportsInterpolation){
         [self.settingsViewController.framePacingModeSelector setEnabled:_settingsViewController.framerateSelector.selectedSegmentIndex != _settingsViewController.framerateSelector.numberOfSegments-1
@@ -1421,6 +1485,7 @@ static NSMutableSet* hostList;
     [self.settingsViewController setHidden:!self.settingsViewController.redirectMicSwitch.isOn forStack:self.settingsViewController.useBuiltinMicStack];
     [self.settingsViewController.useBuiltinMicSwitch setEnabled:!_settingsExpandedInStreamView];
     // [self.settingsViewController.passthroughGesturesSwitch setEnabled:!_settingsExpandedInStreamView];
+#endif
 }
 
 - (void)revealController:(SWRevealViewController *)revealController didMoveToPosition:(FrontViewPosition)position {
@@ -1437,9 +1502,13 @@ static NSMutableSet* hostList;
     
     currentPosition = position;
 }
-#endif
+// #endif
 
 #if TARGET_OS_TV
+- (void)profilesButtonTapped {
+    [self openGameProfileSeletorWithAnimated:true];
+}
+
 - (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
     [self appClicked:self.sortedAppList[indexPath.row] view:nil];
 }
@@ -1531,6 +1600,7 @@ static NSMutableSet* hostList;
 }
 
 - (BOOL)needPopupAboutView {
+    if(PublicUtils.isTVOS) return false;
     // NSString *key = @"appHasLaunchedBefore";
     NSString *key = @"needPopupAboutView20260215";
     BOOL keyExists = [[NSUserDefaults standardUserDefaults] boolForKey:key];
@@ -1587,6 +1657,7 @@ static NSMutableSet* hostList;
     button.titleLabel.font = [UIFont systemFontOfSize:liquidGlassEnabled ? 16 : 16 weight:UIFontWeightMedium];
     // 文字颜色设置为 tintColor 控制
     if(liquidGlassEnabled) {
+        button.contentEdgeInsets = UIEdgeInsetsMake(0, 0, 0, 10);
         button.titleEdgeInsets = UIEdgeInsetsMake(0, 0, 0.9, 0);
     }
     button.tintColor = liquidGlassEnabled ? ThemeManager.appPrimaryColor : UIColor.whiteColor;
@@ -1607,7 +1678,9 @@ static NSMutableSet* hostList;
 
     // 创建 UIBarButtonItem
     UIBarButtonItem *barItem = [[UIBarButtonItem alloc] initWithCustomView:button];
-    if (@available(iOS 26.0, *)) barItem.sharesBackground = true;
+#if !TARGET_OS_TV
+    if (@available(iOS 26.0, *)) barItem.sharesBackground = false;
+#endif
     return barItem;
 }
 
@@ -1618,11 +1691,13 @@ static NSMutableSet* hostList;
     button.backgroundColor = [UIColor clearColor]; // #0A85FF
     // button.layer.cornerRadius = buttonHeight/2;
     button.clipsToBounds = YES;
-
+    
     // 设置图标（SF Symbol）
     if (@available(iOS 13.0, *)) {
-        UIImageSymbolConfiguration *config = [UIImageSymbolConfiguration configurationWithPointSize:
-                                             PublicUtils.liquidGlassEnabled ? buttonHeight*0.73 : buttonHeight*0.85
+        CGFloat symbolSize = PublicUtils.isTVOS
+        ? buttonHeight*0.95
+        : (PublicUtils.liquidGlassEnabled ? buttonHeight*0.73 : buttonHeight*0.85);
+        UIImageSymbolConfiguration *config = [UIImageSymbolConfiguration configurationWithPointSize:symbolSize
                                             weight:UIImageSymbolWeightRegular];
         UIImage *image = [UIImage systemImageNamed:@"questionmark.circle" withConfiguration:config];
         [button setImage:image forState:UIControlStateNormal];
@@ -1644,8 +1719,11 @@ static NSMutableSet* hostList;
 
     // 创建 UIBarButtonItem
     UIBarButtonItem *barItem = [[UIBarButtonItem alloc] initWithCustomView:button];
+    if(PublicUtils.isTVOS) barItem.style = UIBarButtonItemStyleBordered;
 
-    if (@available(iOS 26.0, *)) barItem.sharesBackground = true;
+#if !TARGET_OS_TV
+    if (@available(iOS 26.0, *)) barItem.sharesBackground = false;
+#endif
 
     return barItem;
 }
@@ -1661,6 +1739,14 @@ static NSMutableSet* hostList;
 }
 
 - (void)applyNavBarAppearance{
+#if TARGET_OS_TV
+    UINavigationBar *navigationBar = self.navigationController.navigationBar;
+    UIColor *backgroundColor = ThemeManager.hostViewBackgroundColor;
+    navigationBar.backgroundColor = backgroundColor;
+    navigationBar.barTintColor = backgroundColor;
+    navigationBar.translucent = NO;
+    navigationBar.shadowImage = [UIImage new];
+#else
     if (@available(iOS 13.0, *)) {
         self.navigationController.navigationBar.standardAppearance.backgroundColor = [UIColor clearColor]; // old ios depend on this, do not remove
         self.navigationController.navigationBar.standardAppearance = navBarAppearanceStandard;
@@ -1671,6 +1757,7 @@ static NSMutableSet* hostList;
         self.navigationController.navigationBar.barTintColor = [UIColor clearColor]; // ios 14 depend on this, do not remove
         self.navigationController.navigationBar.barTintColor = ThemeManager.hostViewBackgroundColor; // ios 14 depend on this, do not remove
     }
+#endif
 }
 
 - (void)applyThemeToNavigationButton:(UIBarButtonItem *)barButtonItem {
@@ -1721,13 +1808,22 @@ static NSMutableSet* hostList;
 
     for (UIBarButtonItem *barButtonItem in barButtonItems) {
         [self applyThemeToNavigationButton:barButtonItem];
+#if !TARGET_OS_TV
         if (@available(iOS 26.0, *)) {
-            barButtonItem.sharesBackground = barButtonItem == _addHostButton || barButtonItem == _helpButton;
+            // barButtonItem.sharesBackground = barButtonItem == _addHostButton || barButtonItem == _helpButton;
         }
+#endif
     }
 }
 
 - (void)setupNavBar{
+#if TARGET_OS_TV
+    self.navigationController.navigationBar.barTintColor = ThemeManager.hostViewBackgroundColor;
+    self.navigationController.navigationBar.titleTextAttributes = @{
+        NSForegroundColorAttributeName: ThemeManager.textColor
+    };
+    self.navigationController.navigationBar.shadowImage = [UIImage new];
+#else
     if (@available(iOS 13.0, *)) {
         UINavigationBarAppearance* appearance = [[UINavigationBarAppearance alloc] init];
         [appearance configureWithOpaqueBackground];
@@ -1741,8 +1837,21 @@ static NSMutableSet* hostList;
         appearance.backgroundImage = nil;
         navBarAppearanceStandard = appearance;
     }
+#endif
     [self applyNavBarAppearance];
 
+    if (!_settingsButton) {
+        _settingsButton = [[UIBarButtonItem alloc] initWithTitle:[LocalizationHelper localizedStringForKey:@"Settings"]
+                                                           style:UIBarButtonItemStylePlain
+                                                          target:nil
+                                                          action:nil];
+    }
+    if (!_profilesButton) {
+        _profilesButton = [[UIBarButtonItem alloc] initWithTitle:[LocalizationHelper localizedStringForKey:@"Game Profile"]
+                                                           style:UIBarButtonItemStylePlain
+                                                          target:nil
+                                                          action:nil];
+    }
     self->_addHostButton = [self createAddHostButton];
     self->_helpButton = [self createHelpButton];
     if (PublicUtils.liquidGlassEnabled) {
@@ -1755,7 +1864,9 @@ static NSMutableSet* hostList;
 
 
 
-    self.navigationItem.rightBarButtonItems = @[_helpButton, _addHostButton]; // 顺序：右边靠右的是第一个
+    self.navigationItem.rightBarButtonItems = PublicUtils.isTVOS
+    ? VLBarButtonItems(nil, nil)
+    : VLBarButtonItems(_helpButton, _addHostButton); // 顺序：右边靠右的是第一个
 
     // Set the side bar button action. When it's tapped, it'll show the sidebar.
 
@@ -1763,10 +1874,13 @@ static NSMutableSet* hostList;
     [_settingsButton setAction:@selector(revealToggle:)];
     if (@available(iOS 13.0, *)) {
         [_settingsButton setTitle:nil];
-        UIImageSymbolConfiguration *config = [UIImageSymbolConfiguration configurationWithPointSize:PublicUtils.liquidGlassEnabled ? 18 : 23 weight:UIImageSymbolWeightMedium ];
+        CGFloat symbolSize = PublicUtils.isTVOS ? 34 : (PublicUtils.liquidGlassEnabled ? 18 : 23);
+        UIImageSymbolConfiguration *config = [UIImageSymbolConfiguration configurationWithPointSize:symbolSize weight:PublicUtils.isTVOS ? UIImageSymbolWeightRegular : UIImageSymbolWeightMedium ];
         UIImage *image = [[UIImage systemImageNamed:@"sidebar.left" withConfiguration:config] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
         [_settingsButton setImage:image];
-        _settingsButton.imageInsets = PublicUtils.liquidGlassEnabled ? UIEdgeInsetsMake(0, 0, 0, 0.55) : UIEdgeInsetsMake(10, 10, 0, 0);
+        _settingsButton.imageInsets = PublicUtils.liquidGlassEnabled
+        ? UIEdgeInsetsMake(0, 0, 0, 0.55)
+        : (PublicUtils.tvOS26Aavailable ? UIEdgeInsetsMake(10, 10, 0, 0) : UIEdgeInsetsMake(0, 0, 0, 0));
         if(PublicUtils.liquidGlassEnabled){
             // if(@available(iOS 26.0, *)) _settingsButton.hidesSharedBackground = YES;
             _settingsButton.tintColor = ThemeManager.appPrimaryColor;
@@ -1774,7 +1888,7 @@ static NSMutableSet* hostList;
     } else {
         [_settingsButton setTitle:[LocalizationHelper localizedStringForKey:@"Settings"]];
     }
-
+    
     [_profilesButton setTarget:self];
     [_profilesButton setAction:@selector(profilesButtonTapped)];
     if (@available(iOS 13.0, *)) {
@@ -1802,12 +1916,14 @@ static NSMutableSet* hostList;
         [_profilesButton setTitle:[LocalizationHelper localizedStringForKey:@"Game Profile"]];
     }
     
+#if !TARGET_OS_TV
     if (@available(iOS 26.0, *)) {
         _settingsButton.sharesBackground = false;
         _profilesButton.sharesBackground = false;
-        _addHostButton.sharesBackground = true;
-        _helpButton.sharesBackground = true;
+        _addHostButton.sharesBackground = false;
+        _helpButton.sharesBackground = false;
      }
+#endif
 
     
     
@@ -1817,7 +1933,8 @@ static NSMutableSet* hostList;
     
     if (@available(iOS 13.0, *)) {
         [_upButton setTitle:@""];
-        UIImageSymbolConfiguration *config = [UIImageSymbolConfiguration configurationWithPointSize:PublicUtils.liquidGlassEnabled ? 16 : 21.5 weight:UIImageSymbolWeightMedium];
+        CGFloat symbolSize = PublicUtils.isTVOS ? 27.5 : (PublicUtils.liquidGlassEnabled ? 16 : 21.5);
+        UIImageSymbolConfiguration *config = [UIImageSymbolConfiguration configurationWithPointSize:symbolSize weight:UIImageSymbolWeightMedium];
         UIImage *image = [[UIImage systemImageNamed:PublicUtils.liquidGlassEnabled ? @"macwindow.on.rectangle" : @"tv" withConfiguration:config] imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate];
         [_upButton setImage:image];
         _upButton.imageInsets = PublicUtils.liquidGlassEnabled ? UIEdgeInsetsMake(0, 0, 0, 1) : UIEdgeInsetsMake(25, 20, 0, 15);
@@ -1835,6 +1952,12 @@ static NSMutableSet* hostList;
     self.hostCollectionVC.view.backgroundColor = ThemeManager.hostViewBackgroundColor;
     self.collectionView.backgroundColor = ThemeManager.hostViewBackgroundColor;
 
+#if TARGET_OS_TV
+    self.navigationController.navigationBar.barTintColor = ThemeManager.hostViewBackgroundColor;
+    self.navigationController.navigationBar.titleTextAttributes = @{
+        NSForegroundColorAttributeName: ThemeManager.textColor
+    };
+#else
     if (@available(iOS 13.0, *)) {
         UINavigationBarAppearance* appearance = navBarAppearanceStandard;
         appearance.backgroundColor = ThemeManager.hostViewBackgroundColor;
@@ -1844,6 +1967,7 @@ static NSMutableSet* hostList;
         appearance.titleTextAttributes = titleTextAttributes;
         navBarAppearanceStandard = appearance;
     }
+#endif
     
     _settingsButton.tintColor = ThemeManager.appPrimaryColor;
     _profilesButton.tintColor = ThemeManager.appPrimaryColor;
@@ -1861,6 +1985,17 @@ static NSMutableSet* hostList;
     if (@available(iOS 13.0, *)) [GamepadNavigationIllustrationHud updateCurrentTheme];
 
     [self.hostCollectionVC updateTheme];
+    [self updateAppCollectionTheme];
+}
+
+- (void)updateAppCollectionTheme {
+    for (UICollectionViewCell *cell in self.collectionView.visibleCells) {
+        for (UIView *view in cell.subviews) {
+            if ([view isKindOfClass:[UIAppView class]]) {
+                [(UIAppView *)view updateTheme];
+            }
+        }
+    }
 }
 
 // Called when the system's theme (light/dark mode) changes
@@ -1926,6 +2061,8 @@ static NSMutableSet* hostList;
     settings.controllerMouseRightButton = @(ControllerElementDpadUp);
     settings.controllerMouseExpo = @(1.8);
     settings.controllerMousePointerVelocity = @(15.0);
+    
+    settings.asyncFrameDequeue = PublicUtils.isTVOS || PublicUtils.refreshRate > 100.0;
 
     if (@available(iOS 14.0, tvOS 14.0, *)) nil;
     else settings.appTheme = @(UIUserInterfaceStyleDark);
@@ -1939,34 +2076,25 @@ static NSMutableSet* hostList;
     TemporarySettings* tempSettings = [dataMan getSettings];
     [ThemeManager setUserInterfaceStyle:tempSettings.appTheme.intValue];
     
-#if !TARGET_OS_TV
     self.settingsExpandedInStreamView = false; // init this flag
     self.revealViewController.isStreaming = false; //init this flag for rvlVC
     self.revealViewController.mainFrameIsInHostView = true;
     
-    [self setupNavBar];
-    
-    // Set the gesture
-    [self.view addGestureRecognizer:self.revealViewController.panGestureRecognizer];
-    
-    // Get callbacks associated with the viewController
     [self.revealViewController setDelegate:self];
     
     // Disable bounce-back on reveal VC otherwise the settings will snap closed
     // if the user drags all the way off the screen opposite the settings pane.
     self.revealViewController.bounceBackOnOverdraw = NO;
-#else
-    // The settings button will direct the user into the Settings app on tvOS
-    [_settingsButton setTarget:self];
-    [_settingsButton setAction:@selector(openTvSettings:)];
     
+    [self setupNavBar];
+    
+#if !TARGET_OS_TV
+    // Set the gesture
+    [self.view addGestureRecognizer:self.revealViewController.panGestureRecognizer];
+#else
     // Restore focus on the selected app on view controller pop navigation
     self.restoresFocusAfterTransition = NO;
     self.collectionView.remembersLastFocusedIndexPath = YES;
-    
-    _menuRecognizer = [[UITapGestureRecognizer alloc] init];
-    [_menuRecognizer addTarget:self action: @selector(switchToHostView)];
-    _menuRecognizer.allowedPressTypes = [[NSArray alloc] initWithObjects:[NSNumber numberWithLong:UIPressTypeMenu], nil];
     
     self.navigationController.navigationBar.titleTextAttributes = [NSDictionary dictionaryWithObject:[UIColor whiteColor] forKey:NSForegroundColorAttributeName];
 #endif
@@ -2024,17 +2152,19 @@ static NSMutableSet* hostList;
     [self.view addGestureRecognizer:longPress];
 
 
+    #if !TARGET_OS_TV
     UIStoryboard *storyboard = [UIStoryboard storyboardWithName:PublicUtils.isIPhone?@"iPhone":@"iPad" bundle:nil];
     SettingsViewController *viewController = [storyboard instantiateViewControllerWithIdentifier:@"settingsViewController"];
     // 强制加载视图
     __unused UIView *view = viewController.view;
+    #endif
     
     snapshot = nil;
     
     _controllerConnectObserver = [[NSNotificationCenter defaultCenter] addObserverForName:GCControllerDidConnectNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
         Log(LOG_I, @"Controller connected!");
         GCController* controller = note.object;
-        if(controller){
+        if (controller.extendedGamepad != nil) {
             if (@available(iOS 14.0, tvOS 14.0, *)) {
                 for (GCControllerElement* element in controller.physicalInputProfile.allElements) {
                     element.preferredSystemGestureState = GCSystemGestureStateDisabled;
@@ -2082,6 +2212,7 @@ static NSMutableSet* hostList;
 }
 
 - (void)prewarmSoftKeyboard {
+    if(PublicUtils.isTVOS) return;
     dispatch_async(dispatch_get_main_queue(), ^{
         UITextField *tf = [[UITextField alloc] initWithFrame:CGRectZero];
         tf.hidden = YES;
@@ -2249,11 +2380,19 @@ static NSMutableSet* hostList;
 -(void)handleReturnToForeground
 {
     _background = NO;
+    [self applyThemeToNavigationControls];
     
     [self beginForegroundRefresh];
     
     // Check for a pending shortcut action when returning to foreground
     [self handlePendingShortcutAction];
+}
+
+- (void)handleAboutViewDismissal:(NSNotification *)notification
+{
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        [self applyThemeToNavigationControls];
+    });
 }
 
 -(void)handleEnterBackground
@@ -2276,13 +2415,13 @@ static NSMutableSet* hostList;
     [self attachWaterMark];
     if (@available(iOS 13.0, *)) [GamepadNavigationIllustrationHud showInKeyWindow];
 
-#if !TARGET_OS_TV
+// #if !TARGET_OS_TV
     
     [[self revealViewController] setPrimaryViewController:self];
     self.revealViewController.isStreaming = false; // tell the revealViewController streaming is finished
     //[self.settingsButton setEnabled:![self isIPhonePortrait]]; //make sure settings button is disabled in iphone portrait mode.
     //recordedScreenWidth = CGRectGetWidth([[UIScreen mainScreen] bounds]); // Get the screen's bounds (in points), update recorded screen width
-#endif
+// #endif
     
     [self.navigationController setNavigationBarHidden:NO animated:NO];
     
@@ -2303,6 +2442,11 @@ static NSMutableSet* hostList;
                                              selector: @selector(handleEnterBackground)
                                                  name: UIApplicationWillResignActiveNotification
                                                object: nil];
+
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(handleAboutViewDismissal:)
+                                                 name:@"AboutViewDidDismissNotification"
+                                               object:nil];
     //[self simulateSettingsButtonPress]; //force reload resolution table in the setting
     //[self simulateSettingsButtonPress];
     [self updateResolutionAccordingly];
@@ -2326,6 +2470,14 @@ static NSMutableSet* hostList;
         ControllerNavigator.controllerMouseExpo = settings.controllerMouseExpo.floatValue;
         if(ControllerNavigator.enabled) [ControllerNavigator start];
     }
+    
+#if !TARGET_OS_TV
+    if(!self.presentedViewController) {
+        [GenericUtils handleBarrelRollRedminderIn:self];
+    }
+#else
+    [ControllerUtil handleGameControllerRequiredTipIn:self delay:1];
+#endif
 }
 
 - (void)viewWillDisappear:(BOOL)animated{
@@ -2338,9 +2490,15 @@ static NSMutableSet* hostList;
 {
     [super viewWillAppear:NO];
 
+#if TARGET_OS_TV
+    // StreamFrameViewController hides the navigation bar. Restore it before
+    // rebuilding the collection views so their first layout uses final safe-area geometry.
+    [self.navigationController setNavigationBarHidden:NO animated:NO];
+#endif
+
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(updateTheme)
-                                                 name:ThemeManager.ThemeDidChangeNotification
+                                             name:ThemeManager.ThemeDidChangeNotification
                                                object:nil];
 
     /* this makes background color works*/
@@ -2676,7 +2834,16 @@ static NSMutableSet* hostList;
         [snapshot removeFromSuperview];
         snapshot = nil;
         self.revealViewController.rearViewRevealWidth = limitedWidth;
+        [self.revealViewController.view setNeedsLayout];
+        [self.revealViewController.view layoutIfNeeded];
         [self.revealViewController setupNavigationBar];
+        [self.revealViewController.view setNeedsLayout];
+        [self.revealViewController.view layoutIfNeeded];
+        if (@available(iOS 14.0, *)) {
+            if (self.settingsViewController.usesSwiftUISettings) {
+                [self.settingsViewController refreshSwiftUISettingsGeometry];
+            }
+        }
         if(self.revealViewController.isStreaming) [self.revealViewController buttonsInStreaming];
         else [self.revealViewController buttonsNotInStreaming];
         DataManager* dataMan = [[DataManager alloc] init];
@@ -2685,11 +2852,17 @@ static NSMutableSet* hostList;
         [dataMan saveData];
 
 
+        if (@available(iOS 14.0, *)) {
+            if (self.settingsViewController.usesSwiftUISettings) return;
+        }
+        
+#if !TARGET_OS_TV
         double delayInSeconds = 0.02;
         dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
         dispatch_after(popTime, dispatch_get_main_queue(), ^{
             [self.settingsViewController hideDynamicLabelsWhenOverlapped:self.settingsViewController.parentStack];
         });
+#endif
     }
 }
 
@@ -2746,7 +2919,13 @@ static NSMutableSet* hostList;
 
 #if TARGET_OS_TV
 - (BOOL)canBecomeFocused {
-    return YES;
+    return NO;
+}
+
+- (BOOL)shouldUpdateFocusInContext:(UIFocusUpdateContext *)context {
+    NSLog(@"shouldUpdateFocusInContext .........");
+    return context.nextFocusedItem == nil ||
+        [NSStringFromClass([context.nextFocusedItem class]) containsString:@"VoidLinkFocusSinkView"];
 }
 #endif
 
@@ -2777,7 +2956,7 @@ static NSMutableSet* hostList;
     self.hostCollectionVC = [[HostCollectionViewController alloc] init];
     self.hostCollectionVC.cellSize = [self getHostCardSize];
     self.hostCollectionVC.interItemMinimumSpacing = 25;
-    self.hostCollectionVC.minimumLineSpacing = 25;
+    self.hostCollectionVC.minimumLineSpacing = PublicUtils.isTVOS ? 49 : 25;
     // 添加为子控制器
     [self addChildViewController:self.hostCollectionVC];
     
@@ -2811,7 +2990,8 @@ static NSMutableSet* hostList;
     dispatch_async(dispatch_get_main_queue(), ^{
         switch (item) {
             case RadialMenuItemSettings:
-                [[self revealViewController] revealToggleAnimated:YES];
+                if(self.isStreaming && !self.settingsViewExpanded) [self->streamFrameViewController expandSettingsView];
+                else [[self revealViewController] revealToggleAnimated:YES];
                 break;
             case RadialMenuItemAllSettings:
                 [self.revealViewController allSettingSelected];
@@ -2863,9 +3043,16 @@ static NSMutableSet* hostList;
 
 - (void)controllerNavigatorDidSelectGameProfiles {
     dispatch_async(dispatch_get_main_queue(), ^{
+#if TARGET_OS_TV
+        if(!self.gameProfileSelectorVC) [self openGameProfileSeletorWithAnimated:true];
+        else [self.gameProfileSelectorVC dismissViewControllerAnimated:true completion:^{
+            self.gameProfileSelectorVC = nil;
+        }];
+#else
         if(!self.gameProfileSelectorVC && !self.settingsViewController.layoutOnScreenControlsVC) [self openGameProfileSeletorWithAnimated:true];
         else if (self.gameProfileSelectorVC) [self.gameProfileSelectorVC.profileSelectorViewController dismissViewControllerAnimated:true completion:^{}];
         else if (self.settingsViewController.layoutOnScreenControlsVC) [self.settingsViewController.layoutOnScreenControlsVC.profileSelectorViewController dismissViewControllerAnimated:true completion:^{}];
+#endif
     });
 }
 

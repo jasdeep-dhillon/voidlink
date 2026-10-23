@@ -45,7 +45,7 @@
     },
     "2Bp-XZ-cCw.text" : {
       "comment" : "Class = \"UILabel\"; text = \"Async Native Touch\"; ObjectID = \"2Bp-XZ-cCw\";",
-      "extractionState" : "extracted_with_value",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1335,7 +1335,7 @@
     },
     "AlL-fp-WCm.text" : {
       "comment" : "Class = \"UILabel\"; text = \"Enable On-Screen Widget & Peripherals\"; ObjectID = \"AlL-fp-WCm\";",
-      "extractionState" : "extracted_with_value",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1437,7 +1437,7 @@
     },
     "AXb-DO-LzB.segmentTitles[0]" : {
       "comment" : "Class = \"UISegmentedControl\"; AXb-DO-LzB.segmentTitles[0] = \"No\"; ObjectID = \"AXb-DO-LzB\";",
-      "extractionState" : "extracted_with_value",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -1467,7 +1467,7 @@
     },
     "AXb-DO-LzB.segmentTitles[1]" : {
       "comment" : "Class = \"UISegmentedControl\"; AXb-DO-LzB.segmentTitles[1] = \"Yes\"; ObjectID = \"AXb-DO-LzB\";",
-      "extractionState" : "extracted_with_value",
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -2421,18 +2421,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "可移動"
-          }
-        }
-      }
-    },
-    "cpg-mq-kYj.text" : {
-      "comment" : "Class = \"UILabel\"; text = \"Enable Timebase\"; ObjectID = \"cpg-mq-kYj\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Enable Timebase"
           }
         }
       }
@@ -3999,43 +3987,55 @@
       }
     },
     "JaY-XA-1V6.segmentTitles[1]" : {
-      "comment" : "Class = \"UISegmentedControl\"; JaY-XA-1V6.segmentTitles[1] = \"DS4\"; ObjectID = \"JaY-XA-1V6\";",
+      "comment" : "Class = \"UISegmentedControl\"; JaY-XA-1V6.segmentTitles[1] = \"PS\"; ObjectID = \"JaY-XA-1V6\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "DS4"
+            "value" : "PS"
           }
         }
       }
     },
     "JaY-XA-1V6.segmentTitles[2]" : {
-      "comment" : "Class = \"UISegmentedControl\"; JaY-XA-1V6.segmentTitles[2] = \"Both\"; ObjectID = \"JaY-XA-1V6\";",
+      "comment" : "Class = \"UISegmentedControl\"; JaY-XA-1V6.segmentTitles[2] = \"PS (Enhanced Haptics)\"; ObjectID = \"JaY-XA-1V6\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Both"
+            "value" : "PS (Enhanced Haptics)"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "同时映射"
+            "value" : "PS (触觉增强)"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "同時映射"
+            "value" : "PS（觸覺增強）"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "同時映射"
+            "value" : "PS（觸覺增強）"
+          }
+        }
+      }
+    },
+    "JaY-XA-1V6.segmentTitles[3]" : {
+      "comment" : "Class = \"UISegmentedControl\"; JaY-XA-1V6.segmentTitles[3] = \"Xbox + PS\"; ObjectID = \"JaY-XA-1V6\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Xbox + PS"
           }
         }
       }
@@ -6594,6 +6594,36 @@
           "stringUnit" : {
             "state" : "needs_review",
             "value" : "合成實體搖桿輸入"
+          }
+        }
+      }
+    },
+    "UpM-yi-yc9.text" : {
+      "comment" : "Class = \"UILabel\"; text = \"DualSense Haptic Intensity\"; ObjectID = \"UpM-yi-yc9\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "DualSense Haptic Intensity"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DualSense振动强度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DualSense振動強度"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DualSense振動強度"
           }
         }
       }

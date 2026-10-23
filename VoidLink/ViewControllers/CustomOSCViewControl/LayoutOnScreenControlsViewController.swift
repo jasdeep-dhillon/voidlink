@@ -208,6 +208,7 @@ final class LayoutOnScreenControlsViewController: UIViewController, OnScreenWidg
     private var latestTouchLocation: CGPoint = .zero
     private var vibrationGenerator = UIImpactFeedbackGenerator(style: .medium)
     private var widgetSizeTransition: WidgetSizeTransition = .keepWidgetSize
+    private var hasSavedSinceLastWidgetReload = false
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
         let dataMan = DataManager()
@@ -390,6 +391,7 @@ final class LayoutOnScreenControlsViewController: UIViewController, OnScreenWidg
             }
             
             self.loadWidgets(from: oscProfile)
+            self.hasSavedSinceLastWidgetReload = false
 
             if !self.quickSwitchEnabled {
                 self.originalTrackPointEnabled = OnScreenWidgetView.trackPointEnabled
@@ -1158,6 +1160,31 @@ final class LayoutOnScreenControlsViewController: UIViewController, OnScreenWidg
     }
 
     @IBAction func closeTapped(_ sender: Any?) {
+        guard profilesManager.getSelectedProfile().name != "Default",
+              !hasSavedSinceLastWidgetReload else {
+            dismissLayoutEditor()
+            return
+        }
+
+        AlertControllerUtil.cancelButtonString = "Exit Directly".localized
+        AlertControllerUtil.showAlert(
+            in: self,
+            title: "Save Changes".localized,
+            message: "Save changes before closing?".localized,
+            withCancel: true,
+            buttonTitle: "Save".localized,
+            countdown: 0,
+            completion: { [weak self] in
+                guard let self else { return }
+                if !AlertControllerUtil.actionCancelled {
+                    self.saveTapped(nil)
+                }
+                self.dismissLayoutEditor()
+            }
+        )
+    }
+
+    private func dismissLayoutEditor() {
         clearSickInput()
         dismiss(animated: true) {
             OnScreenWidgetView.trackPointEnabled = self.originalTrackPointEnabled
@@ -1573,6 +1600,7 @@ final class LayoutOnScreenControlsViewController: UIViewController, OnScreenWidg
         clearSickInput()
         OSCProfilesManager.setLayoutViewBounds(view.bounds)
         let success = profilesManager.updateSelectedProfile(layoutOSC.oscButtonLayerPool)
+        hasSavedSinceLastWidgetReload = success
         guard sender != nil else { return }
         let message = success
             ? LocalizationHelper.localizedString(forKey: "profileSaveTip")
@@ -2269,11 +2297,11 @@ final class LayoutOnScreenControlsViewController: UIViewController, OnScreenWidg
     @objc private func buttonModeChanged(_ sender: UISegmentedControl) {
         if let selectedWidget {
             switch sender.selectedSegmentIndex {
-            case ButtonMode.slideToToggle.rawValue where selectedWidget.isFunctionalButton:
+            case ButtonMode.slideToToggle.rawValue where selectedWidget.isRegularFunctionalButton:
                 self.handleInvalidButtonModeTipsFor(widget: selectedWidget, sender: sender)
-            case ButtonMode.slideAndHold.rawValue where (selectedWidget.isFunctionalButton && !selectedWidget.isFolder) || selectedWidget.containsShortcutAction:
+            case ButtonMode.slideAndHold.rawValue where (selectedWidget.isRegularFunctionalButton && !selectedWidget.isFolder) || selectedWidget.containsShortcutAction:
                 self.handleInvalidButtonModeTipsFor(widget: selectedWidget, sender: sender)
-            case ButtonMode.tapToToggle.rawValue where selectedWidget.isFunctionalButton && !selectedWidget.isTapToToggleException:
+            case ButtonMode.tapToToggle.rawValue where selectedWidget.isRegularFunctionalButton && !selectedWidget.isTapToToggleException:
                 self.handleInvalidButtonModeTipsFor(widget: selectedWidget, sender: sender)
             default:
                 GenericUtils.handleButtonModeTip(in: self)

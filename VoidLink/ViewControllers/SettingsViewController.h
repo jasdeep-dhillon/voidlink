@@ -14,12 +14,19 @@
 
 @class LayoutOnScreenControlsViewController;
 @class MainFrameViewController;
+@class TemporarySettings;
 @class MenuSectionView;
 @class MicHandler;
 @class WidgetPickerViewController;
 
 @interface SettingsViewController : UIViewController <RearNavigationBarMenuDelegate, UITextFieldDelegate>
 
+#if TARGET_OS_TV
+- (TemporarySettings *)initialSettingsSnapshotForSwiftUI;
+- (void)consumeTvOSInitialSettingsSnapshotForMenuPresentation;
+#endif
+
+#if !TARGET_OS_TV
 @property (strong, nonatomic) IBOutlet UINavigationBar *navigationBar;
 @property (strong, nonatomic) UIStackView *parentStack;
 @property (strong, nonatomic) IBOutlet UIStackView *resolutionStack;
@@ -29,7 +36,7 @@
 @property (strong, nonatomic) IBOutlet UIStackView *fpsStack;
 @property (strong, nonatomic) IBOutlet UIStackView *bitrateStack;
 @property (strong, nonatomic) IBOutlet UIStackView *touchModeStack;
-@property (strong, nonatomic) IBOutlet UIStackView *enableOswSwitchStack;
+// @property (strong, nonatomic) IBOutlet UIStackView *enableOswSwitchStack;
 //@property (strong, nonatomic) IBOutlet UIStackView *asyncTouchStack;
 @property (strong, nonatomic) IBOutlet UISwitch *optimizeGamesSwitch;
 @property (strong, nonatomic) IBOutlet UIStackView *pointerVelocityDividerStack;
@@ -75,7 +82,7 @@
 @property (strong, nonatomic) IBOutlet UISwitch *customResolutionSwitch;
 @property (strong, nonatomic) IBOutlet UILabel *touchModeLabel;
 @property (strong, nonatomic) IBOutlet UISegmentedControl *touchModeSelector1;
-@property (strong, nonatomic) IBOutlet UISwitch *enableOswForNativeTouchSwitch;
+// @property (strong, nonatomic) IBOutlet UISwitch *enableOswForNativeTouchSwitch;
 @property (strong, nonatomic) IBOutlet UILabel *onscreenControllerLabel;
 @property (strong, nonatomic) IBOutlet UISegmentedControl *onScreenWidgetSelector;
 //@property (strong, nonatomic) IBOutlet UISegmentedControl *asyncNativeTouchPrioritySelector;
@@ -268,9 +275,6 @@
 @property (strong, nonatomic) IBOutlet UIStackView *pressureCurveStack;
 @property (strong, nonatomic) IBOutlet UISwitch *pressureCurveSwitch;
 
-@property (weak, nonatomic) IBOutlet UIStackView *frameTimebaseStack;
-@property (weak, nonatomic) IBOutlet UISwitch *frameTimebaseSwitch;
-
 @property (weak, nonatomic) IBOutlet UIStackView *asyncFrameDequeueStack;
 @property (weak, nonatomic) IBOutlet UISwitch *asyncFrameDequeueSwitch;
 
@@ -282,6 +286,9 @@
 
 @property (weak, nonatomic) IBOutlet UIStackView *globeAsEscapeStack;
 @property (weak, nonatomic) IBOutlet UISwitch *globeAsEscapeSwitch;
+
+@property (weak, nonatomic) IBOutlet UIStackView *dualSenseTransientStack;
+@property (weak, nonatomic) IBOutlet UISlider *dualSenseTransientSlider;
 
 @property (strong, nonatomic) IBOutlet UIStackView *testStack;
 
@@ -312,7 +319,13 @@
 
 @property (weak, nonatomic) IBOutlet UIStackView *pencilModeStack;
 @property (weak, nonatomic) IBOutlet UISegmentedControl *pencilModeSelector;
-
+#else
+@property (strong, nonatomic) UIStackView *parentStack;
+@property (nonatomic, weak) MainFrameViewController *mainFrameViewController;
+@property (strong, nonatomic) UIView *controllerNavigationHighlightOverlayView;
+@property (weak, nonatomic) LayoutOnScreenControlsViewController *layoutOnScreenControlsVC;
+@property (strong, nonatomic) IBOutlet UIScrollView *scrollView;
+#endif
 
 
 #pragma clang diagnostic push
@@ -324,18 +337,36 @@
 
 #pragma clang diagnostic pop
 
+#if !TARGET_OS_TV
 - (bool)hdrSupported;
-- (void)saveSettings;
 - (void)saveFavoriteSettingStackIdentifiers;
 + (bool)isLandscapeNow;
 - (void)updateResolutionTable;
 - (void)widget:(UIView*)widget setEnabled:(bool)enabled;
-- (void)updateTheme;
 - (void)hideDynamicLabelsWhenOverlapped:(UIView* )view;
 - (void)setHidden:(BOOL)hidden forStack:(UIStackView* )stack;
 - (void)updateCodecDependentSwitches;
-- (void)mainFrameGameProfileButtonTapped:(bool)animated;
 - (void)addSettingToFavorite:(UIStackView* )settingStack;
+#endif
+
+- (void)mainFrameGameProfileButtonTapped:(bool)animated;
+- (void)updateTheme;
+- (void)saveSettings;
+
+@end
+
+@interface SettingsViewController (SwiftUISettings)
+- (void)installSwiftUISettingsIfNeeded;
+- (void)refreshSwiftUISettings;
+- (void)refreshSwiftUISettingsGeometry;
+- (void)reloadSwiftUISettings;
+- (void)persistSwiftUISettings;
+- (void)persistSwiftUIGameProfileSettings;
+- (void)applySwiftUIClosingEffects;
+- (void)updateSwiftUISettingsStreamingState:(BOOL)expandedInStream menuIsOpening:(BOOL)menuIsOpening;
+- (void)setSwiftUISettingsMenuMode:(NSInteger)rawValue;
+- (NSInteger)swiftUISettingsMenuModeRawValue;
 - (void)expandGamepadSection;
+@property(nonatomic, readonly) BOOL usesSwiftUISettings;
 
 @end

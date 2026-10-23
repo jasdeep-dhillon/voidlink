@@ -20,8 +20,10 @@
 #import "PaddedLabel.h"
 #import "ImGuiRenderer.h"
 #import "MetalVideoRenderer.h"
+#if !TARGET_OS_TV
 #import "CustomEdgeSlideGestureRecognizer.h"
 #import "CustomTapGestureRecognizer.h"
+#endif
 #import "LocalizationHelper.h"
 #import "VoidLink-Swift.h"
 #import "NativeTouchPointer.h"
@@ -77,7 +79,11 @@ static NSString* VLTerminationHintForErrorCode(int errorCode) {
 }
 
 
-@interface StreamFrameViewController () <ToolboxSpecialEntryDelegate, OnScreenFunctionalWidgetDelegate, AbstractGamepadOverlayCloseButtonDelegate>
+@interface StreamFrameViewController () <ToolboxSpecialEntryDelegate, OnScreenFunctionalWidgetDelegate
+#if !TARGET_OS_TV
+, AbstractGamepadOverlayCloseButtonDelegate
+#endif
+>
 @end
 
 static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil;
@@ -90,9 +96,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     NSTimer *_statsUpdateTimer;
     PaddedLabel *_overlayView;
     PaddedLabel *_transientHUDView;
-    UITapGestureRecognizer *_menuTapGestureRecognizer;
-    UITapGestureRecognizer *_menuDoubleTapGestureRecognizer;
-    UITapGestureRecognizer *_playPauseTapGestureRecognizer;
+    ToolboxViewController* toolBoxViewController;
     uint16_t overlayLevel;
     UILabel *_stageLabel;
     UILabel *_tipLabel;
@@ -108,6 +112,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     PlotMetrics _frameQueueMetrics;
     UIWindow *_extWindow;
     UIView *_streamVideoRenderView;
+    BOOL _externalDisplayRoutingActive;
     /*
      * View architecture of this viewController:
      * self.view (named `streamFrameTopLayerView` in StreamView.m, where slide & tap gestures, and onScreenControls & OnScreenWidgetView buttons are registered)
@@ -119,21 +124,18 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     VideoDecoderRenderer *_videoRenderer;
     BOOL _isRestoringFromPiP;
     SafeTimer* safeTimer;
+    MotionHandler *_motionHandler;
 
 #if !TARGET_OS_TV
     CustomEdgeSlideGestureRecognizer *_slideToSettingsRecognizer;
     CustomEdgeSlideGestureRecognizer *_slideToToolboxRecognizer;
     CustomTapGestureRecognizer *_oscLayoutTapRecoginizer;
     LayoutOnScreenControlsViewController *_layoutOnScreenControlsVC;
-    ToolboxViewController* toolBoxViewController;
-    MicHandler* micHandler;
-    MotionHandler *_motionHandler;
 
-    
-#else
-    UITapGestureRecognizer *_menuTapGestureRecognizer;
-    UITapGestureRecognizer *_menuDoubleTapGestureRecognizer;
-    UITapGestureRecognizer *_playPauseTapGestureRecognizer;
+#endif
+    MicHandler* micHandler;
+#if TARGET_OS_TV
+    BOOL _tvMicStopped;
 #endif
 
 }
@@ -209,6 +211,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 }
 
 - (BOOL)isFirstStreaming {
+    if(PublicUtils.isTVOS) return false;
     NSString *key = @"hasStreamedBefore";
     BOOL streamedBefore = [[NSUserDefaults standardUserDefaults] boolForKey:key];
 
@@ -242,7 +245,9 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
         if (@available(iOS 15.0, *)) {
             self.pipContentSource = [[AVPictureInPictureControllerContentSource alloc] initWithSampleBufferDisplayLayer:streamLayer playbackDelegate:(id<AVPictureInPictureSampleBufferPlaybackDelegate>)self];
             self.pipController = [[AVPictureInPictureController alloc] initWithContentSource:self.pipContentSource];
+#if !TARGET_OS_TV
             self.pipController.canStartPictureInPictureAutomaticallyFromInline = YES;
+#endif
         } else {
             Log(LOG_E, @"PiP not fully supported on this device.");
             return;
@@ -289,6 +294,9 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 }
 
 - (void)prepareGameProfileSelector{
+#if TARGET_OS_TV
+    return;
+#else
     if(true){
         /* sets a reference to the correct 'LayoutOnScreenControlsViewController' depending on whether the user is on an iPhone or iPad */
         // _layoutOnScreenControlsVC = [[LayoutOnScreenControlsViewController alloc] init];
@@ -305,6 +313,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
         _layoutOnScreenControlsVC.view.backgroundColor = UIColor.clearColor;
         _layoutOnScreenControlsVC.modalPresentationStyle = UIModalPresentationOverCurrentContext;
     }
+#endif
     //NSLog(@"in osc frameview gestures: %d", (uint32_t)[self.view.gestureRecognizers count]);
     //NSLog(@"in osc streamview gestures: %d", (uint32_t)[_streamView.gestureRecognizers count]);
 }
@@ -325,7 +334,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     toolBoxViewController.specialEntries = [oldToolboxVC.specialEntries mutableCopy];
     if(hideWidgetLayoutToolEntry) [toolBoxViewController.specialEntries removeObject:@"widgetLayoutTool"];
     toolBoxViewController.modalPresentationStyle = UIModalPresentationOverCurrentContext;
-    if([GenericUtils isFirstOpeningNewToolbox]){
+    if([GenericUtils isFirstOpeningNewToolbox] && !PublicUtils.isTVOS){
         [GenericUtils handleFirstOpeningNewToolboxIn:self handler:^{
             [self presentViewController:self->toolBoxViewController animated:YES completion:^{}];
         }];
@@ -334,6 +343,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 }
 
 - (void)configGestures{
+#if !TARGET_OS_TV
     _slideToSettingsRecognizer = [[CustomEdgeSlideGestureRecognizer alloc] initWithTarget:self action:@selector(edgeSwiped)];
     _slideToSettingsRecognizer.excludePencilEvent = _oscProfile.disablePencilSlideGestures;
     _slideToSettingsRecognizer.edgeTolerance = _settings.edgeSlidingSensitivity.floatValue;
@@ -366,6 +376,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
         _oscLayoutTapRecoginizer.touchCapturingView = _streamView;
     }
     */
+#endif
 }
 
 - (BOOL)currentProfileContainsMagnifierWidget {
@@ -445,12 +456,16 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     }
 
     BOOL interactionEnabled = _magnifierViewportInteractionActive;
-    if (@available(iOS 17.0, *)) {
+    if (@available(iOS 17.0, tvOS 17.0, *)) {
+#if !TARGET_OS_TV
         _scrollView.allowsKeyboardScrolling = false;
+#endif
     }
     _scrollView.scrollEnabled = interactionEnabled;
     _scrollView.panGestureRecognizer.enabled = interactionEnabled;
+#if !TARGET_OS_TV
     _scrollView.pinchGestureRecognizer.enabled = interactionEnabled;
+#endif
 }
 
 - (void)resetMagnifierTransformState {
@@ -513,7 +528,9 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 
     if (shouldWrapInScrollView) {
         if(!_scrollView) _scrollView = [[UIScrollView alloc] initWithFrame:self.view.frame];
+#if !TARGET_OS_TV
         _scrollView.scrollsToTop = false;
+#endif
         _scrollView.frame = self.view.bounds;
         _scrollView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
 #if !TARGET_OS_TV
@@ -592,10 +609,15 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     [self->_streamView disableOnScreenControls]; //don't know why but this must be called outside the streamview class, just put it here. execute in streamview class cause hang
     [self.mainFrameViewcontroller reloadStreamConfig]; // reload streamconfig
     
+#if TARGET_OS_TV
+    if (_micStreamInitialized && !_tvMicStopped && _settings.redirectMic) [micHandler startTapping];
+    else [micHandler stopTappingWithStopEngine:YES];
+#else
     if([MicHandler permissionGranted] && _settings.redirectMic){
         [micHandler startTapping];
     }
     else [micHandler stopTappingWithStopEngine:false];
+#endif
     
     Connection.muteInBackground = _settings.muteInBackground;
     
@@ -648,7 +670,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 
     // Ensure views are layered correctly
     // Metal view should be at the bottom for video rendering
-    if (self.metalViewController && self.metalViewController.view.superview) {
+    if (self.metalViewController.view.superview == self.view) {
         [self.view sendSubviewToBack:self.metalViewController.view];
     }
     // StreamView should also be at the back so OSC CALayers on self.view show
@@ -709,26 +731,9 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     _viewJustLoaded = false;
     _deviceWindow = self.view.window;
     previousOnScreenWidgetEnabled = [_streamView isOnScreenWidgetEnabled];
-    if (@available(iOS 13.0, *)) {
-        UIScreen *currentScreen = self.view.window.windowScene.screen;
-        if (UIScreen.screens.count > 1 && [self isAirPlayEnabled] && currentScreen == UIScreen.mainScreen) {
-            [SceneDelegate setExternalDisplayRenderView:self->_streamVideoRenderView];
-        }
-        else {
-            /*
-             _settings.externalDisplayMode.intValue:
-             0 - stage manager
-             1 - airplay
-             2 - disabled
-             */
-            dispatch_async(dispatch_get_main_queue(), ^{
-                [self->_streamView insertSubview:self->_streamVideoRenderView atIndex:0];
-            });
-        }
-    } else {
-        [self->_streamView insertSubview:self->_streamVideoRenderView atIndex:0];
-        // Fallback on earlier versions
-    }
+    
+    _externalDisplayRoutingActive = YES;
+    [self reloadAirPlayConfig];
 
     self->_streamView.originalFrame = self->_streamView.frame;
     
@@ -739,17 +744,6 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     
     // check to see if external screen is connected/disconnected
 
-    [[NSNotificationCenter defaultCenter] addObserver: self
-                                             selector: @selector(extScreenDidConnect:)
-                                                 name: UIScreenDidConnectNotification
-                                               object: nil];
-
-    [[NSNotificationCenter defaultCenter] addObserver: self
-                                             selector: @selector(extScreenDidDisconnect:)
-                                                 name: UIScreenDidDisconnectNotification
-                                               object: nil];
-   
-#if !TARGET_OS_TV
     [[self revealViewController] setPrimaryViewController:self];
     
     [self restorePersistedStreamViewOffsetAndScaleWithProfile:_oscProfile];
@@ -776,6 +770,27 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
                                                  name:@"SettingsOverlayButtonPressedNotification"
                                                object:nil];
 
+    if(ControllerUtil.primaryGCController && _settings.framePacingMode.intValue != FramePacingModeInterpolation){
+        NSString* radialMenuButton = [ControllerUtil stringFor:_settings.streamingRadialMenuButton.intValue];
+        [self updateTransientHUDText:[LocalizationHelper localizedStringForKey:@"Long press [%@] to activate controller menu", radialMenuButton]];
+        __weak StreamFrameViewController *weakSelf = self;
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [weakSelf updateTransientHUDText:nil];
+        });
+    }
+    
+#if !TARGET_OS_TV
+
+    [[NSNotificationCenter defaultCenter] addObserver: self
+                                             selector: @selector(extScreenDidConnect:)
+                                                 name: UIScreenDidConnectNotification
+                                               object: nil];
+
+    [[NSNotificationCenter defaultCenter] addObserver: self
+                                             selector: @selector(extScreenDidDisconnect:)
+                                                 name: UIScreenDidDisconnectNotification
+                                               object: nil];
+    
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(keyboardWillShow:)
                                                  name:UIKeyboardWillShowNotification
@@ -795,10 +810,9 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
                                              selector:@selector(keyboardDidHide)
                                                  name:UIKeyboardDidHideNotification
                                                object:nil];
+#endif
 
     [safeTimer start];
-    
-    #endif
 }
 
 #if TARGET_OS_TV
@@ -867,6 +881,12 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     _singleTouchDisabled = false;
     
     [super viewDidLoad];
+
+#if TARGET_OS_TV
+    self.controllerUserInteractionEnabled = NO;
+#else
+    self.controllerUserInteractionEnabled = NO;
+#endif
     
     [self.navigationController setNavigationBarHidden:YES animated:YES];
     
@@ -919,31 +939,14 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     _streamVideoRenderView = (StreamView*)[[UIView alloc] initWithFrame:self.view.frame];
     _streamVideoRenderView.bounds = _streamView.bounds;
     _streamVideoRenderView.userInteractionEnabled = false;
+    [_streamView insertSubview:_streamVideoRenderView atIndex:0];
     
     //[_streamView setupStreamView:_controllerSupport interactionDelegate:self config:self.streamConfig];
     [self reConfigStreamViewRealtime]; // call this method again to make sure all gestures are configured & added to the superview(self.view), including the gestures added from inside the streamview.
     
     if([self isFirstStreaming] || GenericUtils.isFirstStreamingOnMac) [self popFirstStreamingTip];
     
-#if TARGET_OS_TV
-    if (!_menuTapGestureRecognizer || !_menuDoubleTapGestureRecognizer || !_playPauseTapGestureRecognizer) {
-        _menuTapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(controllerPauseButtonPressed:)];
-        _menuTapGestureRecognizer.allowedPressTypes = @[@(UIPressTypeMenu)];
-        
-        _playPauseTapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(controllerPlayPauseButtonPressed:)];
-        _playPauseTapGestureRecognizer.allowedPressTypes = @[@(UIPressTypePlayPause)];
-        
-        _menuDoubleTapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(controllerPauseButtonDoublePressed:)];
-        _menuDoubleTapGestureRecognizer.numberOfTapsRequired = 2;
-        [_menuTapGestureRecognizer requireGestureRecognizerToFail:_menuDoubleTapGestureRecognizer];
-        _menuDoubleTapGestureRecognizer.allowedPressTypes = @[@(UIPressTypeMenu)];
-    }
-    
-    [self.view addGestureRecognizer:_menuTapGestureRecognizer];
-    [self.view addGestureRecognizer:_menuDoubleTapGestureRecognizer];
-    [self.view addGestureRecognizer:_playPauseTapGestureRecognizer];
-    
-#else
+#if !TARGET_OS_TV
     //[self configSwipeGestures]; // swipe & exit gesture configured here
     //[self configOscLayoutTool]; //_oscLayoutTapRecoginizer will be added or removed to the view here
 #endif
@@ -952,7 +955,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     [_tipLabel setUserInteractionEnabled:NO];
     
 #if TARGET_OS_TV
-    [_tipLabel setText:@"Tip: Tap the Play/Pause button on the Apple TV Remote to disconnect from your PC"];
+    // [_tipLabel setText:@"Tip: Tap the Play/Pause button on the Apple TV Remote to disconnect from your PC"];
 #else
     // [_tipLabel setText:[LocalizationHelper localizedStringForKey:@"Tip: Swipe from screen edge to a certiain distance (configured by Swipe & Exit settings) to disconnect from your PC"]];
 #endif
@@ -1035,6 +1038,8 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     ControllerUtil.gamepadArrivalReported = false;
     
     [OnScreenWidgetView disableFolderAnimationFor:2];
+    
+    PublicUtils.sessionStartTimestamp = CACurrentMediaTime();
 }
 
 - (void)keyboardWillShow:(NSNotification *)notification{
@@ -1060,6 +1065,9 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 }
 
 - (void)openWidgetLayoutTool{
+#if TARGET_OS_TV
+    return;
+#else
     [_streamView saveStreamingGameProfileChanges];
     _streamView.widgetToolOpened = true;
     [self->_streamView disableOnScreenControls];
@@ -1068,9 +1076,17 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     _layoutOnScreenControlsVC.toolbarStackView.hidden = false;
     _layoutOnScreenControlsVC.toolbarRootView.hidden = false;
     [self presentViewController:_layoutOnScreenControlsVC animated:YES completion:nil];
+#endif
 }
 
 - (void)openWidgetProfileTableWithPickProfile:(BOOL)pickProfile{
+    ProfileSelectorLoadingMode loadingMode = pickProfile ? ProfileSelectorLoadingModePickProfile : ProfileSelectorLoadingModeSelectProfileFromStreamView;
+#if TARGET_OS_TV
+    ProfileSelectorViewController *controller = [[ProfileSelectorViewController alloc] init];
+    controller.loadingMode = loadingMode;
+    controller.modalPresentationStyle = UIModalPresentationFullScreen;
+    [self presentViewController:controller animated:YES completion:nil];
+#else
     [_streamView saveStreamingGameProfileChanges];
     _streamView.widgetToolOpened = true;
     [self->_streamView disableOnScreenControls];
@@ -1078,15 +1094,19 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     _layoutOnScreenControlsVC.quickSwitchEnabled = true;
     _layoutOnScreenControlsVC.toolbarStackView.hidden = true;
     _layoutOnScreenControlsVC.toolbarRootView.hidden = true;
-    ProfileSelectorLoadingMode loadingMode = pickProfile ? ProfileSelectorLoadingModePickProfile : ProfileSelectorLoadingModeSelectProfileFromStreamView;
     _layoutOnScreenControlsVC.profileSelectorLoadingMode = loadingMode;
     [self presentViewController:_layoutOnScreenControlsVC animated:NO completion:^{
         [self->_layoutOnScreenControlsVC presentProfileSelectorWith:loadingMode animated:false];
     }];
+#endif
 }
 
 - (void)bringUpSoftKeyboard{
     [self->_streamView readyToBringUpSoftKeyboardByToolbox];
+}
+
+- (void)remoteTextInputForTvOS {
+    [self->_streamView remoteTextInputForTvOS];
 }
 
 - (void)enterPip{
@@ -1213,7 +1233,9 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
         CGFloat aspectRatio = [aspectRatioNum doubleValue];
         Log(LOG_I, @"Updating StreamView aspect ratio to %.4f", aspectRatio);
         _streamView.streamAspectRatio = aspectRatio;
+#if !TARGET_OS_TV
         _streamView.pencilHandler.streamAspectRatio = aspectRatio;
+#endif
     }
 }
 
@@ -1244,11 +1266,17 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 - (void)willMoveToParentViewController:(UIViewController *)parent {
     // Only cleanup when we're being destroyed
     if (parent == nil) {
+        _externalDisplayRoutingActive = NO;
+        [self reloadAirPlayConfig];
         [_streamView cleanUp];
         _streamView = nil;
         [_controllerSupport cleanup];
 
         [UIApplication sharedApplication].idleTimerDisabled = NO;
+#if TARGET_OS_TV
+        _tvMicStopped = YES;
+        [micHandler clean];
+#endif
         [_streamMan stopStream];
         if (_inactivityTimer != nil) {
             [_inactivityTimer invalidate];
@@ -1398,7 +1426,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
         _transientHUDView.textAlignment = NSTextAlignmentLeft;
         _transientHUDView.textColor = [UIColor.whiteColor colorWithAlphaComponent:0.7];
         _transientHUDView.backgroundColor = [UIColor.blackColor colorWithAlphaComponent:0.5];
-        _transientHUDView.font = [UIFont systemFontOfSize:PublicUtils.isIPhone ? 18 : 22
+        _transientHUDView.font = [UIFont systemFontOfSize: PublicUtils.isIPhone ? 18 : (PublicUtils.isTVOS ? 32 : 22)
                                                   weight:UIFontWeightSemibold];
         _transientHUDView.layer.cornerRadius = 8;
         _transientHUDView.layer.masksToBounds = YES;
@@ -1441,13 +1469,14 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     [_streamView saveStreamingGameProfileChanges];
     [_streamView clearOnScreenWidgets];
     if(micHandler) [micHandler clean];
+#if !TARGET_OS_TV
     PencilHandler.shared = nil;
+#endif
     
     // Reset display mode back to default
     [self updatePreferredDisplayMode:NO];
-    if (@available(iOS 13.0, *)) {
-        [SceneDelegate clearExternalDisplayRenderView];
-    }
+    _externalDisplayRoutingActive = NO;
+    [self reloadAirPlayConfig];
     
     if (_settings.enablePIP) {
         [self cleanupPiPController];
@@ -1460,7 +1489,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     
     _extWindow = nil;
     
-    if(_streamConfig.redirectMic) [micHandler stopTappingWithStopEngine:true];
+    [micHandler stopTappingWithStopEngine:true];
     
     self.mainFrameViewcontroller.settingsExpandedInStreamView = false; // reset this flag to false
         
@@ -1469,41 +1498,12 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 
 // External Screen connected
 - (void)extScreenDidConnect:(NSNotification *)notification {
-    Log(LOG_I, @"External Screen Connected");
-    if ([self isAirPlayEnabled] && [notification.object isKindOfClass:[UIScreen class]]) {
-        // UIScreen *extScreen = (UIScreen *)notification.object;
-        if (_streamVideoRenderView) {
-             // Remove from current superview before passing it
-             [_streamVideoRenderView removeFromSuperview];
-             if (@available(iOS 13.0, *)) {
-                 [SceneDelegate setExternalDisplayRenderView:_streamVideoRenderView];
-             }
-             NSNotificationCenter* nc = [NSNotificationCenter defaultCenter];
-             [nc postNotificationName:@"ScreenChanged" object:self];
-        } else {
-             Log(LOG_W, @"_streamVideoRenderView is nil when external screen connected.");
-        }
-    }
+    [self reloadAirPlayConfig];
 }
 
 // External Screen disconnected
 - (void)extScreenDidDisconnect:(NSNotification *)notification {
-    Log(LOG_I, @"External Screen Disconnected");
-    if(UIScreen.screens.count < 2) {
-        if (@available(iOS 13.0, *)) {
-            [SceneDelegate clearExternalDisplayRenderView];
-        }
-        // Add the render view back to the local StreamView if AirPlay was active
-        if ([self isAirPlayEnabled]) {
-            if (_streamVideoRenderView && _streamView) {
-                [_streamView insertSubview:_streamVideoRenderView atIndex:0];
-                [self handleViewResize]; // Adjust frames as needed
-                [self reConfigStreamViewRealtimeAndReloadSettings:YES reloadOnscreenWidgets:YES];
-            }
-        }
-        NSNotificationCenter* nc = [NSNotificationCenter defaultCenter];
-        [nc postNotificationName:@"ScreenChanged" object:self]; // Your existing notification
-    }
+    [self reloadAirPlayConfig];
 }
 
 - (bool)shallDisableGyroHotSwitch{
@@ -1511,8 +1511,9 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 }
 
 - (BOOL) isAirPlaying{
-    if (_settings.externalDisplayMode.intValue == 1 && _streamVideoRenderView) {
-        return _streamVideoRenderView.hidden;
+    if (@available(iOS 13.0, *)) {
+        UIView *renderView = self.metalViewController ? self.metalViewController.view : _streamVideoRenderView;
+        return [SceneDelegate isExternalDisplayRenderView:renderView];
     }
     return NO;
 }
@@ -1522,16 +1523,20 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 }
 
 - (void) reloadAirPlayConfig{
-    if (UIScreen.screens.count == 1){return;}
-    if (![self isAirPlaying] && [self isAirPlayEnabled]){
-        if (@available(iOS 13.0, *)) {
-            [SceneDelegate setExternalDisplayRenderView:_streamVideoRenderView];
-        }
-    }else if ([self isAirPlaying] && ![self isAirPlayEnabled]){
-        if (@available(iOS 13.0, *)) {
-            [SceneDelegate clearExternalDisplayRenderView];
+    NSAssert(NSThread.isMainThread, @"External display routing must run on the main thread");
+#if !TARGET_OS_TV
+    if (@available(iOS 13.0, *)) {
+        UIView *renderView = self.metalViewController ? self.metalViewController.view : _streamVideoRenderView;
+        BOOL shouldRoute = _externalDisplayRoutingActive && [self isAirPlayEnabled] &&
+            renderView && self.view.window.windowScene.screen == UIScreen.mainScreen;
+        if (shouldRoute) {
+            UIView *localContainer = self.metalViewController ? self.view : _streamView;
+            [SceneDelegate setExternalDisplayRenderView:renderView localContainer:localContainer];
+        } else {
+            [SceneDelegate clearExternalDisplayRenderView:renderView];
         }
     }
+#endif
 }
 
 - (void) handleViewResize{
@@ -1602,7 +1607,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     [_streamMan setNeedRequeuing:true];
     // dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(15 * NSEC_PER_SEC));
     // dispatch_after(delay, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        [Connection resetSysAudioPlayback];
+        // [Connection resetSysAudioPlayback];
     // });
     
     // Stop the background timer, since we're foregrounded again
@@ -1693,7 +1698,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 - (void)disconnectAndQuitApp{
     [self returnToMainFrame];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        sleep(1.5);
+        sleep(2);
         dispatch_async(dispatch_get_main_queue(), ^{
             [self.mainFrameViewcontroller quitLaunchedApp];
         });
@@ -1734,6 +1739,15 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 }
 
 - (void)connectionTerminated:(int)errorCode {
+#if TARGET_OS_TV
+    void (^stopMic)(void) = ^{
+        self->_tvMicStopped = YES;
+        [self->micHandler clean];
+    };
+    if ([NSThread isMainThread]) stopMic();
+    else dispatch_sync(dispatch_get_main_queue(), stopMic);
+#endif
+
     Log(LOG_I, @"Connection terminated: %d", errorCode);
     
     unsigned int portFlags = LiGetPortFlagsFromTerminationErrorCode(errorCode);
@@ -1831,48 +1845,94 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     });
 }
 
+// Called on the main queue after the microphone channel's startup delay.
+- (void)initializeMicrophoneForStream {
+#if TARGET_OS_TV
+    // Pairing UI and input discovery require the main thread. Ignore a cancelled stream.
+    if (_tvMicStopped) return;
+#endif
+    if (!self.view.window || micHandler) return;
+    BOOL useBuiltinMic = _settings.useBuiltinMic;
+
+    if (!_streamConfig.redirectMic) {
+        [self scheduleMicInitializationWithUseBuiltinMic:useBuiltinMic
+                                          deferCapture:YES
+                               voiceProcessingProvider:^BOOL{ return NO; }];
+        return;
+    }
+
+    if (useBuiltinMic || PublicUtils.isTVOS) {
+        [self scheduleMicInitializationWithUseBuiltinMic:true
+                                          deferCapture:NO
+                               voiceProcessingProvider:^BOOL{ return !GenericUtils.hasExternalAudioOutput; }];
+        return;
+    }
+
+    __weak StreamFrameViewController *weakSelf = self;
+    [GenericUtils handleExternalAudioSelectionIn:self completion:^(BOOL voiceProcessing) {
+        StreamFrameViewController *self = weakSelf;
+        if (!self || !self->_streamConfig.redirectMic || !self.view.window || self->micHandler) return;
+        [self scheduleMicInitializationWithUseBuiltinMic:useBuiltinMic
+                                          deferCapture:NO
+                               voiceProcessingProvider:^BOOL{ return voiceProcessing; }];
+    }];
+}
+
+// Evaluate automatic voice processing on the same background queue as before.
+- (void)scheduleMicInitializationWithUseBuiltinMic:(BOOL)useBuiltinMic
+                                    deferCapture:(BOOL)deferCapture
+                         voiceProcessingProvider:(BOOL (^)(void))voiceProcessingProvider {
+    _micStreamInitialized = true;
+    __weak StreamFrameViewController *weakSelf = self;
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        StreamFrameViewController *self = weakSelf;
+        if (!self) return;
+        BOOL voiceProcessing = voiceProcessingProvider();
+        self->micHandler = deferCapture
+            ? [[MicHandler alloc] initWithUseBuiltinMic:useBuiltinMic voiceProcessing:voiceProcessing deferCapture:YES]
+            : [[MicHandler alloc] initWithUseBuiltinMic:useBuiltinMic voiceProcessing:voiceProcessing];
+        // Dormant initialization originally applies mic volume before preparing UI.
+        if (deferCapture) [MicHandler setVolume:self->_settings.micVolume.floatValue];
+#if !TARGET_OS_TV
+        MicHandler *handler = self->micHandler;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (self->micHandler == handler) [handler prepareSystemVolumeRestoreInView:self.view];
+        });
+#endif
+        if (!deferCapture) {
+            [MicHandler setVolume:self->_settings.micVolume.floatValue];
+            [self->micHandler startTapping];
+        }
+    });
+}
+
 - (void) stageComplete:(const char*)stageName {
     _micStreamInitialized = false;
-    if(strcmp(stageName, "mic stream establishment")==0){
-        if(self->_streamConfig.redirectMic){
-            dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC));
-            dispatch_after(delay, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                self->_micStreamInitialized = true;
-                self->micHandler = [[MicHandler alloc] initWithUseBuiltinMic:self->_settings.useBuiltinMic];
-                [MicHandler setVolume:self->_settings.micVolume.floatValue];
-                [self->micHandler startTapping];
-            });
-        }
+    if (strcmp(stageName, "mic stream establishment") == 0) {
+        dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, (int64_t)((_streamConfig.redirectMic ? 5 : 0.05) * NSEC_PER_SEC));
+        dispatch_after(delay, dispatch_get_main_queue(), ^{
+            [self initializeMicrophoneForStream];
+        });
     }
-    
-    if(strcmp(stageName, "mic stream unsupported or unintialized")==0){
+
+    if (strcmp(stageName, "mic stream unsupported or unintialized") == 0) {
         _micStreamInitialized = false;
+#if TARGET_OS_TV
+        NSLog(@"[TVMic] host microphone channel unavailable");
+#endif
     }
-    
-    /*
-    if(strcmp(stageName, "video stream establishment")==0){
-        NSLog(@"sendAutoReleaseComboCommandWithCmdStrings %f", CACurrentMediaTime());
-        if(!_settings.enableHdr
-           && _settings.sdrPerformanceWorkaround
-           && [Utils hdrSupported]
-           ){
-            dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(4 * NSEC_PER_SEC));
-            dispatch_after(delay, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                if(LiGetCurrentHostDisplayHdrMode()){
-                    NSArray* hdrCommand = [CommandManager.shared extractAutoReleaseButtonStringsFrom:@"WIN+ALT+B"];
-                    [CommandManager.shared sendAutoReleaseComboCommandWithCmdStrings:hdrCommand delay:0.15 index:0 pressOnly:false releaseOnly:false];
-                    dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC));
-                    dispatch_after(delay, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                        [self->_streamMan setNeedRequeuing:true];
-                    });
-                }
-            });
-        }
-    }
-    */
 }
 
 - (void) stageFailed:(const char*)stageName withError:(int)errorCode portTestFlags:(int)portTestFlags {
+#if TARGET_OS_TV
+    void (^stopMic)(void) = ^{
+        self->_tvMicStopped = YES;
+        [self->micHandler clean];
+    };
+    if ([NSThread isMainThread]) stopMic();
+    else dispatch_sync(dispatch_get_main_queue(), stopMic);
+#endif
+
     Log(LOG_I, @"Stage %s failed: %d", stageName, errorCode);
     
     unsigned int portTestResults = LiTestClientConnectivity(CONN_TEST_SERVER, 443, portTestFlags);
@@ -1944,6 +2004,17 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     Log(LOG_I, @"Set controller LED on gamepad %d: l%02x%02x%02x", controllerNumber, r, g, b);
     
     [_controllerSupport setControllerLed:controllerNumber r:r g:g b:b];
+}
+
+- (void) setAdaptiveTriggers:(uint16_t)controllerNumber eventFlags:(uint8_t)eventFlags
+                     typeLeft:(uint8_t)typeLeft typeRight:(uint8_t)typeRight
+                         left:(const uint8_t*)left right:(const uint8_t*)right {
+    [_controllerSupport setAdaptiveTriggers:controllerNumber
+                                 eventFlags:eventFlags
+                                   typeLeft:typeLeft
+                                  typeRight:typeRight
+                                       left:left
+                                      right:right];
 }
 
 - (void)connectionStatusUpdate:(int)status {
@@ -2033,6 +2104,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 }
 
 - (void)gamepadPresenceChanged {
+    if(PublicUtils.iOS26Available) return;
 #if !TARGET_OS_TV
     if (@available(iOS 11.0, *)) {
         [self setNeedsUpdateOfHomeIndicatorAutoHidden];
@@ -2068,6 +2140,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     // also discard our edges deferring system gestures unless
     // we willingly give up home bar hiding preference.
     _userIsInteracting = YES;
+    if(PublicUtils.iOS26Available) return;
 #if !TARGET_OS_TV
     if (@available(iOS 11.0, *)) {
         [self setNeedsUpdateOfHomeIndicatorAutoHidden];
@@ -2078,6 +2151,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 - (void)userInteractionEnded {
     // Enable home bar hiding again if conditions allow
     _userIsInteracting = NO;
+    if(PublicUtils.iOS26Available) return;
 #if !TARGET_OS_TV
     if (@available(iOS 11.0, *)) {
         [self setNeedsUpdateOfHomeIndicatorAutoHidden];
@@ -2097,10 +2171,10 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 - (void)toggleMouseCapture{
     DataManager* dataMan = [[DataManager alloc] init];
     Settings *currentSettings = [dataMan retrieveSettings];
-    if(currentSettings.localMousePointerMode.intValue == 0){
-        currentSettings.localMousePointerMode = @1;
+    if(currentSettings.localMousePointerMode.intValue == MousePointerModeCaptured){
+        currentSettings.localMousePointerMode = @(MousePointerModeHidden);
     }else{
-        currentSettings.localMousePointerMode = @0;
+        currentSettings.localMousePointerMode = @(MousePointerModeCaptured);
     }
     
     
@@ -2112,10 +2186,10 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     DataManager* dataMan = [[DataManager alloc] init];
     Settings *currentSettings = [dataMan retrieveSettings];
     
-    if(currentSettings.localMousePointerMode.intValue == 2){
-        currentSettings.localMousePointerMode = @1;
+    if(currentSettings.localMousePointerMode.intValue == MousePointerModeVisible){
+        currentSettings.localMousePointerMode = @(MousePointerModeHidden);
     }else{
-        currentSettings.localMousePointerMode = @2;
+        currentSettings.localMousePointerMode = @(MousePointerModeVisible);
     }
     
     [dataMan saveData];
@@ -2169,6 +2243,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     [_motionHandler stopAccelUpdate];
 }
 
+#if !TARGET_OS_TV
 - (void)enablePencilHover{
     [_streamView enablePencilHover];
 }
@@ -2215,6 +2290,8 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
                                    completion:^{}];
     }
 }
+#endif
+
 
 #if !TARGET_OS_TV
 // Require a confirmation when streaming to activate a system gesture
@@ -2247,8 +2324,9 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     // Pointer lock breaks the UIKit mouse APIs, which is a problem because
     // GCMouse is horribly broken on iOS 14.0 for certain mice. Only lock
     // the cursor if there is a GCMouse present.
-    return ([GCMouse mice].count > 0) && [_settings localMousePointerMode].intValue == 0;
+    return ([GCMouse mice].count > 0) && [_settings localMousePointerMode].intValue == MousePointerModeCaptured;
 }
+
 #endif
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
@@ -2311,13 +2389,16 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 }
 
 - (void)controllerArrivalWithPlayerIndex:(int8_t)index{
+#if !TARGET_OS_TV
     if(index == 0 && _oscProfile.gamepadOverlayEnabled){
         if (@available(iOS 13.0, *)) {
             [self loadAbstractGamepadOverlayIfNeeded];
         }
     }
+#endif
 }
 
+#if !TARGET_OS_TV
 - (void)toggleGamepadOverlayWithOverlayEnabled:(BOOL)overlayEnabled API_AVAILABLE(ios(13.0)){
     OnScreenWidgetView.gamepadOverlayFLag = overlayEnabled;
     OnScreenWidgetView.profileChangedDuringStreaming = true;
@@ -2358,7 +2439,11 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
         self->_virtualGamepadOverlay = overlayView;
     });
 }
+#endif
 
+- (void)startStreamViewInteractionTimer {
+    [_streamView startInteractionTimer];
+}
 
 - (void)dealloc {
     if (VLSharedStreamFrameViewController == self) {

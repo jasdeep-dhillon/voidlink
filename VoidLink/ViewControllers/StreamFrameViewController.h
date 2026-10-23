@@ -28,8 +28,9 @@
 
 @interface StreamFrameViewController : GCEventViewController <ConnectionCallbacks, ControllerSupportDelegate, UserInteractionDelegate, UIScrollViewDelegate, AVPictureInPictureControllerDelegate>
 #else
-@interface StreamFrameViewController : UIViewController <ConnectionCallbacks, ControllerSupportDelegate, UserInteractionDelegate, UIScrollViewDelegate, AVPictureInPictureControllerDelegate>
+@import GameController;
 
+@interface StreamFrameViewController : GCEventViewController <ConnectionCallbacks, ControllerSupportDelegate, UserInteractionDelegate, UIScrollViewDelegate, AVPictureInPictureControllerDelegate>
 #endif
 @property (nonatomic, strong) StreamManager* streamMan;
 @property (nonatomic) StreamConfiguration* streamConfig;
@@ -58,15 +59,19 @@
 - (bool)shallDisableGyroHotSwitch;
 - (void)loadGameProfileConfigs:(OSCProfile* )profile;
 - (void)openWidgetProfileTableWithPickProfile:(BOOL)pickProfile;
+#if !TARGET_OS_TV
 - (void)toggleGamepadOverlayWithOverlayEnabled:(BOOL)overlayEnabled API_AVAILABLE(ios(13.0));
 - (void)loadAbstractGamepadOverlayIfNeeded API_AVAILABLE(ios(13.0));
+#endif
 - (void)restorePersistedStreamViewOffsetAndScaleWithProfile:(OSCProfile* )profile;
 - (void)updateMagnifierViewportMetrics;
 - (void)setMagnifierViewportInteractionEnabled:(BOOL)enabled;
 - (void)resetMagnifierStreamViewWithAnimated:(BOOL)animated;
 - (void)returnToMainFrame;
+- (void)disconnectRemoteSession;
 - (void)bringUpToolboxMenu;
 - (void)bringUpToolboxMenuWithoutWidgetLayoutTool;
+- (void)remoteTextInputForTvOS;
 - (void)updateOverlayText:(NSString*)text;
 - (void)updateTransientHUDText:(NSString*)text;
 

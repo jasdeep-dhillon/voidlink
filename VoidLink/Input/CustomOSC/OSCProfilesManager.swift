@@ -15,7 +15,8 @@ import UIKit
 class OSCProfilesManager: NSObject {
     private static let profilesDefaultsKey = "OSCProfiles"
     // private static let widgetProfileUpdatedKey = "widgetProfileUpdated-20260606"
-    private static let widgetProfileUpdatedKey = "widgetProfileUpdated-20260801"
+    // private static let widgetProfileUpdatedKey = "widgetProfileUpdated-20260801"
+    private static let widgetProfileUpdatedKey = "widgetProfileUpdated-20261016"
 
     private static var sharedInstance: OSCProfilesManager?
     private static var onScreenWidgetViews: NSMutableSet?
@@ -176,7 +177,7 @@ class OSCProfilesManager: NSObject {
 
     func importEncodedProfiles(_ profilesEncoded: NSMutableArray) {
         let localProfiles = currentProfiles.mutableCopy() as? NSMutableArray ?? NSMutableArray()
-        let profilesDecoded = decodeProfiles(from: profilesEncoded)
+        var profilesDecoded = decodeProfiles(from: profilesEncoded)
         let importedIncludesDefault = (profilesDecoded.firstObject as? OSCProfile)?.name == "Default"
         let isSingleProfile = profilesEncoded.count == 1
 
@@ -228,6 +229,12 @@ class OSCProfilesManager: NSObject {
             if let profile = profilesDecoded[profilesDecoded.count-1] as? OSCProfile {
                 profile.isSelected = true
             }
+        }
+        
+        if(PublicUtils.isTVOS){
+            let tvProfiles = NSMutableArray()
+            tvProfiles.insert(profilesDecoded.firstObject as Any, at: 0)
+            profilesDecoded = tvProfiles
         }
         
         persistEncodedProfiles(encodedProfiles(from: profilesDecoded))
@@ -455,7 +462,11 @@ class OSCProfilesManager: NSObject {
             if let style = OnScreenControls.layerVibrationStyleDic()?.object(forKey: layerName) as? NSNumber {
                 buttonState.vibrationStyle = style.uint8Value
             } else {
+#if os(tvOS)
+                buttonState.vibrationStyle = 0
+#else
                 buttonState.vibrationStyle = UInt8(UIImpactFeedbackGenerator.FeedbackStyle.light.rawValue)
+#endif
             }
 
             if let buttonStateEncoded = try? NSKeyedArchiver.archivedData(withRootObject: buttonState, requiringSecureCoding: true) {

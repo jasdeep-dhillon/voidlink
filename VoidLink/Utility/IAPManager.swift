@@ -54,6 +54,14 @@ import UIKit
             return ""
         }
     }
+
+    var inAppPurchaseActionKey: String {
+        "\(productId()).didInitiateInAppPurchaseAction"
+    }
+
+    var didInitiateInAppPurchaseAction: Bool {
+        UserDefaults.standard.bool(forKey: inAppPurchaseActionKey)
+    }
     
     func productName() -> String {
         switch self {
@@ -76,7 +84,7 @@ import UIKit
     func productDescription() -> String {
         switch self {
         case .PencilProPack:
-            return LocalizationHelper.localizedString(forKey: "PencilProPackDescription")
+            return LocalizationHelper.localizedString(forKey: "PencilProPackDescription", self.productName())
         default:
             return ""
         }
@@ -136,11 +144,13 @@ import UIKit
                 await listenForTransactions()
             }
         }
+#if !os(tvOS)
         if #available(iOS 16.4, *) {
             Task {
                 await listenForPurchaseIntents()
             }
         }
+#endif
     }
 
     // MARK: - Fetch Products (StoreKit 2)
@@ -363,6 +373,7 @@ import UIKit
         }
     }
 
+#if !os(tvOS)
     @available(iOS 16.4, *)
     private func listenForPurchaseIntents() async {
         for await intent in PurchaseIntent.intents {
@@ -384,6 +395,7 @@ import UIKit
             }
         }
     }
+#endif
     
     // MARK: Utils
     @objc static public func checkPurchaseInfo(
@@ -435,7 +447,7 @@ import UIKit
     @objc static public func inAppPurchaseAction(viewController: UIViewController, product: AddOnProduct){
         
         let alert = UIAlertController(title: product.productName(),
-                                      message: LocalizationHelper.localizedString(forKey: "No purchase found", product.productName()),
+                                      message: product.productDescription(),
                                       preferredStyle: .alert)
 
         let unlockAction = UIAlertAction(title: LocalizationHelper.localizedString(forKey: "Purchase Now"), style: .default) { _ in
@@ -458,9 +470,10 @@ import UIKit
         alert.addAction(restoreAction)
         alert.addAction(learnMoreAction)
 
+        UserDefaults.standard.set(true, forKey: product.inAppPurchaseActionKey)
+
         viewController.present(alert, animated: true, completion: {
         })
-
     }
     
     @objc static public func inAppPurchaseURLMessage(viewController: UIViewController, product: AddOnProduct){

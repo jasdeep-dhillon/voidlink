@@ -68,6 +68,7 @@
 - (OnScreenControlsLevel) getCurrentOscState;
 
 - (void)readyToBringUpSoftKeyboardByToolbox;
+- (void)remoteTextInputForTvOS;
 - (void)keyboardWillShow:(NSNotification *)notification;
 - (void)keyboardWillHide;
 - (void)handleNonStandardKeyboard:(NSNotification *)notification;
@@ -79,6 +80,8 @@
 - (void)disablePencilHover;
 - (void)setAllowSingleTouchEnabled:(BOOL)enabled;
 - (void)toggleTouchDisabled:(bool)disabled;
+
+- (void)startInteractionTimer;
 
 #if !TARGET_OS_TV
 - (void) updateCursorLocation:(CGPoint)location isMouse:(BOOL)isMouse;
