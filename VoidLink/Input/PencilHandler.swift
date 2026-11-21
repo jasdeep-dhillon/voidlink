@@ -16,6 +16,14 @@ import UIKit
     weak var streamView: UIView?
     // private var tickTimer: SafeTimer
     private var pencilInteraction: Any?
+    private var doubleTapShortcutEnabled = false
+    private var squeezeShortcutEnabled = false
+    private enum SqueezeRoute {
+        case native
+        case shortcut(releaseKeys: [String]? = nil, releaseOnly: Bool = false)
+    }
+    private var activeSqueeze: SqueezeRoute?
+    private var sideButtonPosition: CGPoint?
     @objc var streamAspectRatio: Float
     private var tickInterval: TimeInterval
     private var manualTick: Bool
@@ -31,7 +39,9 @@ import UIKit
     private var strokeSampleIndex: Int32 = 0
     private var initialMoveEventIndexLimit: Int64
     private var touchBeganForce: Float = 0
+    @objc private(set) var reverseBarrelRoll: Bool = false
     @objc static private(set) var isDrawing: Bool = false
+    @objc static var isTurningToHover:Bool = false
     @objc static private(set) var pencilPausesNativeTouch: Bool = false
     
     @objc static var barrelRollChanged: Bool = false
@@ -66,15 +76,19 @@ import UIKit
 
     @objc init(streamView: UIView, settings: TemporarySettings) {
         self.streamView = streamView
-        streamAspectRatio = settings.width.floatValue/settings.height.floatValue
+        streamAspectRatio = (streamView as? StreamView).map { Float($0.streamAspectRatio) }
+            ?? settings.width.floatValue/settings.height.floatValue
         tickInterval = TimeInterval(settings.pencilTickIntervalUs.floatValue/1000000)
-        manualTick = settings.pencilTickMode.intValue == PencilTickMode.ManualTick.rawValue
-        pencilTickEnabled = settings.pencilTickMode.intValue != PencilTickMode.PencilTickDisabled.rawValue
+        manualTick = settings.pencilTickMode.intValue == PencilTickMode.manualTick.rawValue
+        pencilTickEnabled = settings.pencilTickMode.intValue != PencilTickMode.disabled.rawValue
         pencilTipOffset = CGPoint(x: CGFloat(settings.pencilTipOffsetX?.floatValue ?? 0),
                                   y: CGFloat(settings.pencilTipOffsetY?.floatValue ?? 0))
-        // initialMoveEventIndexLimit = UIScreen.main.maximumFramesPerSecond > 60 ? 4 : 2
+        // initialMoveEventIndexLimit = PublicUtils.currentScreen.maximumFramesPerSecond > 60 ? 4 : 2
         initialMoveEventIndexLimit = 0
         super.init()
+        if #available(iOS 12.1, *) {
+            setupPencilInteraction(view: streamView)
+        }
         setupPressureLUT()
         PencilHandler.shared = self
     }
@@ -89,8 +103,10 @@ import UIKit
             selectedProfile = profile!
         }
         
+        doubleTapShortcutEnabled = selectedProfile.doubleTapShorcutEnabled
+        squeezeShortcutEnabled = selectedProfile.squeezeShorcutEnabled
         doubleTapShorcuts.removeAll()
-        if selectedProfile.doubleTapShorcutEnabled {
+        if doubleTapShortcutEnabled {
             if selectedProfile.eraserShortcut != "" {
                 doubleTapShorcuts.append(selectedProfile.eraserShortcut)
             }
@@ -99,9 +115,13 @@ import UIKit
             }
         }
         
+        if shortcutIndex >= doubleTapShorcuts.count {
+            shortcutIndex = 0
+        }
+
         PencilHandler.squeezeStartShortcut = ""
         PencilHandler.squeezeEndShortcut = ""
-        if selectedProfile.squeezeShorcutEnabled {
+        if squeezeShortcutEnabled {
             PencilHandler.squeezeStartShortcut = selectedProfile.squeezeStartShortcut
             PencilHandler.squeezeEndShortcut = selectedProfile.squeezeEndShortcut
             print("squeezeShorcutEnabled \(CACurrentMediaTime())")
@@ -111,6 +131,7 @@ import UIKit
         PencilHandler.pencilAndHoverMode = selectedProfile.pencilAndHoverMode
         
         pressureCurveEnabled = selectedProfile.pressureCurveEnabled
+        reverseBarrelRoll = selectedProfile.reverseBarrelRoll
         
         if #available(iOS 15.0, *) {
             IAPManager.checkPurchaseInfo(.PencilProPack) { info in
@@ -119,9 +140,6 @@ import UIKit
                 self.pencilTipOffset = info.valid ? self.pencilTipOffset : .zero
                 self.pencilProEnabled = info.valid
                 PencilHandler.pencilPausesNativeTouch = selectedProfile.pencilPausesNativeTouch && info.valid
-                if info.valid {
-                    self.setupPencilInteraction(view: self.streamView)
-                }
             }
         }
         
@@ -152,6 +170,8 @@ import UIKit
         previousForce = 0
         previousTargetForce = 0
         PencilHandler.isDrawing = true
+        StreamFrameViewController.sharedInstance().setNeedsUpdateOfPrefersPointerLocked()
+        PencilHandler.isTurningToHover = false
         // isFirstMove = true
         strokeSampleIndex = 0
         strokePhase = .phase1
@@ -169,9 +189,9 @@ import UIKit
     }
 
     private var previousTipLocation: CGPoint?
-    private var refreshRate: CGFloat = {
-        return CGFloat(UIScreen.main.maximumFramesPerSecond)
-    }()
+    private var refreshRate: CGFloat {
+        return CGFloat(PublicUtils.screen(for: streamView).maximumFramesPerSecond)
+    }
     
     private func speed(of touch:UITouch) -> CGFloat {
         guard let previousTipLocation else { return 0 }
@@ -220,6 +240,7 @@ import UIKit
         guard let touch = touches.first else { return }
         let location = touch.location(in: streamView)
         let normalizedLocation = self.getNormalizedLocation(point: location)
+        sideButtonPosition = normalizedLocation
         if let streamView = streamView as? StreamView {
             switch touch.phase {
             case .began where PencilHandler.pencilAndHoverMode == .pencilToMouse:
@@ -248,6 +269,9 @@ import UIKit
     
     func getVideoAreaSize()-> CGSize {
         guard let streamView = streamView else { return CGSize(width: 0, height: 0) }
+        if let streamView = streamView as? StreamView {
+            return streamView.inputGeometry.videoRect.size
+        }
         if streamView.bounds.size.width > streamView.bounds.size.height * CGFloat(streamAspectRatio) {
             return CGSizeMake(streamView.bounds.size.height * CGFloat(streamAspectRatio), streamView.bounds.size.height);
         } else {
@@ -312,7 +336,8 @@ import UIKit
         let degrees = rollAngle * 180.0 / .pi
         let uiKitRoll = (degrees.truncatingRemainder(dividingBy: 360.0) + 360.0)
             .truncatingRemainder(dividingBy: 360.0)
-        let twist = (360.0 - uiKitRoll).truncatingRemainder(dividingBy: 360.0)
+        let twist = reverseBarrelRoll ? uiKitRoll
+            : (360.0 - uiKitRoll).truncatingRemainder(dividingBy: 360.0)
         return UInt16(twist.rounded()) % 360
     }
     
@@ -326,6 +351,7 @@ import UIKit
     var previousForce: Float = 0
     var previousTargetForce: Float = 0
     var phase2IndexCount: Int32 = 0
+    @objc var latestNormalizedLocation: CGPoint = .zero
     private func sendStylusEvent(touchBatch: [UITouch], with event: UIEvent? = nil) -> DispatchTime {
         guard let streamView = streamView, touchBatch.count>0 else { return .now() }
         
@@ -347,7 +373,8 @@ import UIKit
             } else {
                 barrelRoll = UInt16(LI_BARREL_ROLL_UNKNOWN)
             }
-            let normalizedLocation = self.getNormalizedLocation(point: point)
+            var normalizedLocation = self.getNormalizedLocation(point: point)
+            sideButtonPosition = normalizedLocation
             var force = Float(touch.force/touch.maximumPossibleForce)/sin(Float(altitude))
             force  = (self.pencilTickEnabled && force == 0) ? previousForce : force
             
@@ -383,13 +410,16 @@ import UIKit
             switch touch.phase {
             case .began:
                 eventType = UInt8(manualHoverFlag ? LI_TOUCH_EVENT_HOVER : LI_TOUCH_EVENT_DOWN)
+                latestNormalizedLocation = normalizedLocation
             case .moved:
                 eventType = UInt8(manualHoverFlag ? LI_TOUCH_EVENT_HOVER : LI_TOUCH_EVENT_MOVE)
+                latestNormalizedLocation = normalizedLocation
             case .ended:
                 eventType = UInt8(manualHoverFlag ? LI_TOUCH_EVENT_HOVER_LEAVE : LI_TOUCH_EVENT_UP)
                 targetForce = 0
                 previousForce = 0
                 previousTargetForce = 0
+                normalizedLocation = latestNormalizedLocation
             case .cancelled:
                 eventType = UInt8(manualHoverFlag ? LI_TOUCH_EVENT_HOVER_LEAVE : LI_TOUCH_EVENT_UP)
                 targetForce = 0
@@ -412,6 +442,7 @@ import UIKit
             }
             
             let sendableForce = strokePhase == .phase2 ? equalizedForce : targetForce
+            let sendableNormalizedLocation = normalizedLocation
 
             DispatchQueue.global().asyncAfter(deadline: dispatchMoment + tickMoment + delay) {
                 /*
@@ -420,18 +451,19 @@ import UIKit
                 }
                 */
                 
-                if self.strokePhase != .phase1 || !self.pencilTickEnabled {LiSendPenEventWithBarrelRoll(eventType, UInt8(LI_TOOL_TYPE_PEN), 0, Float(normalizedLocation.x), Float(normalizedLocation.y), sendableForce, 0, 0, self.getRotation(fromAzimuthAngle: Float(azimuth)), self.getTilt(fromAltitudeAngle: Float(altitude)), barrelRoll)}
+                if self.strokePhase != .phase1 || !self.pencilTickEnabled {LiSendPenEventWithBarrelRoll(eventType, UInt8(LI_TOOL_TYPE_PEN), 0, Float(sendableNormalizedLocation.x), Float(sendableNormalizedLocation.y), sendableForce, 0, 0, self.getRotation(fromAzimuthAngle: Float(azimuth)), self.getTilt(fromAltitudeAngle: Float(altitude)), barrelRoll)}
                 else {
-                    LiSendPenEventWithBarrelRoll(UInt8(LI_TOUCH_EVENT_HOVER), UInt8(LI_TOOL_TYPE_PEN), 0, Float(normalizedLocation.x), Float(normalizedLocation.y), 0, 0, 0, self.getRotation(fromAzimuthAngle: Float(azimuth)), self.getTilt(fromAltitudeAngle: Float(altitude)), barrelRoll)
+                    LiSendPenEventWithBarrelRoll(UInt8(LI_TOUCH_EVENT_HOVER), UInt8(LI_TOOL_TYPE_PEN), 0, Float(sendableNormalizedLocation.x), Float(sendableNormalizedLocation.y), 0, 0, 0, self.getRotation(fromAzimuthAngle: Float(azimuth)), self.getTilt(fromAltitudeAngle: Float(altitude)), barrelRoll)
                 }
                 
                 if eventType == UInt8(LI_TOUCH_EVENT_UP) {
                     PencilHandler.isDrawing = false
+                    PencilHandler.isTurningToHover = true
                     if PencilHandler.pencilAndHoverMode == .hoverDisabled || !PencilHandler.hoverSupported {
-                        LiSendPenEventWithBarrelRoll(UInt8(LI_TOUCH_EVENT_HOVER), UInt8(LI_TOOL_TYPE_PEN), 0, Float(normalizedLocation.x), Float(normalizedLocation.y), 0, 0, 0, self.getRotation(fromAzimuthAngle: Float(azimuth)), self.getTilt(fromAltitudeAngle: Float(altitude)), barrelRoll)
+                        LiSendPenEventWithBarrelRoll(UInt8(LI_TOUCH_EVENT_HOVER), UInt8(LI_TOOL_TYPE_PEN), 0, Float(self.latestNormalizedLocation.x), Float(self.latestNormalizedLocation.y), 0, 0, 0, self.getRotation(fromAzimuthAngle: Float(azimuth)), self.getTilt(fromAltitudeAngle: Float(altitude)), barrelRoll)
                         DispatchQueue.global().asyncAfter(deadline: .now() + 0.0086){
                             if !PencilHandler.isDrawing {
-                                LiSendPenEventWithBarrelRoll(UInt8(LI_TOUCH_EVENT_HOVER_LEAVE), UInt8(LI_TOOL_TYPE_PEN), 0, Float(normalizedLocation.x), Float(normalizedLocation.y), 0, 0, 0, self.getRotation(fromAzimuthAngle: Float(azimuth)), self.getTilt(fromAltitudeAngle: Float(altitude)), barrelRoll)
+                                LiSendPenEventWithBarrelRoll(UInt8(LI_TOUCH_EVENT_HOVER_LEAVE), UInt8(LI_TOOL_TYPE_PEN), 0, Float(self.latestNormalizedLocation.x), Float(self.latestNormalizedLocation.y), 0, 0, 0, self.getRotation(fromAzimuthAngle: Float(azimuth)), self.getTilt(fromAltitudeAngle: Float(altitude)), barrelRoll)
                             }
                         }
                     }
@@ -470,8 +502,26 @@ import UIKit
 
     @available(iOS 12.1, *)
     func pencilInteractionDidTap(_ interaction: UIPencilInteraction) {
-        if !pencilProEnabled {return}
-        if doubleTapShorcuts.isEmpty {return}
+        handleDoubleTap(at: nil)
+    }
+
+    @available(iOS 17.5, *)
+    func pencilInteraction(_ interaction: UIPencilInteraction, didReceiveTap tap: UIPencilInteraction.Tap) {
+        handleDoubleTap(at: tap.hoverPose?.location)
+    }
+
+    private func sendSideButton(_ event: Int32, at hoverPoint: CGPoint?) -> Bool {
+        let position = hoverPoint.map { getNormalizedLocation(point: $0) }
+            ?? sideButtonPosition ?? CGPoint(x: 0.5, y: 0.5)
+        return LiSendApplePencilSideButtonEvent(UInt8(event), Float(position.x), Float(position.y)) == 0
+    }
+
+    private func handleDoubleTap(at hoverPoint: CGPoint?) {
+        if !doubleTapShortcutEnabled {
+            _ = sendSideButton(LI_APPLE_PENCIL_DOUBLE_TAP, at: hoverPoint)
+            return
+        }
+        guard pencilProEnabled, !doubleTapShorcuts.isEmpty else { return }
         let keyStrings = CommandManager.shared.extractAutoReleaseButtonStrings(from: doubleTapShorcuts[shortcutIndex])
         print("pencilInteractionDidTap \(CACurrentMediaTime())")
         CommandManager.shared.sendAutoReleaseComboCommand(cmdStrings: keyStrings, delay: 0.1)
@@ -483,26 +533,67 @@ import UIKit
         _ interaction: UIPencilInteraction,
         didReceiveSqueeze squeeze: UIPencilInteraction.Squeeze
     ) {
-        if !pencilProEnabled {return}
-        if PencilHandler.squeezeStartShortcut == "", PencilHandler.squeezeEndShortcut == "" {return}
-        
-        let keepPressedUntilRelease = PencilHandler.squeezeEndShortcut.uppercased() == "NULL"
-        let squeezePressKeyStrings = CommandManager.shared.extractAutoReleaseButtonStrings(from: PencilHandler.squeezeStartShortcut)
-        let squeezeReleaseKeyStrings = CommandManager.shared.extractAutoReleaseButtonStrings(from: PencilHandler.squeezeEndShortcut)
-        
-        guard let squeezePressKeyStrings = squeezePressKeyStrings else {return}
-        guard squeezePressKeyStrings.count>0 else {return}
+        let route: SqueezeRoute?
+        if squeeze.phase == .began {
+            guard activeSqueeze == nil else { return }
+            route = squeezeShortcutEnabled ? .shortcut() : .native
+        } else {
+            route = activeSqueeze
+        }
 
+        switch route {
+        case .native:
+            handleNativeSqueeze(squeeze)
+        case .shortcut(let releaseKeys, let releaseOnly):
+            handleShortcutSqueeze(squeeze, releaseKeys: releaseKeys, releaseOnly: releaseOnly)
+        case nil:
+            break
+        }
+    }
+
+    @available(iOS 17.5, *)
+    private func handleNativeSqueeze(_ squeeze: UIPencilInteraction.Squeeze) {
+        let hoverPoint = squeeze.hoverPose?.location
         switch squeeze.phase {
         case .began:
-            if keepPressedUntilRelease {CommandManager.shared.sendAutoReleaseComboCommand(cmdStrings: squeezePressKeyStrings, delay: 0.1, pressOnly: true)}
-            else {CommandManager.shared.sendAutoReleaseComboCommand(cmdStrings: squeezePressKeyStrings, delay: 0.1)}
+            if sendSideButton(LI_APPLE_PENCIL_SQUEEZE_BEGIN, at: hoverPoint) {
+                activeSqueeze = .native
+            }
+        case .changed:
+            _ = sendSideButton(LI_APPLE_PENCIL_SQUEEZE_CHANGE, at: hoverPoint)
+        case .ended, .cancelled:
+            activeSqueeze = nil
+            let event = squeeze.phase == .ended ? LI_APPLE_PENCIL_SQUEEZE_END : LI_APPLE_PENCIL_SQUEEZE_CANCEL
+            _ = sendSideButton(event, at: hoverPoint)
+        @unknown default:
+            break
+        }
+    }
+
+    @available(iOS 17.5, *)
+    private func handleShortcutSqueeze(
+        _ squeeze: UIPencilInteraction.Squeeze,
+        releaseKeys: [String]?,
+        releaseOnly: Bool
+    ) {
+        let commands = CommandManager.shared
+        switch squeeze.phase {
+        case .began:
+            guard pencilProEnabled,
+                  let pressKeys = commands.extractAutoReleaseButtonStrings(from: Self.squeezeStartShortcut),
+                  !pressKeys.isEmpty else { return }
+
+            let releaseShortcut = Self.squeezeEndShortcut
+            let holdUntilRelease = releaseShortcut.uppercased() == "NULL"
+            let keys = holdUntilRelease ? pressKeys : commands.extractAutoReleaseButtonStrings(from: releaseShortcut)
+            activeSqueeze = .shortcut(releaseKeys: keys, releaseOnly: holdUntilRelease)
+            commands.sendAutoReleaseComboCommand(cmdStrings: pressKeys, delay: 0.1, pressOnly: holdUntilRelease)
+        case .changed:
             break
         case .ended, .cancelled:
-            if keepPressedUntilRelease {CommandManager.shared.sendAutoReleaseComboCommand(cmdStrings: squeezePressKeyStrings, releaseOnly: true)}
-            else {CommandManager.shared.sendAutoReleaseComboCommand(cmdStrings: squeezeReleaseKeyStrings, delay: 0.1)}
-            break
-        default:
+            activeSqueeze = nil
+            commands.sendAutoReleaseComboCommand(cmdStrings: releaseKeys, delay: 0.1, releaseOnly: releaseOnly)
+        @unknown default:
             break
         }
     }

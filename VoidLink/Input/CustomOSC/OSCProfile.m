@@ -71,6 +71,7 @@
     [encoder encodeObject:self.brushShortcut forKey:@"brushShortcut"];
     [encoder encodeObject:self.eraserShortcut forKey:@"eraserShortcut"];
     [encoder encodeBool:self.squeezeShorcutEnabled forKey:@"squeezeShorcutEnabled"];
+    [encoder encodeBool:self.reverseBarrelRoll forKey:@"reverseBarrelRoll"];
     [encoder encodeObject:self.squeezeStartShortcut forKey:@"squeezeStartShortcut"];
     [encoder encodeObject:self.squeezeEndShortcut forKey:@"squeezeEndShortcut"];
     [encoder encodeBool:self.pencilPausesNativeTouch forKey:@"pencilPausesNativeTouch"];
@@ -120,13 +121,13 @@
         self.gyroToStickMinOffset = [decoder containsValueForKey:@"gyroToStickMinOffset"] ? [decoder decodeDoubleForKey:@"gyroToStickMinOffset"] : 0;
         self.physicalLeftStickMinOffset = [decoder containsValueForKey:@"physicalLeftStickMinOffset"] ? [decoder decodeDoubleForKey:@"physicalLeftStickMinOffset"] : 0;
         self.physicalRightStickMinOffset = [decoder containsValueForKey:@"physicalRightStickMinOffset"] ? [decoder decodeDoubleForKey:@"physicalRightStickMinOffset"] : 0;
-        self.controllerGyroSwitchMode = [decoder containsValueForKey:@"controllerGyroSwitchMode"] ? [decoder decodeIntForKey:@"controllerGyroSwitchMode"] : ControllerGyroSwitchDisabled;
+        self.controllerGyroSwitchMode = [decoder containsValueForKey:@"controllerGyroSwitchMode"] ? [decoder decodeIntForKey:@"controllerGyroSwitchMode"] : ControllerGyroSwitchModeDisabled;
         self.reverseGyroHoldButton = [decoder containsValueForKey:@"reverseGyroHoldButton"] ? [decoder decodeBoolForKey:@"reverseGyroHoldButton"] : false;
         self.controllerGyroSwitchHold = [decoder containsValueForKey:@"controllerGyroSwitchHold"] ? [decoder decodeIntForKey:@"controllerGyroSwitchHold"] : ControllerElementNull;
         self.controllerGyroSwitchToggle = [decoder containsValueForKey:@"controllerGyroSwitchToggle"] ? [decoder decodeIntForKey:@"controllerGyroSwitchToggle"] : ControllerElementNull;
         
-        self.touchMode = [decoder containsValueForKey:@"touchMode"] ? [decoder decodeIntForKey:@"touchMode"] : NativeTouch;
-        if(self.touchMode == NativeTouchOnly) self.touchMode = NativeTouch;
+        self.touchMode = [decoder containsValueForKey:@"touchMode"] ? [decoder decodeIntForKey:@"touchMode"] : TouchModeNative;
+        if(self.touchMode == TouchModeNativeOnly) self.touchMode = TouchModeNative;
         
         self.pointerVelocityModeDivider = [decoder containsValueForKey:@"pointerVelocityModeDivider"] ? [decoder decodeFloatForKey:@"pointerVelocityModeDivider"] : 0.5;
         self.touchPointerVelocityFactor = [decoder containsValueForKey:@"touchPointerVelocityFactor"] ? [decoder decodeFloatForKey:@"touchPointerVelocityFactor"] : 1.0;
@@ -201,6 +202,7 @@
                                        forKey:@"squeezeEndShortcut"]
         : @"";
 
+        self.reverseBarrelRoll = [decoder containsValueForKey:@"reverseBarrelRoll"] ? [decoder decodeBoolForKey:@"reverseBarrelRoll"] : false;
         self.pencilPausesNativeTouch = [decoder containsValueForKey:@"pencilPausesNativeTouch"] ? [decoder decodeBoolForKey:@"pencilPausesNativeTouch"] : false;
         self.disablePencilSlideGestures = [decoder containsValueForKey:@"disablePencilSlideGestures"] ? [decoder decodeBoolForKey:@"disablePencilSlideGestures"] : false;
         self.pencilAndHoverMode = [decoder containsValueForKey:@"pencilHoverMode"] ? [decoder decodeInt64ForKey:@"pencilHoverMode"] : pencilOnly;
@@ -253,6 +255,7 @@
     copy.squeezeShorcutEnabled = self.squeezeShorcutEnabled;
     copy.squeezeStartShortcut = [self.squeezeStartShortcut mutableCopy]; // NSString → NSMutableString
     copy.squeezeEndShortcut = [self.squeezeEndShortcut mutableCopy]; // NSString → NSMutableString
+    copy.reverseBarrelRoll = self.reverseBarrelRoll;
     copy.pencilPausesNativeTouch = self.pencilPausesNativeTouch;
     copy.disablePencilSlideGestures = self.disablePencilSlideGestures;
     copy.pencilAndHoverMode = self.pencilAndHoverMode;

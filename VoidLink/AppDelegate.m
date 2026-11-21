@@ -11,9 +11,11 @@
 
 #import "AppDelegate.h"
 #import "MainFrameViewController.h"
+#import "StreamFrameViewController.h"
 #import "SceneDelegate.h"
 #import "VoidLink-Swift.h"
-#import "DataManager.h"
+#import "TemporaryHost.h"
+#import "TemporaryApp.h"
 
 #if TARGET_OS_TV
 @interface AppDelegate ()
@@ -54,6 +56,10 @@ static NSString* DB_NAME = @"Limelight_iOS.sqlite";
     Settings *currentSettings = [dataMan retrieveSettings];
 
     if (currentSettings.unlockDisplayOrientation) {
+        if (PublicUtils.isIPhone) {
+            UIInterfaceOrientationMask streamMask = [StreamFrameViewController sharedInstance].streamOrientationMask;
+            if (streamMask != 0) return streamMask;
+        }
         return UIInterfaceOrientationMaskAll;
     }
 
@@ -67,12 +73,13 @@ static NSString* DB_NAME = @"Limelight_iOS.sqlite";
     [CommandManager presetDefaultCommands];
     [GenericUtils installSegmentedControlPreviousSelectionTracking];
     [IAPManager shared];
+    [IAPManager refreshPurchaseCache];
     
     // For iOS 12 and below, we need to manually create the window
     if (@available(iOS 13.0, *)) {
         // Scene delegate will handle window creation
     } else {
-        self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+        self.window = [[UIWindow alloc] initWithFrame:[[PublicUtils currentScreen] bounds]];
         
         NSString *storyboardName;
         if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) {
@@ -103,10 +110,13 @@ static NSString* DB_NAME = @"Limelight_iOS.sqlite";
     [CommandManager presetDefaultCommands];
     [GenericUtils installSegmentedControlPreviousSelectionTracking];
     [PublicUtils installTextFieldControllerUserInteractionTracking];
+    [PublicUtils changeDefaultSettingsForView:nil];
+    [PublicUtils updatePartialSettings];
     [IAPManager shared];
+    [IAPManager refreshPurchaseCache];
 
     // tvOS mounts the settings view lazily when its reveal menu first opens.
-    // Read its Core Data snapshot now so that first presentation is RAM-only.
+    // Capture the persisted defaults so the first presentation can use the snapshot.
     DataManager *dataManager = [[DataManager alloc] init];
     self.tvOSInitialSettingsSnapshot = [dataManager getSettings];
     return YES;
@@ -159,9 +169,19 @@ static NSString* DB_NAME = @"Limelight_iOS.sqlite";
 
 - (void)saveContext
 {
+    [self saveContextWaiting:NO];
+}
+
+- (void)saveContextSynchronously
+{
+    [self saveContextWaiting:YES];
+}
+
+- (void)saveContextWaiting:(BOOL)wait
+{
     NSManagedObjectContext *managedObjectContext = [self managedObjectContext];
     if (managedObjectContext != nil) {
-        [managedObjectContext performBlock:^{
+        void (^save)(void) = ^{
             if (![managedObjectContext hasChanges]) {
                 return;
             }
@@ -174,7 +194,12 @@ static NSString* DB_NAME = @"Limelight_iOS.sqlite";
             NSData* dbData = [NSData dataWithContentsOfURL:[[[[NSFileManager defaultManager] URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask] lastObject] URLByAppendingPathComponent:DB_NAME]];
             [[NSUserDefaults standardUserDefaults] setObject:dbData forKey:DB_NAME];
 #endif
-        }];
+        };
+        if (wait) {
+            [managedObjectContext performBlockAndWait:save];
+        } else {
+            [managedObjectContext performBlock:save];
+        }
     }
 }
 

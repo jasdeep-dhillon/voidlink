@@ -16,7 +16,9 @@
 #import "StreamManager.h"
 #import "SceneDelegate.h"
 #import "ControllerSupport.h"
-#import "DataManager.h"
+#import "AppDelegate.h"
+#import "TemporaryHost.h"
+#import "TemporaryApp.h"
 #import "PaddedLabel.h"
 #import "ImGuiRenderer.h"
 #import "MetalVideoRenderer.h"
@@ -88,6 +90,23 @@ static NSString* VLTerminationHintForErrorCode(int errorCode) {
 
 static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil;
 
+/// Scroll view hosting the stream view. When the stream view is moved or zoomed (magnifier, pinch zoom, portrait
+/// stream position), parts of the screen are no longer covered by it; touches there are still given to the stream
+/// view so touch input works across the whole screen.
+@interface StreamContainerScrollView : UIScrollView
+@end
+
+@implementation StreamContainerScrollView
+- (UIView *)hitTest:(CGPoint)point withEvent:(UIEvent *)event {
+    UIView *hitView = [super hitTest:point withEvent:event];
+    if (hitView == self && [self.delegate respondsToSelector:@selector(viewForZoomingInScrollView:)]) {
+        UIView *contentView = [self.delegate viewForZoomingInScrollView:self];
+        if (contentView.superview == self && contentView.userInteractionEnabled && !contentView.hidden) return contentView;
+    }
+    return hitView;
+}
+@end
+
 @implementation StreamFrameViewController {
     ControllerSupport *_controllerSupport;
     TemporarySettings *_settings;
@@ -97,11 +116,15 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     PaddedLabel *_overlayView;
     PaddedLabel *_transientHUDView;
     ToolboxViewController* toolBoxViewController;
+#if !TARGET_OS_TV
+    FloatingKeyboardButton* _floatingKeyboardButton;
+    BOOL _streamOrientationLockEnded;
+#endif
+    CGPoint _appliedRestingOffset; // last portrait stream position applied at 1x
     uint16_t overlayLevel;
     UILabel *_stageLabel;
     UILabel *_tipLabel;
     UIActivityIndicatorView *_spinner;
-    StreamView *_streamView;
     BOOL _magnifierViewportInteractionActive;
     BOOL _userIsInteracting;
     bool viewIsBeingResized;
@@ -120,7 +143,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
      *     - streamVideoRenderView (where stream view is rendered)
      */
     UIWindow *_deviceWindow;
-    dispatch_block_t _delayedRemoveExtScreen;
+    NSUInteger _viewResizeGeneration;
     VideoDecoderRenderer *_videoRenderer;
     BOOL _isRestoringFromPiP;
     SafeTimer* safeTimer;
@@ -371,7 +394,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
         _oscLayoutTapRecoginizer.tapDownTimeThreshold = 0.2;
         _oscLayoutTapRecoginizer.delaysTouchesBegan = NO;
         _oscLayoutTapRecoginizer.delaysTouchesEnded = NO;
-        if(_settings.touchMode.intValue == AbsoluteTouch) _oscLayoutTapRecoginizer.immediateTriggering = true; // make immediate triggering on for absolute touch mode
+        if(_settings.touchMode.intValue == TouchModeAbsolute) _oscLayoutTapRecoginizer.immediateTriggering = true; // make immediate triggering on for absolute touch mode
         [self.view addGestureRecognizer:_oscLayoutTapRecoginizer];
         _oscLayoutTapRecoginizer.touchCapturingView = _streamView;
     }
@@ -468,6 +491,67 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 #endif
 }
 
+// "Portrait Stream Position" (Others): in portrait, the unzoomed stream is moved up (+) or down (-) by a percentage
+// of how far it can go before its edge reaches the safe area (camera island / home indicator).
+// The Portrait Stream Position percentage in effect now: 0 in landscape.
+- (CGFloat)portraitStreamOffsetPercent {
+#if TARGET_OS_TV
+    return 0;
+#else
+    CGFloat percent = MIN(MAX(_settings.portraitStreamOffset.floatValue, -100.0f), 100.0f);
+    CGSize size = self.view.bounds.size;
+    if (fabs(percent) < 0.5f || size.height <= size.width) return 0;
+    return percent;
+#endif
+}
+
+- (CGPoint)restingStreamViewOffset {
+#if TARGET_OS_TV
+    return CGPointZero;
+#else
+    CGFloat percent = [self portraitStreamOffsetPercent];
+    CGSize size = self.view.bounds.size;
+    if (percent == 0 || !_streamView) return CGPointZero;
+    CGFloat aspectRatio = _streamView.streamAspectRatio;
+    CGFloat videoHeight = aspectRatio > 0 ? MIN(size.height, size.width / aspectRatio) : [_streamView getVideoAreaSize].height;
+    CGFloat gap = (size.height - videoHeight) / 2;
+    UIEdgeInsets safeArea = self.view.safeAreaInsets;
+    CGFloat maxMove = percent > 0 ? gap - safeArea.top : gap - safeArea.bottom;
+    if (maxMove <= 0) return CGPointZero;
+    return CGPointMake(0, percent / 100.0f * maxMove); // a positive content offset moves the stream up
+#endif
+}
+
+- (void)updatePortraitStreamOffsetPercent:(CGFloat)percent {
+    _settings.portraitStreamOffset = @(MIN(MAX(percent, -100.0f), 100.0f));
+    if (!self.isViewLoaded || self.view.bounds.size.height <= self.view.bounds.size.width) return;
+    if (!_scrollView || fabs(_scrollView.zoomScale - 1.0f) > 0.001f) return;
+    _appliedRestingOffset = [self restingStreamViewOffset];
+    _scrollView.contentOffset = _appliedRestingOffset;
+    [self syncMagnifierStateFromScrollView];
+}
+
+- (BOOL)isStreamViewAtRest {
+    if (!_scrollView || fabs(_scrollView.zoomScale - 1.0f) > 0.001f) return NO;
+    CGPoint offset = _scrollView.contentOffset;
+    BOOL atZero = fabs(offset.x) <= 0.5f && fabs(offset.y) <= 0.5f;
+    BOOL atResting = fabs(offset.x - _appliedRestingOffset.x) <= 0.5f && fabs(offset.y - _appliedRestingOffset.y) <= 0.5f;
+    return atZero || atResting;
+}
+
+// Applies the portrait stream position unless the magnifier has moved or zoomed the stream.
+- (void)applyRestingStreamViewOffsetIfAtRest {
+    if (![self isStreamViewAtRest]) return;
+    _appliedRestingOffset = [self restingStreamViewOffset];
+    _scrollView.contentOffset = _appliedRestingOffset;
+    [self syncMagnifierStateFromScrollView];
+}
+
+// The offset saved to game profiles: the portrait stream position itself isn't a magnifier offset.
+- (CGPoint)persistableMagnifierContentOffset {
+    return [self isStreamViewAtRest] ? CGPointZero : _streamViewMagnifierContentOffset;
+}
+
 - (void)resetMagnifierTransformState {
     if (_scrollView) {
         [_scrollView setZoomScale:1.0f animated:NO];
@@ -516,7 +600,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 - (void)handleScrollPan:(UIPanGestureRecognizer *)gesture {
     switch (gesture.state){
         case UIGestureRecognizerStateEnded:
-            if(_oscProfile.touchMode == AbsoluteTouch && _scrollView.zoomScale < 1.0) [self resetMagnifierStreamViewWithAnimated:true];
+            if(_oscProfile.touchMode == TouchModeAbsolute && _scrollView.zoomScale < 1.0) [self resetMagnifierStreamViewWithAnimated:true];
             break;
         default:
             break;
@@ -527,7 +611,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     BOOL shouldWrapInScrollView = [self shouldWrapStreamViewInScrollView];
 
     if (shouldWrapInScrollView) {
-        if(!_scrollView) _scrollView = [[UIScrollView alloc] initWithFrame:self.view.frame];
+        if(!_scrollView) _scrollView = [[StreamContainerScrollView alloc] initWithFrame:self.view.frame];
 #if !TARGET_OS_TV
         _scrollView.scrollsToTop = false;
 #endif
@@ -606,6 +690,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     [self updateToolboxSpecialEntries];
     [self configGestures];
     [self configZoomGestureAndAddStreamView];
+    [self applyRestingStreamViewOffsetIfAtRest];
     [self->_streamView disableOnScreenControls]; //don't know why but this must be called outside the streamview class, just put it here. execute in streamview class cause hang
     [self.mainFrameViewcontroller reloadStreamConfig]; // reload streamconfig
     
@@ -682,6 +767,10 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
         [self.view bringSubviewToFront:self.imguiView.mtkView];
     }
     
+#if !TARGET_OS_TV
+    [self updateFloatingKeyboardButton];
+#endif
+    
     // [self pauseTimer];
     if(_settings.sendDummyEvent){
         if(!safeTimer) [self setupTimer];
@@ -690,6 +779,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     else [safeTimer pause];
     
     _motionHandler = [MotionHandler sharedWithProfile: nil];
+    _motionHandler.motionReferenceView = self.view;
     _motionHandler.gyroBiasX = _settings.gyroBiasX.doubleValue;
     _motionHandler.gyroBiasY = _settings.gyroBiasY.doubleValue;
     _motionHandler.gyroBiasZ = _settings.gyroBiasZ.doubleValue;
@@ -697,13 +787,8 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     _motionHandler.controllerGyroBiasY = _settings.controllerGyroBiasY.doubleValue;
     _motionHandler.controllerGyroBiasZ = _settings.controllerGyroBiasZ.doubleValue;
 
-    TouchPadGestureHandler.enablePinch = _settings.enablePinch;
-    TouchPadGestureHandler.ctrlDownForPinch = _settings.ctrlDownForPinch;
-    TouchPadGestureHandler.scrollSensitivity = _settings.scrollSensitivity.floatValue;
-    TouchPadGestureHandler.pinchSensitivity = _settings.pinchSensitivity.floatValue;
-    TouchPadGestureHandler.displayLinkRate = _settings.framerate.intValue;
     
-    [self setMagnifierViewportInteractionEnabled:_oscProfile.touchMode == AbsoluteTouch && !_settings.passthroughGestures];
+    [self setMagnifierViewportInteractionEnabled:_oscProfile.touchMode == TouchModeAbsolute && !_settings.passthroughGestures];
     
     GenericUtils.globeAsEscape = _settings.globeAsEscape;
     
@@ -718,6 +803,10 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 }
 
 - (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+#if !TARGET_OS_TV
+    [self captureStreamOrientationIfNeeded];
+#endif
     // if(_settings.sendDummyEvent) [self startTimer];
 }
 
@@ -730,6 +819,9 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     [super viewDidAppear:animated];
     _viewJustLoaded = false;
     _deviceWindow = self.view.window;
+#if !TARGET_OS_TV
+    [self captureStreamOrientationIfNeeded];
+#endif
     previousOnScreenWidgetEnabled = [_streamView isOnScreenWidgetEnabled];
     
     _externalDisplayRoutingActive = YES;
@@ -796,6 +888,11 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
                                                  name:UIKeyboardWillShowNotification
                                                object:nil];
     
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(keyboardDidChangeFrame)
+                                                 name:UIKeyboardDidChangeFrameNotification
+                                               object:nil];
+
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(handleNonStandardKeyboard:)
                                                  name:UIKeyboardWillChangeFrameNotification
@@ -1050,7 +1147,14 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     [_streamView keyboardWillHide];
 }
 
+- (void)keyboardDidChangeFrame{
+    [_streamView keyboardDidChangeFrame];
+}
+
 - (void)keyboardDidHide{
+    // Never reset the frame of a zoomed stream view: with a scale transform, setting bounds/frame shrinks its
+    // coordinate space, which leaves the view stuck in a corner and only part of the screen responding to touches.
+    if (!CGAffineTransformIsIdentity(_streamView.transform)) return;
     _streamView.bounds = _deviceWindow.bounds;
     _streamView.frame = _deviceWindow.frame;
 }
@@ -1098,6 +1202,42 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     [self presentViewController:_layoutOnScreenControlsVC animated:NO completion:^{
         [self->_layoutOnScreenControlsVC presentProfileSelectorWith:loadingMode animated:false];
     }];
+#endif
+}
+
+#if !TARGET_OS_TV
+// Optional on-screen keyboard button (Others > Floating Keyboard Button), independent of custom on-screen widgets.
+- (void)updateFloatingKeyboardButton {
+    if (!_settings.floatingKeyboardButton) {
+        [_floatingKeyboardButton removeFromSuperview];
+        _floatingKeyboardButton = nil;
+        return;
+    }
+    if (!_floatingKeyboardButton) {
+        _floatingKeyboardButton = [[FloatingKeyboardButton alloc] init];
+        __weak StreamFrameViewController* weakSelf = self;
+        _floatingKeyboardButton.onTap = ^{
+            StreamFrameViewController* strongSelf = weakSelf;
+            if (strongSelf) [strongSelf->_streamView toggleSoftKeyboardFromButton];
+        };
+    }
+    [self.view addSubview:_floatingKeyboardButton];
+    [self.view bringSubviewToFront:_floatingKeyboardButton];
+    [_floatingKeyboardButton restorePosition];
+}
+
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    [self bringFloatingKeyboardButtonToFront];
+    [_floatingKeyboardButton restorePosition];
+}
+
+#endif
+
+// On-screen widgets are added to self.view asynchronously; keep the keyboard button above them so it's always tappable.
+- (void)bringFloatingKeyboardButtonToFront {
+#if !TARGET_OS_TV
+    if (_floatingKeyboardButton.superview == self.view) [self.view bringSubviewToFront:_floatingKeyboardButton];
 #endif
 }
 
@@ -1154,7 +1294,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 }
 
 - (void)setMagnifierViewportInteractionEnabled:(BOOL)enabled {
-    _magnifierViewportInteractionActive = enabled || (_oscProfile.touchMode == AbsoluteTouch && !_settings.passthroughGestures && !GenericUtils.pencilInStreaming);
+    _magnifierViewportInteractionActive = enabled || (_oscProfile.touchMode == TouchModeAbsolute && !_settings.passthroughGestures && !GenericUtils.pencilInStreaming);
     [self updateScrollViewInteractionState];
 }
 
@@ -1170,8 +1310,13 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     dispatch_async(dispatch_get_main_queue(), ^{
         [self setMagnifierViewportInteractionEnabled:true];
         CGPoint streamViewOffset = CGPointMake(profile.normalizedStreamViewOffset.x*self.view.bounds.size.width, profile.normalizedStreamViewOffset.y*self.view.bounds.size.height);
+        if (CGPointEqualToPoint(profile.normalizedStreamViewOffset, CGPointZero) && fabs(profile.streamViewScale - 1.0f) < 0.001f) {
+            // no magnifier position saved: use the portrait stream position
+            self->_appliedRestingOffset = [self restingStreamViewOffset];
+            streamViewOffset = self->_appliedRestingOffset;
+        }
         [self restoreMagnifierStreamViewWithOffset:streamViewOffset scale:profile.streamViewScale animated:YES];
-        [self setMagnifierViewportInteractionEnabled:profile.touchMode == AbsoluteTouch && !self->_settings.passthroughGestures];
+        [self setMagnifierViewportInteractionEnabled:profile.touchMode == TouchModeAbsolute && !self->_settings.passthroughGestures];
     });
 }
 
@@ -1212,7 +1357,8 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 }
 
 - (void)resetMagnifierStreamViewWithAnimated:(BOOL)animated {
-    [self restoreMagnifierStreamViewWithOffset:CGPointZero scale:1.0f animated:animated];
+    _appliedRestingOffset = [self restingStreamViewOffset];
+    [self restoreMagnifierStreamViewWithOffset:_appliedRestingOffset scale:1.0f animated:animated];
 }
 
 - (void)gameProfileSelectorClosed{
@@ -1233,9 +1379,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
         CGFloat aspectRatio = [aspectRatioNum doubleValue];
         Log(LOG_I, @"Updating StreamView aspect ratio to %.4f", aspectRatio);
         _streamView.streamAspectRatio = aspectRatio;
-#if !TARGET_OS_TV
-        _streamView.pencilHandler.streamAspectRatio = aspectRatio;
-#endif
+        [self applyRestingStreamViewOffsetIfAtRest];
     }
 }
 
@@ -1252,6 +1396,9 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 
 - (void)scrollViewDidScroll:(UIScrollView *)scrollView {
     if (scrollView == _scrollView) {
+#if !TARGET_OS_TV
+        [RelativeTouchGestureHandler scrollViewDidScroll:scrollView];
+#endif
         [self syncMagnifierStateFromScrollView];
     }
 }
@@ -1266,6 +1413,12 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 - (void)willMoveToParentViewController:(UIViewController *)parent {
     // Only cleanup when we're being destroyed
     if (parent == nil) {
+#if !TARGET_OS_TV
+        [self endStreamOrientationLock];
+#endif
+        [_motionHandler stopMotionUpdateWithInterruptNoneGyroInput:YES];
+        [_motionHandler stopAccelUpdate];
+        _motionHandler.motionReferenceView = nil;
         _externalDisplayRoutingActive = NO;
         [self reloadAirPlayConfig];
         [_streamView cleanUp];
@@ -1447,6 +1600,9 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 }
 
 - (void)returnToMainFrame {
+#if !TARGET_OS_TV
+    [self endStreamOrientationLock];
+#endif
     if (@available(iOS 13.0, *)) {
         // [ControllerNavigator setUINavigationDelegate:[_mainFrameViewcontroller isInAppView] ? _mainFrameViewcontroller : _mainFrameViewcontroller.hostCollectionVC];
         [ControllerNavigator restorePreviousUINavigationDelegateWithIfCurrentDelegateIs:self];
@@ -1454,15 +1610,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
             if(ControllerNavigator.radialMenuView) [ControllerNavigator updateRadialMenu];
         });
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            [ControllerNavigator restoreUINavigationHighlight];
-            // ControllerNavigator.radialMenuButtonPressed = false;
             if(ControllerNavigator.streamingRadialMenuButton == ControllerElementSpecial)  [GamepadNavigationIllustrationHud updateHudWithForceDisplay:true];
-        });
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            [ControllerNavigator restoreUINavigationHighlight];
-        });
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            [ControllerNavigator restoreUINavigationHighlight];
         });
     }
     
@@ -1528,7 +1676,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     if (@available(iOS 13.0, *)) {
         UIView *renderView = self.metalViewController ? self.metalViewController.view : _streamVideoRenderView;
         BOOL shouldRoute = _externalDisplayRoutingActive && [self isAirPlayEnabled] &&
-            renderView && self.view.window.windowScene.screen == UIScreen.mainScreen;
+            renderView && [self.view.window.windowScene.session.role isEqualToString:UIWindowSceneSessionRoleApplication];
         if (shouldRoute) {
             UIView *localContainer = self.metalViewController ? self.view : _streamView;
             [SceneDelegate setExternalDisplayRenderView:renderView localContainer:localContainer];
@@ -1541,17 +1689,27 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 
 - (void) handleViewResize{
     viewIsBeingResized = true;
-    
-    _streamView.bounds = _deviceWindow.bounds;
-    _streamView.frame = _deviceWindow.frame;
+
+    // Resolve geometry in the content parent's coordinate space after transition.
+    // A zoomed view's frame cannot be used to establish its unscaled size.
+    [_scrollView setZoomScale:1.0f animated:NO];
+    _scrollView.frame = self.view.bounds;
+    CGSize viewportSize = self.view.bounds.size;
+    if (_streamView.superview == _scrollView && _scrollView) {
+        viewportSize = _scrollView.bounds.size;
+    }
+    CGRect contentBounds = CGRectMake(0, 0, viewportSize.width, viewportSize.height);
+    _streamView.bounds = contentBounds;
+    _streamView.center = CGPointMake(viewportSize.width / 2, viewportSize.height / 2);
+    _scrollView.contentSize = viewportSize;
     
     if(![self isAirPlaying]){
-        _streamVideoRenderView.bounds = _deviceWindow.bounds;
-        _streamVideoRenderView.frame = _deviceWindow.frame;
+        _streamVideoRenderView.bounds = contentBounds;
+        _streamVideoRenderView.frame = _streamView.bounds;
 
         // Handle resize for meetal renderer
         if ([_settings.renderingBackend intValue] == RENDER_METAL && self.metalViewController) {
-            self.metalViewController.view.frame = _deviceWindow.bounds;
+            self.metalViewController.view.frame = self.view.bounds;
             [self.metalViewController.view setNeedsLayout];
             [self.metalViewController.view layoutIfNeeded];
             Log(LOG_I, @"Updated Metal view bounds after resize");
@@ -1569,6 +1727,7 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     //[self.pipController startPictureInPicture];
     //sleep(1);
     if(_settings.framePacingMode.intValue == FramePacingModeQueue) appDidEnterBackgroundWithoutPip = true;
+    PublicUtils.appDidEnterBackground = true;
     
     NSLog(@"applicationWillResignActive %f", CACurrentMediaTime());
     [_streamView saveStreamingGameProfileChanges];
@@ -1586,6 +1745,10 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 }
 
 - (void)applicationDidBecomeActive:(NSNotification *)notification {
+    [Connection resetSysAudioPlaybackCooldown];
+    appDidEnterBackgroundWithoutPip = false;
+    PublicUtils.appDidEnterBackground = false;
+    
     if(!PublicUtils.isIPhone){
         for(OnScreenWidgetView* widget in OnScreenWidgetView.mapping.allValues){
             if(widget.parentSequence != -1 && !widget.autoDockEnabled) continue;
@@ -1603,7 +1766,6 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
         }
     }
     
-    appDidEnterBackgroundWithoutPip = false;
     [_streamMan setNeedRequeuing:true];
     // dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(15 * NSEC_PER_SEC));
     // dispatch_after(delay, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
@@ -1639,7 +1801,11 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 
 // This fires when the home button is pressed
 - (void)applicationDidEnterBackground:(UIApplication *)application {
-    NSLog(@"did enter background, %d, %@, %d", _settings.enablePIP, self.pipController, self.pipController.isPictureInPictureActive);
+    [Connection resetSysAudioPlaybackCooldown];
+    // NSLog(@"did enter background, %d, %@, %d", _settings.enablePIP, self.pipController, self.pipController.isPictureInPictureActive);
+    
+    PublicUtils.appDidEnterBackground = true;
+    
     if (_settings.enablePIP && self.pipController && self.pipController.isPictureInPictureActive) {
         //Log(LOG_I, @"PIP is active, not terminating stream");
         appDidEnterBackgroundWithoutPip = false;
@@ -1739,6 +1905,11 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 }
 
 - (void)connectionTerminated:(int)errorCode {
+#if !TARGET_OS_TV
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self endStreamOrientationLock];
+    });
+#endif
 #if TARGET_OS_TV
     void (^stopMic)(void) = ^{
         self->_tvMicStopped = YES;
@@ -1751,7 +1922,8 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     Log(LOG_I, @"Connection terminated: %d", errorCode);
     
     unsigned int portFlags = LiGetPortFlagsFromTerminationErrorCode(errorCode);
-    unsigned int portTestResults = LiTestClientConnectivity(CONN_TEST_SERVER, 443, portFlags);
+    unsigned int portTestResults = self.streamConfig.usesUSBStreamTunnel ? ML_TEST_RESULT_INCONCLUSIVE
+        : LiTestClientConnectivity(CONN_TEST_SERVER, 443, portFlags);
     
     dispatch_async(dispatch_get_main_queue(), ^{
         // Allow the display to go to sleep now
@@ -1924,6 +2096,11 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 }
 
 - (void) stageFailed:(const char*)stageName withError:(int)errorCode portTestFlags:(int)portTestFlags {
+#if !TARGET_OS_TV
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self endStreamOrientationLock];
+    });
+#endif
 #if TARGET_OS_TV
     void (^stopMic)(void) = ^{
         self->_tvMicStopped = YES;
@@ -1935,7 +2112,8 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
 
     Log(LOG_I, @"Stage %s failed: %d", stageName, errorCode);
     
-    unsigned int portTestResults = LiTestClientConnectivity(CONN_TEST_SERVER, 443, portTestFlags);
+    unsigned int portTestResults = self.streamConfig.usesUSBStreamTunnel ? ML_TEST_RESULT_INCONCLUSIVE
+        : LiTestClientConnectivity(CONN_TEST_SERVER, 443, portTestFlags);
 
     dispatch_async(dispatch_get_main_queue(), ^{
         // Allow the display to go to sleep now
@@ -1968,6 +2146,9 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     Log(LOG_I, @"Launch failed: %@", message);
     
     dispatch_async(dispatch_get_main_queue(), ^{
+#if !TARGET_OS_TV
+        [self endStreamOrientationLock];
+#endif
         // Allow the display to go to sleep now
         [UIApplication sharedApplication].idleTimerDisabled = NO;
         
@@ -2320,72 +2501,83 @@ static __weak StreamFrameViewController *VLSharedStreamFrameViewController = nil
     return YES;
 }
 
+- (void)refreshStreamOrientationPolicyForWindow:(UIWindow *)window {
+    if (@available(iOS 16.0, *)) {
+        NSArray<UIWindow *> *windows = window.windowScene.windows;
+        if (!windows && window) windows = @[window];
+        for (UIWindow *sceneWindow in windows) {
+            for (UIViewController *controller = sceneWindow.rootViewController;
+                 controller != nil; controller = controller.presentedViewController) {
+                [controller setNeedsUpdateOfSupportedInterfaceOrientations];
+            }
+        }
+    }
+}
+
+- (void)captureStreamOrientationIfNeeded {
+    if (!PublicUtils.isIPhone || _streamOrientationLockEnded || _streamOrientationMask != 0) return;
+
+    UIWindow *window = self.viewIfLoaded.window ?: self.navigationController.viewIfLoaded.window;
+    if (!window) return;
+
+    _streamOrientationMask = [PublicUtils getCurrentOrientationForWindow:window];
+    [self refreshStreamOrientationPolicyForWindow:window];
+}
+
+- (void)endStreamOrientationLock {
+    _streamOrientationLockEnded = YES;
+    if (_streamOrientationMask == 0) return;
+
+    _streamOrientationMask = 0;
+    [self refreshStreamOrientationPolicyForWindow:_deviceWindow ?: self.viewIfLoaded.window ?: self.navigationController.viewIfLoaded.window];
+}
+
 - (BOOL)prefersPointerLocked {
     // Pointer lock breaks the UIKit mouse APIs, which is a problem because
     // GCMouse is horribly broken on iOS 14.0 for certain mice. Only lock
     // the cursor if there is a GCMouse present.
-    return ([GCMouse mice].count > 0) && [_settings localMousePointerMode].intValue == MousePointerModeCaptured;
+    return ([GCMouse mice].count > 0) && [_settings localMousePointerMode].intValue == MousePointerModeCaptured && !PencilHandler.isDrawing;
 }
 
 #endif
 
 - (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
     [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
-    
-    [self resetMagnifierStreamViewWithAnimated:false];
-    
-    // handle view size change for on-screen widgets
-    CGSize oldSize = self.view.bounds.size;
-    CGFloat scaleX = size.width  / oldSize.width;
-    CGFloat scaleY = size.height / oldSize.height;
-    for(OnScreenWidgetView* widget in OnScreenWidgetView.mapping.allValues){
-        CGPoint oldCenter = widget.center;
-        CGPoint oldStoredCenter = widget.storedCenter;
-        
-        if(widget.autoDockEnabled){
-            widget.autoDockIdleDuration = fmax(widget.autoDockIdleDuration, 2.0);
-            [widget autoDockStopCountdown];
-        }
-        dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC));
-        dispatch_after(delayTime, dispatch_get_main_queue(), ^{
-            if(widget.autoDockEnabled){
-                OnScreenWidgetView.autoDockRestoreInitByViewResize = true;
-                [widget restoreFromAutoDockWithAnimated:true];
-            }
-        });
-        
-        [coordinator animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext>  _Nonnull context) {
-            widget.center = CGPointMake(oldCenter.x * scaleX,oldCenter.y * scaleY);
-            widget.storedCenter = CGPointMake(oldStoredCenter.x * scaleX,oldStoredCenter.y * scaleY);
-        } completion:nil];
-    }
 
+    NSUInteger resizeGeneration = ++_viewResizeGeneration;
+    // Keep the video container's current size during UIKit's rotation animation.
+    // Its final geometry is applied below, without interpolating the video frame.
+    _scrollView.autoresizingMask = UIViewAutoresizingNone;
+    [UIView performWithoutAnimation:^{
+        [self resetMagnifierStreamViewWithAnimated:NO];
+    }];
+    [coordinator animateAlongsideTransition:nil completion:^(id<UIViewControllerTransitionCoordinatorContext>  _Nonnull context) {
+        if (resizeGeneration != self->_viewResizeGeneration) return;
+        // Use the final viewport, including the restored viewport on cancellation.
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.05 * NSEC_PER_SEC)),
+                       dispatch_get_main_queue(), ^{
+            if (resizeGeneration != self->_viewResizeGeneration) return;
+            [CATransaction begin];
+            [CATransaction setDisableActions:YES];
+            [UIView performWithoutAnimation:^{
+                [self.view layoutIfNeeded];
+                [self handleViewResize];
+                // Reconfiguration restores the container's flexible autoresizing mask.
+                [self reConfigStreamViewRealtimeAndReloadSettings:YES reloadOnscreenWidgets:NO];
+                [self updateMagnifierViewportMetrics];
+                [self resetMagnifierStreamViewWithAnimated:NO];
+            }];
+            [CATransaction commit];
+        });
+    }];
     
+    [OnScreenWidgetView transitionWidgetsInView:self.view toSize:size coordinator:coordinator];
+
     dispatch_time_t delay = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC));
     dispatch_after(delay, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         [self->_streamMan setNeedRequeuing:true];
     });
 
-    /*
-    if (_isRestoringFromPiP) {
-        Log(LOG_I, @"View size changed during PiP restore, skipping redundant reconfiguration.");
-        return;
-    } */
-
-    // Log(LOG_I, @"View size changed, terminating stream");
-
-    double delayInSeconds = 0.2;
-    if (_delayedRemoveExtScreen) {
-        dispatch_block_cancel(_delayedRemoveExtScreen);
-    }
-        
-    dispatch_block_t block = dispatch_block_create(0, ^{
-        [self handleViewResize];
-        [self reConfigStreamViewRealtimeAndReloadSettings:YES reloadOnscreenWidgets:NO];
-    });
-    _delayedRemoveExtScreen = block;
-    dispatch_time_t delayTime = dispatch_time(DISPATCH_TIME_NOW, (int64_t)(delayInSeconds * NSEC_PER_SEC));
-    dispatch_after(delayTime, dispatch_get_main_queue(), block);
 }
 
 - (void)controllerArrivalWithPlayerIndex:(int8_t)index{

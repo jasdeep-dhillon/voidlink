@@ -17,6 +17,8 @@
 @property (atomic, nullable, retain) NSString * currentGame;
 @property (atomic) unsigned short httpsPort;
 @property (atomic) BOOL isNvidiaServerSoftware;
+@property (atomic) BOOL usesUSBStreamTunnel;
+@property (atomic, copy) NSString *usbTunnelSessionID;
 
 @property (atomic, nullable, retain) NSData *serverCert;
 @property (atomic, nullable, retain) NSString *address;
@@ -32,7 +34,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (atomic, retain) NSString *name;
 @property (atomic, retain) NSString *uuid;
 @property (atomic, retain) NSSet *appList;
-@property (atomic, retain) NSMutableSet * activeAddressPool;
+- (void)rememberAddress:(nullable NSString *)address;
+- (NSSet<NSString *> *)addressPoolSnapshot;
 
 - (id) initFromHost:(Host*)host;
 

@@ -11,7 +11,9 @@
 #import "StreamConfiguration.h"
 #import "TemporaryHost.h"
 
-@interface HttpManager : NSObject <NSURLSessionDelegate>
+@interface HttpManager : NSObject <NSURLSessionTaskDelegate>
+
+@property (nonatomic) BOOL requiresPinnedServer;
 
 - (id) initWithHost:(TemporaryHost*) host;
 - (id) initWithAddress:(NSString*) hostAddressPortString httpsPort:(unsigned short) httpsPort serverCert:(NSData*) serverCert;
@@ -31,6 +33,9 @@
 - (NSURLRequest*) newAppAssetRequestWithAppId:(NSString*)appId;
 - (NSURLRequest*) newBirateRequest:(NSInteger)bitrateKbps forClient:(NSString* )clientName;
 - (void) executeRequestSynchronously:(HttpRequest*)request;
+- (void) executeRequestSynchronously:(HttpRequest*)request deadline:(dispatch_time_t)deadline;
+// Cancels active requests and prevents this manager from starting another request.
+- (void)cancelRequests;
 
 @end
 

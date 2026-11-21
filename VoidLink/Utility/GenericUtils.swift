@@ -153,10 +153,30 @@ import UIKit
             )
         }
     }
+    
+    @objc public static func handleFirstReversingBarrelRoll(in vc: UIViewController?) {
+        DispatchQueue.main.async {
+            let key = "isFirstReversingBarrelRoll"
+            guard !UserDefaults.standard.bool(forKey: key) else {
+                return
+            }
+            UserDefaults.standard.set(true, forKey: key)
+
+            AlertControllerUtil.showAlert(
+                in: vc,
+                title: LocalizationHelper.localizedString(forKey: "Tips"),
+                message: LocalizationHelper.localizedString(forKey: "reverseBarrelRollStackTip"),
+                withCancel: false,
+                buttonTitle: LocalizationHelper.localizedString(forKey: "Got it!"),
+                countdown: 6
+            )
+        }
+    }
         
     @objc public static func needUpdateDefaultSettings() -> Bool {
         // let key = "needUpdateDefaultSettings20260226-1"
-        let key = "needUpdateDefaultSettings20260408-3"
+        // let key = "needUpdateDefaultSettings20260408-3"
+        let key = "needUpdateDefaultSettings20261103"
         guard !UserDefaults.standard.bool(forKey: key) else {
             return false
         }
@@ -167,7 +187,8 @@ import UIKit
     @objc public static func needUpdatePartialSettings() -> Bool {
         // let key = "needUpdateDefaultSettings20260226-1"
         // let key = "needUpdatePartialSettings20260620"
-        let key = "needUpdatePartialSettings20260801"
+        // let key = "needUpdatePartialSettings20260801"
+        let key = "needUpdatePartialSettings20261103"
         guard !UserDefaults.standard.bool(forKey: key) else {
             return false
         }
@@ -567,6 +588,9 @@ import UIKit
     @objc public static func handleFirstGamepadConnection(in vc: UIViewController?,with controller: GCController, handler: @escaping () -> Void) {
         if PublicUtils.isTVOS {
             AlertControllerUtil.alertController.dismiss(animated: true)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.7) {
+                ControllerNavigator.uiNavigationDelegate?.restoreControllerNavigationHighlight()
+            }
         }
 
         if isFirstConnectingG8PlusMFi(controller) {
@@ -634,6 +658,31 @@ import UIKit
             )
         }
     }
+    
+    @objc public static func handleFirstSettingNativeTrackpad(in vc: UIViewController?) {
+        DispatchQueue.main.async {
+            let key = "isFirstSettingNativeTrackpad3"
+            guard !UserDefaults.standard.bool(forKey: key) else {
+                return
+            }
+            UserDefaults.standard.set(true, forKey: key)
+
+            AlertControllerUtil.showAlert(
+                in: vc,
+                title: LocalizationHelper.localizedString(forKey: "Tips"),
+                message: LocalizationHelper.localizedString(forKey: "nativeTrackpadTip"),
+                withCancel: true,
+                buttonTitle: LocalizationHelper.localizedString(forKey: "Learn More"),
+                countdown: 0,
+                completion: {
+                    if !AlertControllerUtil.actionCancelled {
+                        PublicUtils.openUrl("nativeTrackpadHostLink".localized)
+                    }
+                }
+            )
+        }
+    }
+
 
     @objc public static func isFirstOpeningNewToolbox() -> Bool {
         let key = "isFirstOpeningNewToolbox6"
@@ -721,6 +770,41 @@ import UIKit
             )
         }
     }
+    
+    private static let usbWiredStreamingButtonTappedKey = "hasTappedUSBWiredStreamingButton"
+
+    @objc public static func hasTappedUSBWiredStreamingButton() -> Bool {
+        UserDefaults.standard.bool(forKey: usbWiredStreamingButtonTappedKey)
+    }
+
+    @objc public static func markUSBWiredStreamingButtonTapped() {
+        UserDefaults.standard.set(true, forKey: usbWiredStreamingButtonTappedKey)
+    }
+
+    @objc public static func handleWiredStreamingTip(in vc: UIViewController?, completion: @escaping () -> Void) {
+        AlertControllerUtil.autoCompletion = false
+        AlertControllerUtil.cancelButtonString = "Get Foundation Sunshine"
+        AlertControllerUtil.showAlert(
+            in: vc,
+            title: "Tips".localized,
+            message: "wiredStreamingTip".localized,
+            withCancel: true,
+            buttonTitle: "This tip won't be shown again".localized,
+            countdown: 6,
+            completion: {
+                let opensFoundationSunshine = AlertControllerUtil.actionCancelled
+                let alert = AlertControllerUtil.alertController
+                DispatchQueue.main.async {
+                    AlertControllerUtil.afterActionDismissal(of: alert) {
+                        completion()
+                        if opensFoundationSunshine {
+                            PublicUtils.openUrl("wiredStreamingSunshineLink".localized)
+                        }
+                    }
+                }
+            })
+    }
+
     
     /// Returns false when external audio requires enabling redirection first.
     @objc public static func canActivatePushToTalk(in vc: UIViewController?, redirectMic: Bool) -> Bool {
@@ -893,6 +977,9 @@ import UIKit
     
     @objc public static var settingsMenuNavigationBarHeight: CGFloat {
         // return isIPhone() ? 44 : hostViewNavigationBarHeight
+        if PublicUtils.isFoldableRAMCached {
+            return hostViewNavigationBarHeight+11
+        }
         switch UIDevice.current.userInterfaceIdiom {
         case .phone:
             return PublicUtils.liquidGlassEnabled ? hostViewNavigationBarHeight+5 : hostViewNavigationBarHeight
@@ -958,7 +1045,7 @@ import UIKit
 
         let container = CALayer()
         container.frame = view.bounds
-        container.contentsScale = UIScreen.main.scale
+        container.contentsScale = PublicUtils.screen(for: view).scale
 
         let step: CGFloat = 0.05
         let totalSteps = Int(1.0 / step)
@@ -979,7 +1066,7 @@ import UIKit
             // 数值
             if true {
                 let t = CATextLayer()
-                t.contentsScale = UIScreen.main.scale
+                t.contentsScale = PublicUtils.screen(for: view).scale
                 t.font = UIFont.systemFont(ofSize: 13, weight: .medium)
                 t.fontSize = 13
                 t.foregroundColor = UIColor.red.cgColor

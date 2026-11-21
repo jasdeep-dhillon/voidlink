@@ -33,6 +33,7 @@
 @interface StreamFrameViewController : GCEventViewController <ConnectionCallbacks, ControllerSupportDelegate, UserInteractionDelegate, UIScrollViewDelegate, AVPictureInPictureControllerDelegate>
 #endif
 @property (nonatomic, strong) StreamManager* streamMan;
+@property (nonatomic, strong) StreamView* streamView;
 @property (nonatomic) StreamConfiguration* streamConfig;
 @property (nonatomic, strong) AVPictureInPictureController *pipController API_AVAILABLE(ios(9.0));
 @property (nonatomic, strong) AVPictureInPictureControllerContentSource *pipContentSource API_AVAILABLE(ios(15.0)); // Needed for iOS 15+ layer-based PiP
@@ -54,6 +55,11 @@
 
 + (StreamFrameViewController *)sharedInstance;
 
+#if !TARGET_OS_TV
+// Zero when this stream has no active orientation lock.
+@property (nonatomic, readonly) UIInterfaceOrientationMask streamOrientationMask;
+#endif
+
 - (void)updatePreferredDisplayMode:(BOOL)streamActive;
 - (void)setUserInteractionEnabledForStreamView:(bool)enabled;
 - (bool)shallDisableGyroHotSwitch;
@@ -67,6 +73,11 @@
 - (void)updateMagnifierViewportMetrics;
 - (void)setMagnifierViewportInteractionEnabled:(BOOL)enabled;
 - (void)resetMagnifierStreamViewWithAnimated:(BOOL)animated;
+- (CGPoint)restingStreamViewOffset;
+- (void)updatePortraitStreamOffsetPercent:(CGFloat)percent NS_SWIFT_NAME(updatePortraitStreamOffset(percent:));
+- (CGFloat)portraitStreamOffsetPercent;
+- (CGPoint)persistableMagnifierContentOffset;
+- (void)bringFloatingKeyboardButtonToFront;
 - (void)returnToMainFrame;
 - (void)disconnectRemoteSession;
 - (void)bringUpToolboxMenu;

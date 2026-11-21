@@ -1,6 +1,7 @@
 #import "SceneDelegate.h"
 #import "StreamFrameViewController.h"
 #import <GameController/GameController.h>
+#import "VoidLink-Swift.h"
 #if TARGET_OS_IOS && !TARGET_OS_MACCATALYST && !TARGET_OS_VISION && __has_include(<UIKit/UISceneAccessory.h>)
 #import <UIKit/UISceneAccessory.h>
 #import <UIKit/UISceneAccessoryRegistration.h>
@@ -8,11 +9,8 @@
 #else
 #define VL_HAS_EXTERNAL_DISPLAY_ACCESSORY 0
 #endif
-#if TARGET_OS_TV
 #import "MainFrameViewController.h"
-#import "SettingsViewController.h"
 #import "SWRevealViewController.h"
-#endif
 
 NSNotificationName const VoidLinkTvOSRemoteMenuTappedNotification = @"VoidLinkTvOSRemoteMenuTappedNotification";
 NSNotificationName const VoidLinkTvOSRemotePlayPauseTappedNotification = @"VoidLinkTvOSRemotePlayPauseTappedNotification";
@@ -216,6 +214,17 @@ static BOOL VoidLinkTvOSFocusItemIsSink(id item) {
     return _contentViewController.shouldAutorotate;
 }
 
+- (void)viewWillTransitionToSize:(CGSize)size withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
+    [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
+    __weak UIWindow *window = self.viewIfLoaded.window;
+    [coordinator animateAlongsideTransition:^(id<UIViewControllerTransitionCoordinatorContext> context) {} completion:^(id<UIViewControllerTransitionCoordinatorContext> context) {
+        // Re-read the final traits and safe area after the transition settles.
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.06 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            [GamepadNavigationIllustrationHud refreshForWindowTransition:window];
+        });
+    }];
+}
+
 - (UIInterfaceOrientationMask)supportedInterfaceOrientations {
     return _contentViewController.supportedInterfaceOrientations;
 }
@@ -238,7 +247,10 @@ BOOL VoidLinkTvOSShouldUpdateFocus(UIFocusUpdateContext *context, UIWindow *wind
 #endif
 
 API_AVAILABLE(ios(13.0), tvos(13.0))
-@implementation SceneDelegate
+@implementation SceneDelegate {
+    __weak MainFrameViewController *_deeplinkMainFrame;
+    NSURL *_pendingDeeplinkURL;
+}
 
 static __weak UIView *_sharedStreamVideoRenderView = nil;
 static __weak UIView *_localRenderContainer = nil;
@@ -263,69 +275,16 @@ static BOOL VLIsExternalDisplaySession(UISceneSession *session) {
     }
     UIWindowScene *windowScene = (UIWindowScene *)scene;
     if ([session.role isEqualToString:UIWindowSceneSessionRoleApplication]) {
-#if TARGET_OS_TV
-        SettingsViewController *tvOSSettingsViewController = nil;
-#endif
+        [self scene:scene openURLContexts:connectionOptions.URLContexts];
 #if TARGET_OS_TV
         self.window = [[VoidLinkNoFocusWindow alloc] initWithWindowScene:windowScene];
 #else
         self.window = [[UIWindow alloc] initWithWindowScene:windowScene];
 #endif
-        NSString *storyboardName;
-#if TARGET_OS_TV
-        storyboardName = @"Main";
-#else
-        if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) {
-            storyboardName = @"iPad";
-        } else {
-            storyboardName = @"iPhone";
-        }
-#endif
-        UIStoryboard *storyboard = [UIStoryboard storyboardWithName:storyboardName bundle:nil];
-        UIViewController *initialViewController = [storyboard instantiateInitialViewController];
-#if TARGET_OS_TV
-        if ([initialViewController isKindOfClass:[UINavigationController class]]) {
-            UINavigationController *frontNavigationController = (UINavigationController *)initialViewController;
-            SettingsViewController *settingsViewController = [[SettingsViewController alloc] init];
-            tvOSSettingsViewController = settingsViewController;
-            SWRevealViewController *revealViewController = [[SWRevealViewController alloc] initWithRearViewController:settingsViewController
-                                                                                                   frontViewController:frontNavigationController];
-            UIViewController *topViewController = frontNavigationController.topViewController;
-            if ([topViewController isKindOfClass:[MainFrameViewController class]]) {
-                MainFrameViewController *mainFrameViewController = (MainFrameViewController *)topViewController;
-                mainFrameViewController.settingsViewController = settingsViewController;
-                settingsViewController.mainFrameViewController = mainFrameViewController;
-                [revealViewController setDelegate:mainFrameViewController];
-                revealViewController.bounceBackOnOverdraw = NO;
-            }
-            initialViewController = revealViewController;
-        }
-#endif
-        self.window.rootViewController = [[VoidLinkControllerRootViewController alloc] initWithContentViewController:initialViewController];
-        [self.window makeKeyAndVisible];
-#if VL_HAS_EXTERNAL_DISPLAY_ACCESSORY
-        if (@available(iOS 27.0, *)) {
-            UISceneConfiguration *configuration = [[UISceneConfiguration alloc]
-                initWithName:@"VoidLink External Display"
-                sessionRole:UIWindowSceneSessionRoleExternalDisplayNonInteractive];
-            configuration.delegateClass = SceneDelegate.class;
-            UISceneAccessory *accessory = [UISceneAccessory externalNonInteractiveSceneAccessoryWithConfiguration:configuration];
-            _externalDisplayAccessoryRegistration = [self.window.rootViewController registerSceneAccessory:accessory];
-        }
-#endif
-#if TARGET_OS_TV
-        // SWReveal keeps the rear controller unloaded until it is revealed.
-        // Preheat the SwiftUI settings hierarchy without consuming its
-        // launch-time settings snapshot; the first real reveal consumes it.
-        [tvOSSettingsViewController loadViewIfNeeded];
-        tvOSSettingsViewController.view.frame = self.window.bounds;
-        [tvOSSettingsViewController.view setNeedsLayout];
-        [tvOSSettingsViewController.view layoutIfNeeded];
-        if (@available(tvOS 14.0, *)) {
-            [tvOSSettingsViewController refreshSwiftUISettingsGeometry];
-        }
-#endif
-        Log(LOG_I, @"SceneDelegate: Main app scene connected.");
+        [PublicUtils refreshCurrentScreenForWindow:self.window];
+        [PublicUtils prepareFoldableIPhoneDetectionInWindow:self.window completion:^{
+            [self finishConnectingMainAppScene];
+        }];
 
     } else if (VLIsExternalDisplaySession(session)) {
         Log(LOG_I, @"SceneDelegate: External display scene connecting for screen: %@", ((UIWindowScene *)scene).screen.description);
@@ -344,6 +303,128 @@ static BOOL VLIsExternalDisplaySession(UISceneSession *session) {
     }
 }
 
+
+- (void)scene:(UIScene *)scene openURLContexts:(NSSet<UIOpenURLContext *> *)URLContexts {
+    if (![scene.session.role isEqualToString:UIWindowSceneSessionRoleApplication]) return;
+    for (UIOpenURLContext *context in URLContexts) {
+        if (![DeeplinkCoordinator canHandleURL:context.URL]) continue;
+        if (_deeplinkMainFrame) {
+            [_deeplinkMainFrame.deeplinkCoordinator open:context.URL];
+        } else {
+            _pendingDeeplinkURL = context.URL;
+        }
+        break;
+    }
+}
+
+// Construct every business view only after the shared device cache is ready.
+- (void)finishConnectingMainAppScene {
+#if !TARGET_OS_TV
+    if (@available(iOS 17.0, *)) {
+        if ([ThemeManager pinsSystemStyleForFoldable]) {
+            // Observe above the pinned windows so System still follows Control Center.
+            [self.window.windowScene registerForTraitChanges:@[UITraitUserInterfaceStyle.class]
+                                                withHandler:^(__kindof id<UITraitEnvironment> environment, UITraitCollection *previousCollection) {
+                [ThemeManager systemUserInterfaceStyleDidChange:environment.traitCollection.userInterfaceStyle];
+            }];
+        }
+    }
+#endif
+#if TARGET_OS_TV
+    SettingsViewController *tvOSSettingsViewController = nil;
+#endif
+    NSString *storyboardName;
+#if TARGET_OS_TV
+    storyboardName = @"Main";
+#else
+    if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPad) {
+        storyboardName = @"iPad";
+    } else {
+        storyboardName = @"iPhone";
+    }
+#endif
+    UIStoryboard *storyboard = [UIStoryboard storyboardWithName:storyboardName bundle:nil];
+    UIViewController *initialViewController = [storyboard instantiateInitialViewController];
+#if TARGET_OS_TV
+    if ([initialViewController isKindOfClass:[UINavigationController class]]) {
+        UINavigationController *frontNavigationController = (UINavigationController *)initialViewController;
+        SettingsViewController *settingsViewController = [[SettingsViewController alloc] init];
+        tvOSSettingsViewController = settingsViewController;
+        SWRevealViewController *revealViewController = [[SWRevealViewController alloc] initWithRearViewController:settingsViewController
+                                                                                               frontViewController:frontNavigationController];
+        UIViewController *topViewController = frontNavigationController.topViewController;
+        if ([topViewController isKindOfClass:[MainFrameViewController class]]) {
+            MainFrameViewController *mainFrameViewController = (MainFrameViewController *)topViewController;
+            mainFrameViewController.settingsViewController = settingsViewController;
+            settingsViewController.mainFrameViewController = mainFrameViewController;
+            [revealViewController setDelegate:mainFrameViewController];
+            revealViewController.bounceBackOnOverdraw = NO;
+        }
+        initialViewController = revealViewController;
+    }
+#endif
+    UIViewController *root = [[VoidLinkControllerRootViewController alloc] initWithContentViewController:initialViewController];
+    self.window.rootViewController = root;
+    // On iOS the storyboard creates the reveal controller's front controller in loadView.
+    [root loadViewIfNeeded];
+    UIViewController *deeplinkFront = initialViewController;
+    if ([deeplinkFront isKindOfClass:SWRevealViewController.class]) {
+        deeplinkFront = ((SWRevealViewController *)deeplinkFront).frontViewController;
+    }
+    if ([deeplinkFront isKindOfClass:UINavigationController.class]) {
+        deeplinkFront = ((UINavigationController *)deeplinkFront).viewControllers.firstObject;
+    }
+    if ([deeplinkFront isKindOfClass:MainFrameViewController.class]) {
+        _deeplinkMainFrame = (MainFrameViewController *)deeplinkFront;
+        if (_pendingDeeplinkURL) {
+            [_deeplinkMainFrame.deeplinkCoordinator open:_pendingDeeplinkURL];
+            _pendingDeeplinkURL = nil;
+        }
+    }
+    [self.window makeKeyAndVisible];
+#if !TARGET_OS_TV
+    // Keep the actual menu's geometry listener alive even before its first reveal.
+    if ([initialViewController isKindOfClass:SWRevealViewController.class]) {
+        SWRevealViewController *reveal = (SWRevealViewController *)initialViewController;
+        if ([reveal.rearViewController isKindOfClass:SettingsViewController.class]) {
+            SettingsViewController *settings = (SettingsViewController *)reveal.rearViewController;
+            UIViewController *front = reveal.frontViewController;
+            if ([front isKindOfClass:UINavigationController.class]) {
+                front = ((UINavigationController *)front).viewControllers.firstObject;
+            }
+            if ([front isKindOfClass:MainFrameViewController.class]) {
+                settings.mainFrameViewController = (MainFrameViewController *)front;
+                ((MainFrameViewController *)front).settingsViewController = settings;
+            }
+            [settings loadViewIfNeeded];
+        }
+    }
+    [self notifyResolutionGeometryChangedForScene:self.window.windowScene];
+#endif
+#if VL_HAS_EXTERNAL_DISPLAY_ACCESSORY
+    if (@available(iOS 27.0, *)) {
+        UISceneConfiguration *configuration = [[UISceneConfiguration alloc]
+            initWithName:@"VoidLink External Display"
+            sessionRole:UIWindowSceneSessionRoleExternalDisplayNonInteractive];
+        configuration.delegateClass = SceneDelegate.class;
+        UISceneAccessory *accessory = [UISceneAccessory externalNonInteractiveSceneAccessoryWithConfiguration:configuration];
+        _externalDisplayAccessoryRegistration = [self.window.rootViewController registerSceneAccessory:accessory];
+    }
+#endif
+#if TARGET_OS_TV
+    // SWReveal keeps the rear controller unloaded until it is revealed.
+    // Preheat the SwiftUI settings hierarchy without consuming its
+    // launch-time settings snapshot; the first real reveal consumes it.
+    [tvOSSettingsViewController loadViewIfNeeded];
+    tvOSSettingsViewController.view.frame = self.window.bounds;
+    [tvOSSettingsViewController.view setNeedsLayout];
+    [tvOSSettingsViewController.view layoutIfNeeded];
+    if (@available(tvOS 14.0, *)) {
+        [tvOSSettingsViewController refreshSwiftUISettingsGeometry];
+    }
+#endif
+    Log(LOG_I, @"SceneDelegate: Main app scene connected.");
+}
 
 + (void)attachExternalDisplayRenderViewIfReady {
     NSAssert(NSThread.isMainThread, @"External display routing must run on the main thread");
@@ -402,12 +483,41 @@ static BOOL VLIsExternalDisplaySession(UISceneSession *session) {
 }
 
 - (void)sceneDidBecomeActive:(UIScene *)scene {
+#if !TARGET_OS_TV
+    if ([scene.session.role isEqualToString:UIWindowSceneSessionRoleApplication]) {
+        [DeeplinkCoordinator deliverPendingShortcut];
+    }
+#endif
+    [PublicUtils refreshCurrentScreenForWindow:self.window];
+    if ([ThemeManager pinsSystemStyleForFoldable] && scene == self.window.windowScene) {
+        [ThemeManager systemUserInterfaceStyleDidChange:self.window.windowScene.traitCollection.userInterfaceStyle];
+    }
 #if TARGET_OS_TV
     if (scene == self.window.windowScene &&
         [self.window.rootViewController isKindOfClass:[VoidLinkControllerRootViewController class]]) {
         [(VoidLinkControllerRootViewController *)self.window.rootViewController forceFocusSinkUpdate];
     }
 #endif
+}
+
+- (void)windowScene:(UIWindowScene *)windowScene didUpdateEffectiveGeometry:(UIWindowSceneGeometry *)previousEffectiveGeometry API_AVAILABLE(ios(26.0), tvos(26.0)) {
+    [PublicUtils refreshCurrentScreenForWindow:self.window];
+    [self notifyResolutionGeometryChangedForScene:windowScene];
+}
+
+#if !TARGET_OS_TV
+- (void)windowScene:(UIWindowScene *)windowScene didUpdateCoordinateSpace:(id<UICoordinateSpace>)previousCoordinateSpace interfaceOrientation:(UIInterfaceOrientation)previousInterfaceOrientation traitCollection:(UITraitCollection *)previousTraitCollection {
+    [PublicUtils refreshCurrentScreenForWindow:self.window];
+    [self notifyResolutionGeometryChangedForScene:windowScene];
+}
+#endif
+
+- (void)notifyResolutionGeometryChangedForScene:(UIWindowScene *)windowScene {
+    if (self.window && self.window.windowScene == windowScene &&
+        [windowScene.session.role isEqualToString:UIWindowSceneSessionRoleApplication]) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:PublicUtils.windowGeometryDidChangeNotification
+                                                          object:self.window];
+    }
 }
 
 - (void)sceneDidDisconnect:(UIScene *)scene {

@@ -70,6 +70,7 @@ class HostCollectionViewController: UICollectionViewController, UICollectionView
     var minimumLineSpacing: CGFloat = 10
     var cellSize: CGSize = .zero
     private(set) var items = NSMutableArray()
+    weak var deeplinkCoordinator: DeeplinkCoordinator?
 
     private var collectionViewHeightConstraint: NSLayoutConstraint?
     private var superViewBottomConstraint: NSLayoutConstraint?
@@ -82,7 +83,7 @@ class HostCollectionViewController: UICollectionViewController, UICollectionView
 
         switch UIDevice.current.userInterfaceIdiom {
         case .phone:
-            horizontalPadding = 5
+            horizontalPadding = PublicUtils.isFoldableIPhone ? 22 : 5
         case .pad:
             fallthrough
         default:
@@ -116,6 +117,41 @@ class HostCollectionViewController: UICollectionViewController, UICollectionView
         }
     }
 
+    @objc(refreshHostCardForHost:)
+    func refreshHostCard(for host: TemporaryHost) {
+        guard isViewLoaded else { return }
+        for case let cell as HostCell in collectionView.visibleCells {
+            cell.cardView?.refreshHostContents(for: host)
+        }
+        deeplinkCoordinator?.reportOnlineHost(host)
+        refreshHostNavigationHudIfActive(for: host)
+    }
+
+    @available(iOS 13.0, *)
+    func refreshHostNavigationHudIfActive(for host: TemporaryHost? = nil) {
+        guard ControllerNavigator.uiNavigationDelegate === self,
+              ControllerNavigator.radialMenuView == nil else { return }
+        if let host {
+            guard let index = controllerNavigationSelectedIndexPath?.item,
+                  index >= 0, index < items.count, (items[index] as? TemporaryHost) === host else { return }
+        }
+        GamepadNavigationIllustrationHud.updateHud()
+    }
+
+    func reportOnlineHostsForDeeplink() {
+        for case let host as TemporaryHost in items {
+            deeplinkCoordinator?.reportOnlineHost(host)
+        }
+    }
+
+    func refreshVisibleHostCards() {
+        guard isViewLoaded else { return }
+        for case let cell as HostCell in collectionView.visibleCells {
+            cell.cardView?.refreshHostContents()
+        }
+        refreshHostNavigationHudIfActive()
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         collectionView.register(HostCell.self, forCellWithReuseIdentifier: "HostCell")
@@ -137,12 +173,14 @@ class HostCollectionViewController: UICollectionViewController, UICollectionView
             items.add(host)
             collectionView.reloadData()
         }
+        deeplinkCoordinator?.reportOnlineHost(host)
     }
 
     func removeHost(_ host: TemporaryHost) {
         if items.contains(host) {
             items.remove(host)
             collectionView.reloadData()
+            refreshHostNavigationHudIfActive()
         }
     }
 
@@ -150,6 +188,7 @@ class HostCollectionViewController: UICollectionViewController, UICollectionView
         if items.count > 0 {
             items.removeLastObject()
             collectionView.reloadData()
+            refreshHostNavigationHudIfActive()
         }
     }
 
@@ -193,10 +232,17 @@ class HostCollectionViewController: UICollectionViewController, UICollectionView
             flowLayout.sectionInset = UIEdgeInsets(top: PublicUtils.tvOS26Aavailable ? 43 : 30, left: horizontalPadding, bottom: 0, right: horizontalPadding)
             return
         }
+        
+        if PublicUtils.isFoldableIPhone {
+            flowLayout.sectionInset = UIEdgeInsets(top: 20, left: horizontalPadding, bottom: 0, right: horizontalPadding)
+            return
+        }
 
         switch numberOfRowsInCollectionView() {
         case 1:
-            flowLayout.sectionInset = UIEdgeInsets(top: 50, left: horizontalPadding, bottom: 0, right: horizontalPadding)
+            flowLayout.sectionInset = UIEdgeInsets(
+                top: (PublicUtils.liquidGlassEnabled && PublicUtils.isIPhone) ? 35 : 50,
+            left: horizontalPadding, bottom: 0, right: horizontalPadding)
         case 2:
             flowLayout.sectionInset = UIEdgeInsets(top: 17, left: horizontalPadding, bottom: 0, right: horizontalPadding)
         default:
@@ -217,6 +263,13 @@ class HostCollectionViewController: UICollectionViewController, UICollectionView
             applyControllerNavigationHighlight(to: cell, highlighted: indexPath == controllerNavigationSelectedIndexPath)
         }
         return cell
+    }
+
+    override func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
+        (cell as? HostCell)?.cardView?.refreshHostContents()
+        if indexPath == controllerNavigationSelectedIndexPath {
+            refreshHostNavigationHudIfActive()
+        }
     }
 
     func collectionView(_ collectionView: UICollectionView,

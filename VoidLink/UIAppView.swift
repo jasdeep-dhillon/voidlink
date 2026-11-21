@@ -27,6 +27,14 @@ private let refreshCycle: TimeInterval = 1.0
 
 @objcMembers
 final class UIAppView: UIButton {
+    static var defaultSize: CGSize {
+        #if os(tvOS)
+        return CGSize(width: 200, height: 265)
+        #else
+        return CGSize(width: 150, height: 200)
+        #endif
+    }
+
     weak var updateLoopDelegate: AppViewUpdateLoopDelegate?
 
     private static var noImage: UIImage?
@@ -49,11 +57,7 @@ final class UIAppView: UIButton {
             UIAppView.noImage = UIImage(named: "NoAppImage")
         }
 
-        #if os(tvOS)
-        let initialFrame = CGRect(x: 0, y: 0, width: 200, height: 265)
-        #else
-        let initialFrame = CGRect(x: 0, y: 0, width: 150, height: 200)
-        #endif
+        let initialFrame = CGRect(origin: .zero, size: Self.defaultSize)
 
         self.appImage = UIImageView(frame: initialFrame)
 
@@ -133,23 +137,18 @@ final class UIAppView: UIButton {
         appLabel = nil
 
         var noAppImage = false
-        var loadedAppImage: UIImage?
-
-        if let boxArtPath = AppAssetManager.boxArtPath(for: app) {
-            loadedAppImage = UIImage(contentsOfFile: boxArtPath)
-            if let loadedAppImage {
-                artCache.setObject(loadedAppImage, forKey: app)
+        var loadedAppImage = artCache.object(forKey: app) as? UIImage
+        if loadedAppImage == nil {
+            loadedAppImage = AppAssetManager.loadBoxArt(for: app)
+            if let loadedAppImage, let bitmap = loadedAppImage.cgImage {
+                artCache.setObject(loadedAppImage, forKey: app,
+                                   cost: bitmap.bytesPerRow * bitmap.height)
             }
         }
+        appImage.image = UIAppView.noImage
 
         if let loadedAppImage {
-            let isGFE2BlankImage = loadedAppImage.size.width == 130.0 && loadedAppImage.size.height == 180.0
-            let isGFE3BlankImage = loadedAppImage.size.width == 628.0 && loadedAppImage.size.height == 888.0
-            if !isGFE2BlankImage && !isGFE3BlankImage {
-                appImage.image = loadedAppImage
-            } else {
-                noAppImage = true
-            }
+            appImage.image = loadedAppImage
         } else {
             noAppImage = true
         }

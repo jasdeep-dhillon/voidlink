@@ -912,6 +912,35 @@
         }
       }
     },
+    "=canvasDrag" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Canvas (Space)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "空格 (移画布)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "空白鍵 (移畫布)"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "空白鍵 (移畫布)"
+          }
+        }
+      }
+    },
     "=closeTab" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4403,7 +4432,7 @@
         },
         "zh-Hans" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "虚拟手柄"
           }
         },
@@ -5128,6 +5157,98 @@
         }
       }
     },
+    "Add to Shortcuts" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加入快捷指令"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加入捷徑"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加入捷徑"
+          }
+        }
+      }
+    },
+    "Add to Top Shelf" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "添加到主屏幕"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加入主畫面"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "加入主畫面"
+          }
+        }
+      }
+    },
+    "Added “%@” to Top Shelf" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已将「%@」添加到主屏幕"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已將「%@」加入主畫面"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已將「%@」加入主畫面"
+          }
+        }
+      }
+    },
+    "Added to Shortcuts List" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已加入快捷指令清单"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已加入捷徑清單"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已加入捷徑清單"
+          }
+        }
+      }
+    },
     "addEntry" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5464,6 +5585,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "音訊"
+          }
+        }
+      }
+    },
+    "Audio Buffer Limit" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音频缓冲上限"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音訊緩衝上限"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音訊緩衝上限"
           }
         }
       }
@@ -6474,6 +6618,29 @@
         }
       }
     },
+    "Centered" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "居中"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "居中"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "居中"
+          }
+        }
+      }
+    },
     "Centered (PlayStation)" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7292,6 +7459,52 @@
         }
       }
     },
+    "Copy DeepLink" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "复制 DeepLink"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "複製 DeepLink"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "複製 DeepLink"
+          }
+        }
+      }
+    },
+    "Could not update Top Shelf." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法更新主屏幕卡片。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法更新主畫面卡片。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無法更新主畫面卡片。"
+          }
+        }
+      }
+    },
     "Create" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7407,6 +7620,29 @@
         }
       }
     },
+    "Ctrl+Scroll" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ctrl+滚轮"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ctrl+滾輪"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ctrl+滾輪"
+          }
+        }
+      }
+    },
     "ctrlDownForPinchStackTip" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7459,6 +7695,29 @@
         }
       }
     },
+    "Cursor Inertia" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "指针惯性"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "指標慣性"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "指標慣性"
+          }
+        }
+      }
+    },
     "Cursor Speed" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7478,6 +7737,52 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "游標速度"
+          }
+        }
+      }
+    },
+    "Cursor Velocity" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "指针灵敏度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滑鼠靈敏度"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滑鼠靈敏度"
+          }
+        }
+      }
+    },
+    "Cursor Velocity (View Zoom)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "指针灵敏度（视图缩放）"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滑鼠靈敏度（視圖縮放）"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "滑鼠靈敏度（視圖縮放）"
           }
         }
       }
@@ -7695,6 +8000,29 @@
         }
       }
     },
+    "Deceleration" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "减速力度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "減速力度"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "減速力度"
+          }
+        }
+      }
+    },
     "DecelerationRateX: %.3f  " : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7737,6 +8065,75 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "減速率Y: %.3f  "
+          }
+        }
+      }
+    },
+    "DeepLink app was not found." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找不到 DeepLink 对应的应用。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找不到 DeepLink 對應的應用程式。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "找不到 DeepLink 對應的應用程式。"
+          }
+        }
+      }
+    },
+    "DeepLink copied to clipboard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DeepLink 已复制到剪贴板"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DeepLink 已複製到剪貼簿"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DeepLink 已複製到剪貼簿"
+          }
+        }
+      }
+    },
+    "DeepLink host did not come online." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DeepLink 对应的主机未上线。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DeepLink 對應的主機未上線。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "DeepLink 對應的主機未上線。"
           }
         }
       }
@@ -10363,6 +10760,29 @@
         }
       }
     },
+    "Floating Keyboard Button" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "软键盘悬浮按钮"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "軟鍵盤懸浮按鈕"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "軟鍵盤懸浮按鈕"
+          }
+        }
+      }
+    },
     "Floating keyboard not supported" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11361,6 +11781,29 @@
         }
       }
     },
+    "Gesture Sensitivity" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手势灵敏度"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手勢靈敏度"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "手勢靈敏度"
+          }
+        }
+      }
+    },
     "Gesture Sliding Distance" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11459,6 +11902,29 @@
         }
       }
     },
+    "Go for Sunshine-Foundation" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前往 Sunshine-基地版"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前往 Sunshine-基地版"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前往 Sunshine-基地版"
+          }
+        }
+      }
+    },
     "Go for TestFlight" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -11484,6 +11950,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "前往 TestFlight"
+          }
+        }
+      }
+    },
+    "Get Foundation Sunshine" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "获取 Foundation Sunshine"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取得 Foundation Sunshine"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "取得 Foundation Sunshine"
           }
         }
       }
@@ -13119,6 +13608,29 @@
         }
       }
     },
+    "Launch Now" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "立即启动"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "立即啟動"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "立即啟動"
+          }
+        }
+      }
+    },
     "launchPairWake" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14578,29 +15090,6 @@
         }
       }
     },
-    "Mouse Pointer Velocity" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "鼠标指针灵敏度"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "滑鼠靈敏度"
-          }
-        },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "滑鼠靈敏度"
-          }
-        }
-      }
-    },
     "Mouse Pointer Velocity: %d%%" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14814,6 +15303,29 @@
         }
       }
     },
+    "Native Mode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "原生模式"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "原生模式"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "原生模式"
+          }
+        }
+      }
+    },
     "Native Touch" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14833,6 +15345,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "多點觸控"
+          }
+        }
+      }
+    },
+    "nativeTrackpadHostLink" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://voidlink.yuque.com/org-wiki-voidlink-znirha/biuzs1/wu777frutl050k5a"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://voidlink.yuque.com/org-wiki-voidlink-znirha/biuzs1/fzsllzmhznbwntn3"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://voidlink.yuque.com/org-wiki-voidlink-znirha/biuzs1/fzsllzmhznbwntn3"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://voidlink.yuque.com/org-wiki-voidlink-znirha/biuzs1/fzsllzmhznbwntn3"
+          }
+        }
+      }
+    },
+    "nativeTrackpadTip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Touchpad Native Mode: Passes through native touchpad gestures. Requires Foundation-Sunshine, or Canvas Host (VoidLink macOS host made for digital art)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "触控板 - 原生模式：透传原生触控板手势。仅支持 Sunshine 基地版 或 [Canvas Host] (VoidLink macOS 绘画服务端)"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "觸控板 - 原生模式：透傳原生觸控板手勢。僅支援 Sunshine 基地版 或 [Canvas Host]（VoidLink macOS 繪畫伺服端）"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "觸控板 - 原生模式：透傳原生觸控板手勢。僅支援 Sunshine 基地版 或 [Canvas Host]（VoidLink macOS 繪畫伺服端）"
           }
         }
       }
@@ -15087,6 +15657,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "否"
+          }
+        }
+      }
+    },
+    "No Pinch" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无缩放"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無縮放"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "無縮放"
           }
         }
       }
@@ -15805,6 +16398,29 @@
         }
       }
     },
+    "Open VoidLink Target" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "打开 VoidLink 目标"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開啟 VoidLink 目標"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "開啟 VoidLink 目標"
+          }
+        }
+      }
+    },
     "Opens pencil pressure curve tool" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -16066,6 +16682,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "背鍵4"
+          }
+        }
+      }
+    },
+    "Pair" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配对"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配對"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "配對"
           }
         }
       }
@@ -16734,29 +17373,6 @@
         }
       }
     },
-    "Pinch Gesture" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "缩放手势"
-          }
-        },
-        "zh-Hant" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "縮放手勢"
-          }
-        },
-        "zh-HK" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "縮放手勢"
-          }
-        }
-      }
-    },
     "Pinch Sensitivity" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -17163,6 +17779,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "與電腦的連線品質不佳"
+          }
+        }
+      }
+    },
+    "Portrait Stream Position" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "竖屏画面位置"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "直向畫面位置"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "直向畫面位置"
           }
         }
       }
@@ -18473,6 +19112,52 @@
         }
       }
     },
+    "Remove from Shortcuts" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从快捷指令移除"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從捷徑移除"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從捷徑移除"
+          }
+        }
+      }
+    },
+    "Remove from Top Shelf" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "从主屏幕移除"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從主畫面移除"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "從主畫面移除"
+          }
+        }
+      }
+    },
     "Remove Host" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -18515,6 +19200,52 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "移除項目"
+          }
+        }
+      }
+    },
+    "Removed from Shortcuts List" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已从快捷指令清单移除"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已從捷徑清單移除"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已從捷徑清單移除"
+          }
+        }
+      }
+    },
+    "Removed from Top Shelf" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已从主屏幕移除"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已從主畫面移除"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已從主畫面移除"
           }
         }
       }
@@ -18824,6 +19555,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "恢復執行中的應用程式"
+          }
+        }
+      }
+    },
+    "Reverse Barrel Roll" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "反转笔轴旋转"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "反轉筆軸旋轉"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "反轉筆軸旋轉"
           }
         }
       }
@@ -19525,7 +20279,7 @@
         },
         "zh-HK" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "提示：手動鎖定螢幕方向以避免顯示異常"
           }
         }
@@ -19986,6 +20740,29 @@
         }
       }
     },
+    "Sent Wake-on-LAN" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已尝试唤醒主机"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已嘗試喚醒電腦"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "已嘗試喚醒電腦"
+          }
+        }
+      }
+    },
     "Set all" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -20228,6 +21005,29 @@
         }
       }
     },
+    "Shortcuts" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "快捷方式"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "捷徑"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "捷徑"
+          }
+        }
+      }
+    },
     "ShortcutsTab" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -20276,6 +21076,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "顯示應用程式"
+          }
+        }
+      }
+    },
+    "Show DeepLink" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "显示 DeepLink"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顯示 DeepLink"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "顯示 DeepLink"
           }
         }
       }
@@ -21307,6 +22130,29 @@
         }
       }
     },
+    "Streaming Target" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "串流目标"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "串流目標"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "串流目標"
+          }
+        }
+      }
+    },
     "streamingRadialMenuButtonTip" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -21470,6 +22316,35 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已成功傳送喚醒請求。電腦可能需要一些時間才能喚醒。如果它一直沒有喚醒，請確保已正確設定網路喚醒。"
+          }
+        }
+      }
+    },
+    "sunshineFoundationLink" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://github.com/AlkaidLab/foundation-sunshine"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://www.alkaidlab.cn/"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://www.alkaidlab.cn/"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://www.alkaidlab.cn/"
           }
         }
       }
@@ -22136,6 +23011,29 @@
         }
       }
     },
+    "This VoidLink shortcut target is no longer available." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此 VoidLink 快捷指令目标已不可用。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此 VoidLink 捷徑目標已無法使用。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "此 VoidLink 捷徑目標已無法使用。"
+          }
+        }
+      }
+    },
     "Tick Interval" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -22562,25 +23460,25 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "- Touchpad: Windows laptop style touchpad. Double tap and hold to drag, 2-finger tap to click right button, 2-finger slide to scroll mouse wheel.\nTouchpad mode is not recommended for 3D games. Use MousePad on-screen widget instead.\n\n- Native Touch: Use your PC as a Windows tablet. Not supported on macOS host.\n\n- Single Point: Provides a touchscreen-like experience on macOS."
+            "value" : "- Touchpad: Laptop-style controls. Double-tap and hold to drag, two-finger tap to right-click, two-finger swipe to scroll. Cannot be used for 3D games. Use the MousePad widget instead.\n\n- Touchpad Native Mode: Passes through native Windows touchpad gestures. Requires Sunshine-Foundation.\n\n- Native Touch: Use your PC as a Windows tablet. Not supported on macOS host.\n\n- Single Point: Provides a touchscreen-like experience on macOS."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "- 触控板: Windows笔记本电脑风格触控板，快速双击并滑动即可拖动，双指快速轻按触发鼠标右键，双指滑动滚动鼠标滚轮。\n不推荐用于3D游戏，游戏时请用 MousePad 屏显控件。\n\n- 多点触控: 以Windows 平板的方式使用PC主机。不支持 macOS 主机。\n\n- 单点鼠标: 可为macOS提供类触屏体验。"
+            "value" : "- 触控板: Windows笔记本风格触控板，快速双击并滑动 - 拖动，双指轻按 - 右键，双指滑动 - 滚轮。\n不可用于3D游戏，游戏时请用 MousePad 屏显控件。\n\n- 触控板 - 原生模式： 透传 Windows 原生触控板手势。仅支持 Sunshine 基地版。\n\n- 多点触控: 以Windows 平板的方式使用PC主机。不支持 macOS 主机。\n\n- 单点鼠标: 可为macOS提供类触屏体验。"
           }
         },
         "zh-Hant" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "- 觸控板：與 Windows 筆記型電腦風格觸控板，快速雙擊並滑動即可拖曳，雙指快速輕按觸發滑鼠右鍵，雙指滑動可捲動滑鼠滾輪。\n不建議用於 3D 遊戲，遊戲時請使用 MousePad 螢幕控制項。\n\n- 多點觸控：以 Windows 平板的方式操作 PC 主機。不支援 macOS 主機。\n\n\n- 單點滑鼠：可為 macOS 提供類觸控螢幕體驗。"
+            "value" : "- 觸控板: Windows 筆電風格觸控板，快速雙擊並滑動 - 拖曳，雙指輕按 - 右鍵，雙指滑動 - 滾輪。\n不可用於3D遊戲，遊戲時請用 MousePad 螢幕控制元件。\n\n- 觸控板 - 原生模式： 透傳 Windows 原生觸控板手勢。僅支援 Sunshine 基地版。\n\n- 多點觸控: 以Windows 平板的方式使用PC主機。不支援 macOS 主機。\n\n- 單點滑鼠: 可為macOS提供類觸控螢幕體驗。"
           }
         },
         "zh-HK" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "- 觸控板：與 Windows 筆記型電腦風格觸控板，快速雙擊並滑動即可拖曳，雙指快速輕按觸發滑鼠右鍵，雙指滑動可捲動滑鼠滾輪。\n不建議用於 3D 遊戲，遊戲時請使用 MousePad 螢幕控制項。\n\n- 多點觸控：以 Windows 平板的方式操作 PC 主機。不支援 macOS 主機。\n\n\n- 單點滑鼠：可為 macOS 提供類觸控螢幕體驗。"
+            "value" : "- 觸控板: Windows 筆電風格觸控板，快速雙擊並滑動 - 拖曳，雙指輕按 - 右鍵，雙指滑動 - 滾輪。\n不可用於3D遊戲，遊戲時請用 MousePad 螢幕控制元件。\n\n- 觸控板 - 原生模式： 透傳 Windows 原生觸控板手勢。僅支援 Sunshine 基地版。\n\n- 多點觸控: 以Windows 平板的方式使用PC主機。不支援 macOS 主機。\n\n- 單點滑鼠: 可為macOS提供類觸控螢幕體驗。"
           }
         }
       }
@@ -22627,6 +23525,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "触摸板按键"
+          }
+        }
+      }
+    },
+    "Touchpad Gestures" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "触控板手势"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "觸控板手勢"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "觸控板手勢"
           }
         }
       }
@@ -22821,7 +23742,7 @@
         },
         "zh-HK" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "按住 [LT] 完成發送Enter，或用 iPhone 輸入文本"
           }
         }
@@ -22955,6 +23876,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "上箭頭"
+          }
+        }
+      }
+    },
+    "USB Hosts" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "USB 主机"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "USB 主機"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "USB 主機"
           }
         }
       }
@@ -23262,6 +24206,29 @@
         }
       }
     },
+    "View Zoom" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "视图缩放"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "視圖縮放"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "視圖縮放"
+          }
+        }
+      }
+    },
     "Visible" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -23389,6 +24356,29 @@
         }
       }
     },
+    "Waiting for host system initialization" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待主机系统初始化"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待主機系統初始化"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "等待主機系統初始化"
+          }
+        }
+      }
+    },
     "Wake PC" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -23475,7 +24465,7 @@
         },
         "zh-Hant" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "聯絡開發者 True砖家"
           }
         },
@@ -23829,6 +24819,64 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "寬度: %.2f"
+          }
+        }
+      }
+    },
+    "wiredStreamingSunshineLink" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://voidlink.yuque.com/org-wiki-voidlink-znirha/biuzs1/tbxv49ko2lfupqym"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://voidlink.yuque.com/org-wiki-voidlink-znirha/biuzs1/tqogfftganrmdf3y"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://voidlink.yuque.com/org-wiki-voidlink-znirha/biuzs1/tqogfftganrmdf3y"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "https://voidlink.yuque.com/org-wiki-voidlink-znirha/biuzs1/tqogfftganrmdf3y"
+          }
+        }
+      }
+    },
+    "wiredStreamingTip" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VoidLink now supports USB wired streaming with Foundation Sunshine (custom build).\n- The USB button will reappear in the navigation bar when a USB host is detected.\n- Your host PC’s USB port or your USB cable may be unable to power your iPad or iPhone. Keep an eye on your battery level while streaming over USB.\n- A loose connection at the cable or port can cause more frequent streaming interruptions than a wireless connection.\n- VoidLink caps the requested USB streaming bitrate at 240 Mbps. If the picture is still unstable, lower the bitrate further."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VoidLink 现已支持配合 Foundation Sunshine (定制版) 实现USB有线连接串流。\n- 检测到 USB 主机时， 导航栏将再次显示 \"USB\" 按钮。\n- 主机 USB 接口或您的 USB 线缆可能无法为 iPad/iPhone 供电，有线串流时请注意电量消耗。\n- 线缆或端口接触不良时，甚至比无线连接更容易断流。\n- App已将 USB 串流请求的码率限制在 240Mbps。如果出现画面不稳定的情况，请继续降低码率。"
+          }
+        },
+        "zh-Hant" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VoidLink 現已支援搭配 Foundation Sunshine (客製版) 透過 USB 進行有線串流。\n- 偵測到 USB 主機時，導覽列會再次顯示「USB」按鈕。\n- 主機的 USB 連接埠或您的 USB 連接線可能無法為 iPad/iPhone 供電，有線串流時請留意電量消耗。\n- 連接線或連接埠接觸不良時，甚至比無線連線更容易中斷串流。\n- App 已將 USB 串流請求的位元率限制在 240 Mbps。如果畫面不穩定，請繼續降低位元率。"
+          }
+        },
+        "zh-HK" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "VoidLink 現已支援搭配 Foundation Sunshine (客製版) 透過 USB 進行有線串流。\n- 偵測到 USB 主機時，導覽列會再次顯示「USB」按鈕。\n- 主機的 USB 連接埠或您的 USB 連接線可能無法為 iPad/iPhone 供電，有線串流時請留意電量消耗。\n- 連接線或連接埠接觸不良時，甚至比無線連線更容易中斷串流。\n- App 已將 USB 串流請求的位元率限制在 240 Mbps。如果畫面不穩定，請繼續降低位元率。"
           }
         }
       }
